@@ -24,5 +24,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - When implementing UI from a Figma design or screenshot, prioritize matching spacing, type scale, and hierarchy exactly rather than approximating "close enough."
 - Favor the simplest solution that achieves the design — avoid over-engineering or adding abstraction the minimalist design doesn't call for.
-- Prefer explaining changes and tradeoffs in plain language over showing raw code, since the user isn't reading code to verify it — they're verifying the rendered result.
+- Used Cursor on prior projects (had direct IDE visibility into code). Working in Claude Code instead, so don't assume they can casually glance at a file to see what changed — be transparent rather than just plain-spoken.
+- After implementing or changing UI, give a concrete summary of the actual values used, not just a description. Include things like:
+  - Breakpoints and what changes at each
+  - Typefaces used and the font hierarchy (which weights/sizes map to which text roles)
+  - Margins, spacing, and how the grid is constructed
 - Since there's no established stack yet, confirm framework/tooling choices before scaffolding rather than assuming.
