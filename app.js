@@ -49,16 +49,19 @@ const PHRASES = [
   "Wolves & Orchard",
 ];
 
+/* The waterfall lines are edited in place, so the test string lives here rather
+   than in any one element. */
+let testString = PHRASES[0];
+
 /* Never hand back the phrase already on screen — a shuffle that appears to do
    nothing reads as a broken button. */
 function randomPhrase() {
-  const current = el.sample.textContent.trim();
-  const pool = PHRASES.filter((p) => p !== current);
+  const pool = PHRASES.filter((p) => p !== testString.trim());
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
 function setPhrase(text) {
-  el.sample.textContent = text;
+  testString = text;
   renderWaterfall();
 }
 
@@ -71,14 +74,12 @@ const el = {
   specimen: document.getElementById("specimen"),
   fontName: document.getElementById("font-name"),
   infoGrid: document.getElementById("info-grid"),
-  sample: document.getElementById("sample"),
   waterfall: document.getElementById("waterfall"),
   glyphGrid: document.getElementById("glyph-grid"),
   glyphCount: document.getElementById("glyph-count"),
   glyphNotice: document.getElementById("glyph-notice"),
   shuffle: document.getElementById("shuffle"),
   print: document.getElementById("print"),
-  reset: document.getElementById("reset"),
 };
 
 let loadedFace = null; // the FontFace currently registered, so we can swap it out
@@ -278,7 +279,7 @@ function formatBytes(bytes) {
    Render: waterfall
    ---------------------------------------------------------------------- */
 function sampleText() {
-  return el.sample.textContent.trim() || "Handgloves";
+  return testString;
 }
 
 function renderWaterfall() {
@@ -292,6 +293,10 @@ function renderWaterfall() {
       line.className = "waterfall-line specimen-type";
       line.style.fontSize = `${size}px`;
       line.textContent = text;
+      line.contentEditable = "true";
+      line.spellcheck = false;
+      line.setAttribute("role", "textbox");
+      line.setAttribute("aria-label", `Test string at ${size} pixels`);
 
       const label = document.createElement("span");
       label.className = "waterfall-size";
@@ -414,38 +419,68 @@ el.fileInput.addEventListener("change", () => {
   el.fileInput.value = ""; // allow re-picking the same file
 });
 
-["dragenter", "dragover"].forEach((type) =>
-  el.dropzone.addEventListener(type, (e) => {
-    e.preventDefault();
-    el.dropzone.classList.add("is-dragover");
-  })
-);
+/* Drag and drop is handled on the window, not on the drop zone, so a font can
+   be dropped anywhere on the page. The browser's default for a dropped file is
+   to navigate away from the page, so every one of these must preventDefault —
+   dragover included, or the drop event never fires at all. */
+let dragDepth = 0; // dragenter/leave also fire when crossing child elements
 
-["dragleave", "drop"].forEach((type) =>
-  el.dropzone.addEventListener(type, (e) => {
-    e.preventDefault();
-    el.dropzone.classList.remove("is-dragover");
-  })
-);
+function endDrag() {
+  dragDepth = 0;
+  document.body.classList.remove("is-dragging");
+}
 
-el.dropzone.addEventListener("drop", (e) => {
+window.addEventListener("dragenter", (e) => {
+  e.preventDefault();
+  dragDepth++;
+  document.body.classList.add("is-dragging");
+});
+
+window.addEventListener("dragover", (e) => e.preventDefault());
+
+window.addEventListener("dragleave", (e) => {
+  e.preventDefault();
+  dragDepth = Math.max(0, dragDepth - 1);
+  if (dragDepth === 0) document.body.classList.remove("is-dragging");
+});
+
+window.addEventListener("drop", (e) => {
+  e.preventDefault();
+  endDrag();
   const file = e.dataTransfer.files[0];
   if (file) handleFile(file);
 });
 
-// Dropping anywhere on the page works too, but the browser's default is to
-// navigate to the file — so cancel that everywhere.
-window.addEventListener("dragover", (e) => e.preventDefault());
-window.addEventListener("drop", (e) => e.preventDefault());
+// A drag that leaves the window entirely never fires dragleave on some
+// browsers; this catches the stuck-overlay case.
+window.addEventListener("dragend", endDrag);
+window.addEventListener("blur", endDrag);
 
-el.sample.addEventListener("input", renderWaterfall);
+/* Editing any line retypes every other line. The edited line is deliberately
+   left alone — rewriting its content would collapse the caret to the start on
+   every keystroke. */
+el.waterfall.addEventListener("input", (e) => {
+  const edited = e.target.closest(".waterfall-line");
+  if (!edited) return;
+  testString = edited.textContent;
+  for (const line of el.waterfall.querySelectorAll(".waterfall-line")) {
+    if (line !== edited) line.textContent = testString;
+  }
+});
+
+// Keep the lines to plain single-line text: Enter would insert markup, and a
+// paste would carry the source document's formatting in with it.
+el.waterfall.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && e.target.closest(".waterfall-line")) e.preventDefault();
+});
+
+el.waterfall.addEventListener("paste", (e) => {
+  if (!e.target.closest(".waterfall-line")) return;
+  e.preventDefault();
+  const text = (e.clipboardData || window.clipboardData).getData("text").replace(/\s+/g, " ");
+  document.execCommand("insertText", false, text);
+});
 
 el.shuffle.addEventListener("click", () => setPhrase(randomPhrase()));
 
 el.print.addEventListener("click", () => window.print());
-
-el.reset.addEventListener("click", () => {
-  resetSpecimen();
-  setStatus("");
-  el.fileInput.click();
-});

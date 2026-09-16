@@ -51,6 +51,8 @@
    ========================================================================== */
 *, *::before, *::after { box-sizing: border-box; }
 
+main { display: flex; flex-direction: column; }
+
 body {
   margin: 0;
   padding: var(--space-8) var(--gutter) var(--space-16);
@@ -102,14 +104,38 @@ button:hover { border-color: var(--color-accent); }
   background: var(--color-field);
   cursor: pointer;
 }
-.dropzone.is-dragover { border-color: var(--color-accent); background: var(--color-bg); }
 .dropzone:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+/* A font can be dropped anywhere, so the whole page is the target while a drag
+   is in progress. pointer-events: none is essential — an overlay that captures
+   the pointer becomes the drop target and swallows the drop. */
+body.is-dragging::after {
+  content: "Drop to load the font";
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  background: var(--color-bg);
+  outline: 1px dashed var(--color-rule);
+  outline-offset: -12px;
+  font-family: var(--font-ui);
+  font-size: var(--size-ui);
+  color: var(--color-text);
+  pointer-events: none;
+}
 
 .dropzone-text { margin: 0 0 var(--space-2); font-size: var(--size-ui); }
 .dropzone-hint { margin: 0; color: var(--color-muted); font-size: var(--size-ui); }
 
-/* Once a font is loaded the picker collapses to a slim bar, so the waterfall
-   leads the page instead of sitting below a large empty target. */
+/* Once a font is loaded the picker collapses to a slim bar AND moves to the
+   foot of the page (order: 1 puts it after the specimen), so the typeface
+   name is the first thing on the page rather than a file input. */
+body.has-font .loader {
+  order: 1;
+  margin-top: var(--section-gap);
+}
+
 .loader.is-loaded .dropzone {
   padding: var(--space-3) var(--space-4);
   text-align: left;
@@ -132,7 +158,12 @@ body.has-font .lede { display: none; }
   font-size: var(--size-ui);
 }
 
-.hint { margin: 0 0 var(--space-3); color: var(--color-muted); font-size: var(--size-ui); }
+/* Sits directly under its section label, which already owns 48px below it. */
+.hint {
+  margin: calc(var(--space-8) * -1) 0 var(--space-12);
+  color: var(--color-muted);
+  font-size: var(--size-ui);
+}
 
 /* ==========================================================================
    Specimen sections
@@ -155,8 +186,8 @@ body.has-font .lede { display: none; }
 
 /* The intro: the family name, set as large as the viewport allows. */
 .font-name {
-  margin: var(--space-8) 0 0;
-  font-size: clamp(48px, 11vw, 180px);
+  margin: var(--section-gap) 0 0;
+  font-size: clamp(96px, 22vw, 360px);
   font-weight: normal;
   line-height: 1.05;
   overflow-wrap: anywhere;
@@ -172,21 +203,11 @@ body.has-font .lede { display: none; }
 .info-grid dt { color: var(--color-muted); }
 .info-grid dd { margin: 0; font-size: var(--size-ui); }
 
-/* Test string control */
-.sample-control { margin-bottom: var(--space-8); }
-
-.sample {
-  font-size: 24px;
-  line-height: 1.3;
-  padding: var(--space-2) var(--space-3);
-  border: var(--border-soft);
-  border-radius: var(--radius);
-  background: var(--color-bg);
-  word-break: break-word;
+/* The waterfall lines are the editable surface — there is no separate field. */
+.waterfall-line:focus {
+  outline: none;
+  background: var(--color-field);
 }
-.sample:focus { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-
-.sample-control .hint { margin: var(--space-2) 0 0; }
 
 /* Waterfall */
 /* Space sits above each line, not below, so the type reads as sitting on its
@@ -222,6 +243,8 @@ body.has-font .lede { display: none; }
    room for fonts whose ink exceeds their em box. */
 .waterfall-line {
   line-height: 1.15;
+  min-height: 1em; /* an emptied line must stay tall enough to click back into */
+  cursor: text;
   padding-bottom: 0.06em; /* clears descenders without floating off the rule */
   /* A single long word at 128px is wider than a phone screen and has no space
      to break at, so allow a mid-word break rather than let the page scroll
