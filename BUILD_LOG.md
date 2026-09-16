@@ -446,6 +446,15 @@ fix, 760px gave the same 50%.
 have to come *after* the rules they are meant to override, or be written as the default
 with the wider case as the exception — which is the version that cannot rot.
 
+**Postscript.** This happened again, in the same stylesheet, several sessions later, while
+moving the phone home page top down: a `body:not(.has-font) .site-footer { position:
+static }` written up with the other phone rules, six hundred lines above the `position:
+fixed` it was meant to beat. Identical selector, identical specificity, later declaration
+wins, so it never applied once. Having written the entry above did not prevent it. What
+caught it was measuring the result — `footerPosition` came back `"fixed"` — rather than
+looking at the rule and believing it. Knowing a trap exists is not the same as checking
+whether you are in it.
+
 ---
 
 ## 15. Shuffle looked broken, and was working correctly

@@ -310,8 +310,6 @@ body.has-font .loader { display: none; }
   transition: opacity 240ms ease;
 }
 
-/* Too narrow for a left stack and a centred banner to coexist: below this the
-   empty state becomes one centred column, banner first. */
 @media (max-width: 767px) {
   .loader {
     display: flex;
@@ -741,7 +739,18 @@ body.has-font .drop-banner {
     transform: none;
   }
 
-  body.has-font .banner-lead { display: none; }
+  /* The empty state gets the same treatment. A phone cannot drag and drop
+     either, and here the shortened banner leaves the middle of the screen
+     empty rather than filling it with an instruction that does not apply. */
+  body:not(.has-font) .drop-banner {
+    position: fixed;
+    left: var(--gutter);
+    right: auto;
+    bottom: var(--banner-inset);
+    transform: none;
+  }
+
+  .banner-lead { display: none; }
 }
 
 /* Only the action takes the pointer — the bar itself stays transparent to it,
@@ -992,6 +1001,21 @@ body:not(.has-font) .site-footer {
 }
 
 body:not(.has-font) #print { display: none; }
+
+/* Home on a phone reads top down instead of bottom up: the library where you
+   start, the file picker where you finish. Static is all it takes — the loader
+   is fixed, the specimen is hidden and the header is not shown on the empty
+   state, so the footer has nothing above it in flow and lands at the top.
+
+   This has to sit below the fixed rule above rather than up with the other
+   phone rules: same specificity, and a media query adds none, so the later
+   declaration wins. Written above it, it never applied at all. */
+@media (max-width: 767px) {
+  body:not(.has-font) .site-footer {
+    position: static;
+    margin-top: var(--banner-inset);
+  }
+}
 
 /* Hovering a sample font names it, set in itself, above the pills. Hidden by
    default and only on a desktop-width empty state — it is a pointer gesture,
