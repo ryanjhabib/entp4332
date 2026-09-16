@@ -1,6 +1,6 @@
 /* Font Specimen — everything runs client-side. No font data leaves the page. */
 
-const WATERFALL_SIZES = [12, 16, 24, 36, 48, 72, 96, 128];
+const WATERFALL_SIZES = [128, 96, 72, 48, 36, 24, 16, 12];
 
 // Rendering every glyph of a large CJK font locks the page up. Cap it and say so.
 const GLYPH_LIMIT = 1500;
