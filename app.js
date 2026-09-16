@@ -863,7 +863,7 @@ function trimStop(text) {
    any section, so it reads the same whichever state the page is in, and it is
    only ever used for things that went wrong — a specimen appearing is its own
    confirmation that nothing did. */
-const TOAST_MS = 10000;
+const TOAST_MS = 5000;
 let toastTimer = null;
 
 function notify(message) {
