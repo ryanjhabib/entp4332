@@ -65,12 +65,27 @@ function setPhrase(text) {
   renderWaterfall();
 }
 
+/* Open-licence faces served from the same CDN as the libraries. Nothing is
+   uploaded — these are downloads, so the page's privacy claim still holds. */
+const SAMPLE_CDN = "https://cdn.jsdelivr.net/npm/";
+const SAMPLE_FONTS = [
+  { name: "Inter", file: "Inter-Regular.woff2", path: "@fontsource/inter/files/inter-latin-400-normal.woff2" },
+  { name: "Archivo", file: "Archivo-SemiBold.woff2", path: "@fontsource/archivo/files/archivo-latin-600-normal.woff2" },
+  { name: "Space Grotesk", file: "SpaceGrotesk-Medium.woff2", path: "@fontsource/space-grotesk/files/space-grotesk-latin-500-normal.woff2" },
+  { name: "Playfair Display", file: "PlayfairDisplay-Regular.woff2", path: "@fontsource/playfair-display/files/playfair-display-latin-400-normal.woff2" },
+  { name: "EB Garamond", file: "EBGaramond-Regular.woff2", path: "@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff2" },
+  { name: "Libre Baskerville", file: "LibreBaskerville-Regular.woff2", path: "@fontsource/libre-baskerville/files/libre-baskerville-latin-400-normal.woff2" },
+  { name: "Bodoni Moda", file: "BodoniModa-Regular.woff2", path: "@fontsource/bodoni-moda/files/bodoni-moda-latin-400-normal.woff2" },
+  { name: "JetBrains Mono", file: "JetBrainsMono-Regular.woff2", path: "@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2" },
+];
+
 const el = {
   loader: document.getElementById("loader"),
   dropzone: document.getElementById("dropzone"),
   fileInput: document.getElementById("file-input"),
   browse: document.getElementById("browse"),
   status: document.getElementById("status"),
+  sampleList: document.getElementById("sample-list"),
   specimen: document.getElementById("specimen"),
   intro: document.querySelector(".specimen-intro"),
   fontName: document.getElementById("font-name"),
@@ -609,6 +624,41 @@ function resetSpecimen() {
   el.glyphNotice.hidden = true;
   el.glyphNotice.textContent = "";
 }
+
+/* -------------------------------------------------------------------------
+   Sample fonts
+   ---------------------------------------------------------------------- */
+function renderSamples() {
+  el.sampleList.replaceChildren(
+    ...SAMPLE_FONTS.map((sample) => {
+      const item = document.createElement("li");
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "link-button";
+      button.textContent = sample.name;
+      button.addEventListener("click", () => loadSample(sample));
+      item.append(button);
+      return item;
+    })
+  );
+}
+
+async function loadSample(sample) {
+  setStatus(`Fetching ${sample.name}…`);
+  try {
+    const res = await fetch(SAMPLE_CDN + sample.path);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const blob = await res.blob();
+    await handleFile(new File([blob], sample.file, { type: "font/woff2" }));
+  } catch (err) {
+    setStatus(
+      `Could not fetch ${sample.name} (${err.message}). Drop a font file instead.`,
+      true
+    );
+  }
+}
+
+renderSamples();
 
 /* -------------------------------------------------------------------------
    Events

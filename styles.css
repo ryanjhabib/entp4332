@@ -17,7 +17,7 @@
      One size, one weight, everywhere. Hierarchy comes from spacing,
      rules and muted colour, never from scaling type up. */
   --font-ui: ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
-  --size-ui: 14px;
+  --size-ui: 12px;
   --weight-ui: 400;
   --leading-ui: 1.5;
 
@@ -175,6 +175,19 @@ body.has-font .lede { display: none; }
 
 .status { margin: var(--space-4) 0 0; min-height: 1.5em; color: var(--color-muted); }
 .status.is-error { color: var(--color-error); }
+
+/* Sample fonts — empty state only, so it disappears once a specimen is up. */
+.samples { margin-top: var(--space-8); }
+body.has-font .samples { display: none; }
+
+.sample-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
 
 .notice {
   margin: 0 0 var(--space-4);
@@ -357,6 +370,11 @@ html { scroll-padding-top: var(--space-16); }
    ========================================================================== */
 body.is-viewing { overflow: hidden; }
 
+/* An author `display` beats the UA stylesheet's `[hidden] { display: none }`
+   whatever the specificity, so the hidden attribute must be honoured here
+   explicitly or this overlay covers the page permanently. */
+.glyph-viewer[hidden] { display: none; }
+
 .glyph-viewer {
   position: fixed;
   inset: 0;
@@ -438,5 +456,18 @@ body.is-viewing { overflow: hidden; }
   .glyph-cell { break-inside: avoid; }
   .glyph-grid { gap: 2px; }
 
-  .notice { break-inside: avoid; }
+  /* Sample fonts — empty state only, so it disappears once a specimen is up. */
+.samples { margin-top: var(--space-8); }
+body.has-font .samples { display: none; }
+
+.sample-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notice { break-inside: avoid; }
 }

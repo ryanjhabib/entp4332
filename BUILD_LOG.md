@@ -168,6 +168,45 @@ marker keeps what it had. Ceiling raised to 300px once names stopped carrying ex
 
 ---
 
+## 8. The glyph viewer never actually closed
+
+**Symptom** After adding the glyph viewer, the page went blank white. Screenshots showed
+an empty overlay with the two arrows and a Close link floating on it, no matter what was
+underneath. Closing the viewer changed nothing, and reloading the page still showed it.
+
+Worse, it did not *look* like a bug from the code's side: `viewer.hidden` was `true`, the
+JavaScript was setting and clearing it correctly, and element measurements all came back
+sane. I initially dismissed the blank screenshots as a rendering lag in the preview pane.
+They were not — this was live, and it had already shipped.
+
+**Cause** The overlay is markup with a `hidden` attribute, and its CSS sets a layout:
+
+```css
+.glyph-viewer { display: grid; ... }   /* author stylesheet   */
+[hidden] { display: none; }            /* browser's UA stylesheet */
+```
+
+**Author styles always beat the user-agent stylesheet, regardless of specificity.** It is
+not a matter of the class selector outranking the attribute selector — origin is decided
+before specificity is ever consulted. So `display: grid` won every time and the `hidden`
+attribute did precisely nothing.
+
+**Fix** One line, which has to be stated explicitly because nothing infers it:
+
+```css
+.glyph-viewer[hidden] { display: none; }
+```
+
+Verified on computed style rather than by eye: `none` on load, `grid` while open, `none`
+again after closing.
+
+**Worth remembering** Any element you toggle with the `hidden` attribute is at risk the
+moment you give it a `display` rule of its own — every flex, grid or block overlay,
+dialog, panel or drawer. Elements that never get a `display` declaration (the specimen
+container, the notices, the file input) are unaffected, which is why only this one broke.
+
+---
+
 ## Test matrix (all passing)
 
 | File | Format | Result |
