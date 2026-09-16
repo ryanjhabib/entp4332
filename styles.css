@@ -641,10 +641,13 @@ html { scroll-padding-top: var(--space-16); }
 }
 
 /* Glyphs */
+/* Tight. With no label under each glyph the cells are all ground and the grid
+   reads better as one field of letters than as a row of separate tiles, so the
+   gap comes down to the smallest step on the scale. */
 .glyph-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(var(--glyph-min), 1fr));
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
 .glyph-cell {
@@ -654,11 +657,9 @@ html { scroll-padding-top: var(--space-16); }
   color: inherit;
   cursor: pointer;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
+  /* One child now, dead centre in the square. */
+  display: grid;
+  place-items: center;
   aspect-ratio: 1;
   border: 0;
   border-radius: var(--radius);
@@ -672,18 +673,6 @@ html { scroll-padding-top: var(--space-16); }
 .glyph-mark { line-height: 1; }
 .glyph-mark svg { display: block; width: 40px; height: 40px; }
 .glyph-mark svg path { fill: var(--color-text); }
-
-.glyph-label {
-  max-width: 100%;
-  padding: 0 var(--space-1);
-  font-size: var(--size-ui);
-  color: var(--color-muted);
-  /* Long production names (acute.loclPL) are truncated here; the full name is
-     on the cell's title attribute. */
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
 
 /* ==========================================================================
    Pinned banner

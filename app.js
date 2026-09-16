@@ -516,6 +516,16 @@ function sampleFile(sample, weight) {
    what keeps the weight control off for fonts we only have one file of. */
 let activeSample = null;
 let activeWeight = null;
+/* `script: true` marks the connected hands. Their letters are drawn to join, so
+   any tracking at all pulls the joins apart or laps them over each other, and
+   the presets that flatter a sans wreck them.
+
+   Flagged by hand because the font files do not say. PANOSE has a field for
+   exactly this — family type 3 is "Latin Hand Written" — and across the seven
+   here it is unset on Kapakana, Pinyon Script, Italianno and Ephesis, and says
+   2, "Latin Text", for Tangerine. Two right out of seven, and one of the wrong
+   answers is confidently wrong. It is kept below as a fallback for dropped
+   files, where a guess beats nothing, but it cannot be the primary signal. */
 const SAMPLE_FONTS = [
   { name: "Alegreya", id: "alegreya", weights: [400, 500, 600, 700, 800, 900], weight: 400 },
   { name: "Archivo", id: "archivo", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 600 },
@@ -525,9 +535,9 @@ const SAMPLE_FONTS = [
   { name: "Cardo", id: "cardo", weights: [400, 700], weight: 400 },
   { name: "Cinzel", id: "cinzel", weights: [400, 500, 600, 700, 800, 900], weight: 400 },
   { name: "Crimson Text", id: "crimson-text", weights: [400, 600, 700], weight: 400 },
-  { name: "Eagle Lake", id: "eagle-lake", weights: [400], weight: 400 },
+  { name: "Eagle Lake", id: "eagle-lake", weights: [400], weight: 400, script: true },
   { name: "EB Garamond", id: "eb-garamond", weights: [400, 500, 600, 700, 800], weight: 400 },
-  { name: "Ephesis", id: "ephesis", weights: [400], weight: 400 },
+  { name: "Ephesis", id: "ephesis", weights: [400], weight: 400, script: true },
   { name: "Fraunces", id: "fraunces", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
   { name: "Fredoka", id: "fredoka", weights: [300, 400, 500, 600, 700], weight: 400 },
   { name: "Fustat", id: "fustat", weights: [200, 300, 400, 500, 600, 700, 800], weight: 400 },
@@ -539,10 +549,10 @@ const SAMPLE_FONTS = [
   { name: "Instrument Sans", id: "instrument-sans", weights: [400, 500, 600, 700], weight: 400 },
   { name: "Instrument Serif", id: "instrument-serif", weights: [400], weight: 400 },
   { name: "Inter", id: "inter", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
-  { name: "Italianno", id: "italianno", weights: [400], weight: 400 },
+  { name: "Italianno", id: "italianno", weights: [400], weight: 400, script: true },
   { name: "JetBrains Mono", id: "jetbrains-mono", weights: [100, 200, 300, 400, 500, 600, 700, 800], weight: 400 },
-  { name: "Jim Nightshade", id: "jim-nightshade", weights: [400], weight: 400 },
-  { name: "Kapakana", id: "kapakana", weights: [300, 400], weight: 400 },
+  { name: "Jim Nightshade", id: "jim-nightshade", weights: [400], weight: 400, script: true },
+  { name: "Kapakana", id: "kapakana", weights: [300, 400], weight: 400, script: true },
   { name: "League Gothic", id: "league-gothic", weights: [400], weight: 400 },
   { name: "Libre Baskerville", id: "libre-baskerville", weights: [400, 500, 600, 700], weight: 400 },
   { name: "Literata", id: "literata", weights: [200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
@@ -554,7 +564,7 @@ const SAMPLE_FONTS = [
   { name: "Newsreader", id: "newsreader", weights: [200, 300, 400, 500, 600, 700, 800], weight: 400 },
   { name: "Old Standard TT", id: "old-standard-tt", weights: [400, 700], weight: 400 },
   { name: "Oxygen", id: "oxygen", weights: [300, 400, 700], weight: 400 },
-  { name: "Pinyon Script", id: "pinyon-script", weights: [400], weight: 400 },
+  { name: "Pinyon Script", id: "pinyon-script", weights: [400], weight: 400, script: true },
   { name: "Playfair Display", id: "playfair-display", weights: [400, 500, 600, 700, 800, 900], weight: 400 },
   { name: "Poppins", id: "poppins", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
   { name: "Public Sans", id: "public-sans", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
@@ -564,7 +574,7 @@ const SAMPLE_FONTS = [
   { name: "Space Grotesk", id: "space-grotesk", weights: [300, 400, 500, 600, 700], weight: 500 },
   { name: "Spectral", id: "spectral", weights: [200, 300, 400, 500, 600, 700, 800], weight: 400 },
   { name: "Syne", id: "syne", weights: [400, 500, 600, 700, 800], weight: 600 },
-  { name: "Tangerine", id: "tangerine", weights: [400, 700], weight: 400 },
+  { name: "Tangerine", id: "tangerine", weights: [400, 700], weight: 400, script: true },
   { name: "Unbounded", id: "unbounded", weights: [200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
   { name: "UnifrakturMaguntia", id: "unifrakturmaguntia", weights: [400], weight: 400 },
   { name: "Work Sans", id: "work-sans", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
@@ -740,6 +750,9 @@ async function handleFile(file, source = null) {
     activeSample = source.sample;
     activeWeight = source.weight;
   }
+  // Decided here, not per render: renderPage runs before renderGlyphs sets
+  // currentFont, so it cannot ask the parsed font itself.
+  scriptFace = Boolean(source?.sample?.script) || panoseIsHandwritten(parsed.font);
   placeBanner();
   const names = fontNames(file, parsed.font);
   renderTitle(names);
@@ -1030,6 +1043,21 @@ async function nextWeight() {
 /* -------------------------------------------------------------------------
    Per-section weights
    ---------------------------------------------------------------------- */
+/* Whether the loaded face is a connected hand. */
+let scriptFace = false;
+
+function panoseIsHandwritten(font) {
+  const panose = font?.tables?.os2?.panose;
+  return Boolean(panose) && panose[0] === 3; // Latin Hand Written
+}
+
+/* Scripts take no tracking, whatever the role would otherwise ask for. Not
+   merely no negative tracking — the caption role opens it up by 10, which
+   breaks the joins in the other direction. */
+function roleTracking(tracking) {
+  return scriptFace ? 0 : tracking;
+}
+
 /* A section can be set in a different weight from the hero. Only --face
    changes, so nothing re-renders and nothing moves. */
 const WEIGHT_SECTIONS = [
@@ -1378,7 +1406,7 @@ function renderPage(from = PAGE_SHAPES) {
   el.page.classList.toggle("is-centred", style.centred);
 
   pageLeading.set(style.leading);
-  pageTracking.set(style.tracking);
+  pageTracking.set(roleTracking(style.tracking));
   // Measured on the whole text either way; only the longest word matters.
   pageSize.reset(fitPageText(el.pageText.textContent, style.size));
 
@@ -1522,12 +1550,14 @@ function glyphCell(glyph, font, i) {
   // (alternates, ligatures) that plain text could never reach.
   mark.append(glyphSvg(glyph, font));
 
-  const label = document.createElement("div");
-  label.className = "glyph-label";
-  label.textContent = glyphLabel(glyph);
-
-  cell.append(mark, label);
-  cell.title = glyph.name ? `${glyph.name} (#${glyph.index})` : `#${glyph.index}`;
+  /* No label under the glyph. A grid of a hundred codepoints is a table of
+     hex, and the person scrolling it wants to look at the letters — so the
+     glyph gets the whole cell and centres in it. The codepoint and the name
+     are still on the title, a hover away, for anyone who does want them. */
+  cell.append(mark);
+  cell.title = [glyphLabel(glyph), glyph.name, `#${glyph.index}`]
+    .filter(Boolean)
+    .join(" · ");
   return cell;
 }
 
@@ -1608,11 +1638,7 @@ function paintViewer() {
 
   // Where you are first, then what you are looking at.
   el.viewerMeta.replaceChildren(
-    ...[
-      `${viewerIndex + 1} of ${shownGlyphs.length}`,
-      glyphLabel(glyph),
-      glyph.name,
-    ]
+    ...[`${viewerIndex + 1} of ${shownGlyphs.length}`, glyph.name]
       .filter(Boolean)
       .map((text) => {
         const note = document.createElement("span");
@@ -1656,6 +1682,7 @@ function resetSpecimen() {
   el.glyphCount.textContent = "";
   el.glyphNotice.hidden = true;
   el.glyphNotice.textContent = "";
+  scriptFace = false;
 }
 
 /* -------------------------------------------------------------------------
