@@ -19,7 +19,7 @@
   <section class="loader no-print" id="loader">
     <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Drop a font file here or press Enter to browse">
       <p class="dropzone-text">Drop a font file here</p>
-      <p class="dropzone-hint">or <button type="button" class="link-button" id="browse">choose a file</button> &middot; .ttf .otf .woff .woff2</p>
+      <p class="dropzone-hint"><button type="button" class="link-button" id="browse">Choose a file</button> &middot; .ttf .otf .woff .woff2</p>
       <input type="file" id="file-input" accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2" hidden>
     </div>
     <p class="status" id="status" role="status" aria-live="polite"></p>
@@ -28,23 +28,24 @@
   <!-- Everything below is hidden until a font loads -->
   <div id="specimen" hidden>
 
+    <!-- 5 + 4. Waterfall leads the page. The test string sits with it as a
+         control, so editing happens next to what it changes. -->
+    <section class="specimen-section" id="waterfall-section">
+      <h2 class="section-title">Waterfall</h2>
+
+      <div class="sample-control no-print">
+        <div class="sample specimen-type" id="sample" contenteditable="true" spellcheck="false"
+             role="textbox" aria-label="Test string">Handgloves &amp; Quartz Sphinx</div>
+        <p class="hint">Click above to edit the test string.</p>
+      </div>
+
+      <div id="waterfall"></div>
+    </section>
+
     <!-- 3. Font info -->
     <section class="specimen-section" id="info-section">
       <h2 class="section-title">Information</h2>
       <dl class="info-grid" id="info-grid"></dl>
-    </section>
-
-    <!-- 4. Editable test string -->
-    <section class="specimen-section" id="sample-section">
-      <h2 class="section-title">Sample</h2>
-      <p class="hint no-print">Click the line below to edit it. The waterfall updates as you type.</p>
-      <div class="sample specimen-type" id="sample" contenteditable="true" spellcheck="false">Handgloves &amp; Quartz Sphinx</div>
-    </section>
-
-    <!-- 5. Size waterfall -->
-    <section class="specimen-section" id="waterfall-section">
-      <h2 class="section-title">Waterfall</h2>
-      <div id="waterfall"></div>
     </section>
 
     <!-- 6. Glyph grid -->

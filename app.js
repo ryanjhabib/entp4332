@@ -9,6 +9,7 @@ const GLYPH_LIMIT = 1500;
 const FAMILY = "SpecimenFont";
 
 const el = {
+  loader: document.getElementById("loader"),
   dropzone: document.getElementById("dropzone"),
   fileInput: document.getElementById("file-input"),
   browse: document.getElementById("browse"),
@@ -99,6 +100,7 @@ async function handleFile(file) {
   const parsed = await parseFont(buffer, format);
 
   el.specimen.hidden = false;
+  el.loader.classList.add("is-loaded");
   renderInfo(file, format, parsed);
   renderWaterfall();
   renderGlyphs(parsed);
@@ -313,6 +315,7 @@ function glyphSvg(glyph, font) {
    ---------------------------------------------------------------------- */
 function resetSpecimen() {
   el.specimen.hidden = true;
+  el.loader.classList.remove("is-loaded");
   el.infoGrid.replaceChildren();
   el.waterfall.replaceChildren();
   el.glyphGrid.replaceChildren();
