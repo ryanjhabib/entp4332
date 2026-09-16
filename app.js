@@ -195,6 +195,10 @@ const PHRASES = [
   "Nights end",
   "Half-light",
   "Kirameku",
+  "Let's play Minecraft",
+  "Swimming in Ikea",
+  "Backroom",
+  "Squire",
 ];
 
 /* Full lines rather than labels. Too long for the waterfall — past about
@@ -213,6 +217,7 @@ const LINES = [
   "awaiting my wedding with eternity",
   "experience raw emotion",
   "sorting all my promises",
+  "How many favours of your lord will you deny",
   "to see the next part of the dream",
   "my heart tore on the tennis courts",
   "the power lines are my pyramids",
@@ -281,7 +286,7 @@ const SLOT_PHRASES = [
   "a thousand tears", "burnt sienna", "benevolence", "finality",
   "mother and father", "brother and sister",
   "Everything", "Longing", "Oxygen", "Daybreak", "Eggnog", "Oatmeal",
-  "Sweden", "Nights end", "Half-light",
+  "Sweden", "Nights end", "Half-light", "Swimming in Ikea",
 ];
 
 /* Paragraph specimens need running prose, not a label. These forms take two
