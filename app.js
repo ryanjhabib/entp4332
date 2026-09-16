@@ -405,7 +405,7 @@ async function handleFile(file, source = null) {
   renderInfo(file, format, parsed, names);
   setPhrase(randomPhrase()); // a fresh phrase per font, and it renders the waterfall
   renderParagraphs();
-  renderPage();
+  renderPage(PAGE_OPENING_SHAPES);
   randomColourPair();
   closeFontMenu();
   renderGlyphs(parsed);
@@ -913,11 +913,16 @@ const TEXT_ROLES = {
 
 const PAGE_STYLES = {
   word: { size: 180, centred: true, ...TEXT_ROLES.display },
-  phrase: { size: 96, centred: false, ...TEXT_ROLES.heading },
+  phrase: { size: 96, centred: true, ...TEXT_ROLES.heading },
   paragraph: { size: 24, centred: false, ...TEXT_ROLES.body },
 };
 
 const PAGE_SHAPES = Object.keys(PAGE_STYLES);
+
+/* A font opens on something centred — a word or a short phrase — rather than
+   on a column of prose. Shuffling from there reaches all three. */
+const PAGE_OPENING_SHAPES = ["word", "phrase"];
+
 let lastPageShape = null;
 
 function pick(list) {
@@ -952,9 +957,11 @@ function fitPageText(text, ceiling) {
   return Math.max(24, Math.min(ceiling, Math.floor((width / widthAt100) * 100)));
 }
 
-function renderPage() {
-  // Never the same shape twice running, or shuffle looks like it did nothing.
-  const shape = pick(PAGE_SHAPES.filter((s) => s !== lastPageShape));
+function renderPage(from = PAGE_SHAPES) {
+  // Never the same shape twice running, or shuffle looks like it did nothing —
+  // unless that leaves nothing to choose from.
+  const options = from.filter((s) => s !== lastPageShape);
+  const shape = pick(options.length ? options : from);
   lastPageShape = shape;
 
   const style = PAGE_STYLES[shape];
@@ -1715,7 +1722,7 @@ el.paragraphs.addEventListener("keydown", (e) => {
 });
 
 el.paraShuffle.addEventListener("click", renderParagraphs);
-el.pageShuffle.addEventListener("click", renderPage);
+el.pageShuffle.addEventListener("click", () => renderPage());
 
 /* Paste lands as plain text everywhere that takes typing, so a paste from a
    styled document cannot drag its own font in with it. */
