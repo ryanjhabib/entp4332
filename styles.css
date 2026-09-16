@@ -725,6 +725,25 @@ body.has-font .drop-banner {
   -webkit-backdrop-filter: var(--blur);
 }
 
+/* On a phone the banner and the hero's style row share the bottom line, and at
+   375px they cannot both have the middle: the banner is 76% of the screen, so
+   right-aligning it alone still laps the pills by about 90px.
+
+   So it gives up its first clause as well as the centre. That clause was never
+   true on a phone anyway — you cannot drag a file onto a touch screen — and
+   the button was always the only part of it you could act on. Scoped to
+   body.has-font: on the empty state the banner is alone in a centred column
+   with nothing to collide with, and it keeps the full sentence. */
+@media (max-width: 767px) {
+  body.has-font .drop-banner {
+    left: auto;
+    right: var(--gutter);
+    transform: none;
+  }
+
+  body.has-font .banner-lead { display: none; }
+}
+
 /* Only the action takes the pointer — the bar itself stays transparent to it,
    so it never comes between the cursor and the page. */
 .banner-button {

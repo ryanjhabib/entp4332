@@ -620,6 +620,41 @@ fixed ladder is a claim that every screen is the same screen.
 
 ---
 
+## 19. The banner and the hero wanted the same line, and the phone had room for one
+
+**Symptom** On a phone the hero's style pills sat underneath the pinned banner. The two
+share a centre line by design — they were built to — and at 375px they overlapped by about
+66px.
+
+**Cause** Both are anchored to the middle of the bottom edge from opposite directions. The
+style row starts at the left gutter; the banner is centred with `left: 50%` and a
+translate. On a wide screen there is a gulf between them. On a phone there is not: the
+banner is 285px of a 375px screen, 76% of the width, so the middle *is* the left.
+
+**Fix** The first idea was to right-align the banner, and measuring it killed that on its
+own: right-aligned against the gutter the banner starts at 66px and the pills end at 156,
+so it still laps them by 90. A 76%-wide element cannot be moved out of the way of anything.
+
+So it gives up its first clause as well as the centre. "Drag and drop a font anywhere, or"
+was never true on a phone — you cannot drag a file onto a touch screen — and the button
+after it was always the only part you could act on. Hidden below 768px, the banner is 118px
+instead of 285 and right-aligning then clears the pills by 166.
+
+Scoped to `body.has-font`. On the empty state the banner is alone in a centred column with
+nothing to collide with, and there it keeps the whole sentence.
+
+**Verified** At phone width: banner 118px at the right gutter, pills end at 156, clearance
+166, no overlap, still on the style row's line. At 1000px: unchanged — 285px, centred to
+the pixel, full sentence, on one line, clear of the pills. Empty state keeps the full
+sentence at both.
+
+**Worth remembering** Measure the fix before writing it. Right-aligning was the obvious
+move and it was obviously wrong the moment the element's width was compared to the screen's
+— which took one line of arithmetic and would otherwise have taken a round trip and a
+second bug report.
+
+---
+
 ## Test matrix (all passing)
 
 | File | Format | Result |
