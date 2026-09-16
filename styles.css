@@ -16,6 +16,22 @@
   --color-field-strong: #d9d9d9; /* the same ground, on hover */
   --color-banner: #4c78cd;                 /* the empty state */
   --color-banner-quiet: rgba(0, 0, 0, 0.32); /* over a specimen */
+  /* Glass is now only for things that float over moving type and never change
+     on hover: the two header pills and the pinned banner. Everywhere else the
+     pills are solid.
+
+     Two reasons, and they turned out to be the same reason. A background-color
+     transition on a backdrop-filtered element does not animate smoothly — the
+     element is on its own composited layer and the backdrop is re-rasterised
+     rather than tweened — so every hover on a glass pill snapped, which is why
+     deepening the colours and lengthening the fade both changed nothing. And
+     an element with backdrop-filter inside an ancestor with opacity < 1 has no
+     backdrop to sample, so the font menu's pills rendered flat for the whole
+     length of its fade and only picked up the blur when the fade finished.
+     One flat pill is a style; a pill that turns to glass a moment after it
+     arrives is a glitch.
+
+     On a white ground the blur was showing nothing anyway. */
   --color-pill-glass: rgba(255, 255, 255, 0.72); /* header pills */
   /* The light pills as glass. 240 rather than 245 because 28% of white shows
      through: over paper it lands back on #F4F4F4, so nothing looks different
@@ -152,7 +168,7 @@ body:not(.has-font) .site-header { display: none; }
 }
 
 .home-button { cursor: pointer; }
-.home-button:hover { background: var(--color-field-glass-strong); }
+.home-button:hover { color: var(--color-muted); }
 
 .header-bar {
   display: flex;
@@ -199,16 +215,15 @@ body:not(.has-font) .site-header { display: none; }
   padding-top: var(--space-2);
   opacity: 0;
   visibility: hidden;
-  /* The base rule governs the way out, the .is-open rule the way in: quick to
-     arrive, slow to leave. The visibility delay has to match the fade or the
-     panel would vanish partway through it. */
-  transition: opacity 450ms ease, visibility 0s linear 450ms;
+  /* The same fade in both directions. The visibility delay has to match it, or
+     the panel would vanish partway through the way out. */
+  transition: opacity 550ms ease, visibility 0s linear 550ms;
 }
 
 .font-menu.is-open {
   opacity: 1;
   visibility: visible;
-  transition: opacity 160ms ease;
+  transition: opacity 550ms ease;
 }
 
 /* The footer's half-measure cap is meaningless inside a panel. */
@@ -263,12 +278,8 @@ button,
 /* The print button is glass, like every other light pill. Glyph cells are not:
    there are hundreds of them, they never overlap anything, and blurring each
    one would cost a great deal to show nothing. */
-.site-footer button {
-  background: var(--color-field-glass);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
-}
-.site-footer button:hover { background: var(--color-field-glass-strong); }
+.site-footer button { background: var(--color-field); }
+.site-footer button:hover { background: var(--color-field-strong); }
 
 /* Inline actions read as a quiet pill rather than an underline. */
 .link-button {
@@ -278,15 +289,13 @@ button,
   vertical-align: middle; /* it sits inside running text in the hints */
   border: 0;
   padding: 0 var(--space-3);
-  background: var(--color-field-glass);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
+  background: var(--color-field);
   border-radius: var(--radius-pill);
   text-decoration: none;
   cursor: pointer;
 }
 
-.link-button:hover { background: var(--color-field-glass-strong); }
+.link-button:hover { background: var(--color-field-strong); }
 
 /* ==========================================================================
    Loader
@@ -579,9 +588,7 @@ html { scroll-padding-top: var(--space-16); }
   height: var(--pill-height);
   padding: 0 var(--space-3);
   border-radius: var(--radius-pill);
-  background: var(--color-field-glass);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
+  background: var(--color-field);
   color: var(--color-muted-soft);
 }
 

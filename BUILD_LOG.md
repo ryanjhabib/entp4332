@@ -664,6 +664,56 @@ second bug report.
 
 ---
 
+## 20. The glass was eating the transitions, and the transitions were not the problem
+
+**Symptom** Two complaints that turned out to be one bug. Hover on the pills "still feels
+static" after two separate attempts to fix it. And the font menu "loads in static then does
+the blur, its a weird glitch."
+
+**Cause** `backdrop-filter`, in two different ways.
+
+The first attempt added a 160ms transition on `background-color`. Measuring the hover states
+afterwards showed why it changed nothing: the hover grounds were 10 to 12 steps of 255 away
+from the resting ones, below the threshold where a fade has anything to show. Easing
+imperceptibly is still imperceptible. So the second attempt deepened them to 28 steps and
+lengthened the fade to 200ms — and it still felt static, which is the point at which the
+transition stops being a plausible suspect.
+
+A background-color transition on a backdrop-filtered element does not tween. The element
+sits on its own composited layer and the backdrop behind it is re-rasterised rather than
+interpolated, so the change lands in one step no matter what duration is declared. Every
+light pill on the page was glass, so every hover on the page snapped.
+
+The menu is the same property failing the other way round. An element with
+`backdrop-filter` inside an ancestor whose `opacity` is less than 1 has no backdrop to
+sample — the ancestor becomes a backdrop root containing only itself. The menu fades from
+opacity 0 to 1, so for the whole length of that fade its pills rendered flat, and they
+picked up the blur in one frame when the fade finished and the opacity hit 1. One flat pill
+is a style. A pill that turns to glass a moment after it arrives is a glitch.
+
+**Fix** Glass only for things that float over moving type and never change on hover: the two
+header pills and the pinned banner. Everywhere else — the sample library, the menu, Shuffle,
+the style note, the print button — the pills are solid. On a white ground the blur was
+showing nothing anyway, so almost none of it is visible loss.
+
+**Verified** A 200ms `background-color` CSSTransition object still constructs on a
+now-solid pill. `backdrop-filter` survives on exactly two elements, `#home` and
+`#header-font`, plus the specimen banner. Menu pills are solid `#F5F5F5` with no filter,
+and both menu fades read 550ms.
+
+**Worth remembering** Two failed fixes in a row is the signal to stop fixing and start
+asking what else is true of every element that misbehaves. Both symptoms named the same
+property out loud — one of them said "the glass thing" — and it still took a third pass to
+hear it.
+
+Also: `:hover` cannot be tested here. Synthetic pointer events do not set it, and the
+preview pane has no OS focus, so even moving the real cursor onto an element leaves
+`matches(':hover')` false. `getAnimations()` proves a transition is *declared and
+constructible*; it cannot prove one is *smooth*. That gap is exactly where this bug lived,
+which is why it took a user to find it three times.
+
+---
+
 ## Test matrix (all passing)
 
 | File | Format | Result |
