@@ -180,6 +180,21 @@ const PHRASES = [
   "brother and sister",
   "you deserve nothing",
   "you > helvetica",
+  "If I was you",
+  "Everything",
+  "Admit",
+  "Nude",
+  "Longing",
+  "Oxygen",
+  "Please",
+  "Daybreak",
+  "Eggnog",
+  "Oatmeal",
+  "Sweden",
+  "Handsome",
+  "Nights end",
+  "Half-light",
+  "Kirameku",
 ];
 
 /* Full lines rather than labels. Too long for the waterfall — past about
@@ -197,6 +212,7 @@ const LINES = [
   "i'm not so much a fighter",
   "awaiting my wedding with eternity",
   "experience raw emotion",
+  "sorting all my promises",
   "to see the next part of the dream",
   "my heart tore on the tennis courts",
   "the power lines are my pyramids",
@@ -264,6 +280,8 @@ const SLOT_PHRASES = [
   "solar flares", "naked knight", "blue fireworks", "swollen palms",
   "a thousand tears", "burnt sienna", "benevolence", "finality",
   "mother and father", "brother and sister",
+  "Everything", "Longing", "Oxygen", "Daybreak", "Eggnog", "Oatmeal",
+  "Sweden", "Nights end", "Half-light",
 ];
 
 /* Paragraph specimens need running prose, not a label. These forms take two
