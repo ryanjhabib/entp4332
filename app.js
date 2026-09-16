@@ -1602,7 +1602,8 @@ function openViewer(i) {
   if (!shownGlyphs.length) return;
   lastFocused = document.activeElement;
   viewerIndex = i;
-  viewerStep = colourStep; // open on the ground the page is already wearing
+  // Open on the page's ground, unless you have already picked one in here.
+  if (!viewerChosen) viewerStep = colourStep;
   applyViewerPair();
   paintFace();
   paintViewer();
@@ -2142,6 +2143,12 @@ el.pageColors.addEventListener("click", () => {
    back on when you close it. It opens on whatever the page is showing, so the
    two are continuous without being coupled. */
 let viewerStep = 0;
+/* Whether the viewer's ground was chosen in the viewer. Until it is, the viewer
+   follows the page so the two are continuous on the way in; once it is, that
+   choice outlives closing and reopening, because picking a ground to look at
+   letters on and then having it thrown away on the next click is the annoying
+   half of independence without the useful half. */
+let viewerChosen = false;
 
 function applyViewerPair() {
   const { fg, bg } = pairAt(viewerStep);
@@ -2152,6 +2159,7 @@ function applyViewerPair() {
 
 el.viewerColors.addEventListener("click", () => {
   viewerStep = (viewerStep + 1) % colourOrder.length;
+  viewerChosen = true;
   applyViewerPair();
 });
 
@@ -2164,6 +2172,7 @@ function randomColourPair() {
     .map((_, step) => step)
     .filter((step) => step !== colourStep && pairAt(step).opening !== false);
   colourStep = others[Math.floor(Math.random() * others.length)];
+  viewerChosen = false; // a new font is a fresh start for both
   applyColourPair();
 }
 
