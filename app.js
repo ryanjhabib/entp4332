@@ -327,100 +327,120 @@ const LINES = [
 let testString = sentenceCase(PHRASES[0]);
 
 /* The two slots in the forms below are grammatical holes: "the steward promised
-   ___". Only a noun phrase can fill one. Most of the pool above is not — a good
-   number of the phrases are whole clauses ("mercy stays warm"), imperatives
-   ("kindle the dark") or statements ("you > helvetica"), and dropping one into
-   a slot produces "there was a song about mercy stays warm".
+   ___". Only a noun phrase can fill one — and not any noun phrase, because the
+   holes are not all the same shape. "The bridge toll was ___" wants something
+   you could put on a cart. "Grief taught him ___" wants something you could
+   learn. Pour either list into the other's forms and you get "Mercy, arriving
+   late, taught him vexed knights".
 
-   So the slots draw from their own list. It is a subset of the pool, curated by
-   hand for the one thing the forms require, and the waterfall and the page go
-   on drawing from everything. A phrase that reads well alone and a phrase that
-   reads well inside a sentence are different jobs, and most of these only do
-   the first. */
-const SLOT_PHRASES = [
+   So the phrases are split by what kind of noun they are and every form below
+   says which kind it takes. The waterfall and the page go on drawing from
+   everything; only the slots care. */
+
+/* Things: you could point at it, carry it, trade it, or find it on a map. */
+const SLOT_THINGS = [
   "Eggs & Potatoes", "Quills & Ink", "Mead & Vespers", "Ye Olde Fox",
   "Baron's Turnips", "Vexed Knights", "Blacksmith's Jig", "Hogs & Vellum",
   "Plump Pheasants", "A Wretched Feast", "Crypts & Quails", "Frogs in the Moat",
   "Quigley's Zephyr", "Brazen Squid", "The Alchemist", "Minstrels & Mud",
-  "Bewitched Turnip", "Plums for Abbot", "Gravy & Woe", "Jousting at Dawn",
-  "Pickled Herring", "Wizard's Laundry", "Oxen & Quiet", "Bread & Cheese",
-  "A Jug of Mead", "Cobbler's Lament", "Squires & Omens", "Buzzards Aloft",
-  "Velvet & Mud", "Quartz & Flax", "Knaves at Dusk", "Pottage & Grumbles",
-  "Wolves & Orchard",
-  "Crystal Vigil", "Moonlit Ruin", "Ashen Spire", "The Sundering", "Emberfall",
-  "Shivering Vale", "Glass Daggers", "Wyrmtongue", "Gilded Wyrm",
-  "Salt & Sorcery", "Runes of Vaal", "The Black Gate", "Hollow Crown",
-  "Aether Drift", "Summoner's Rest", "Starmetal Shard", "Obsidian Oath",
+  "Bewitched Turnip", "Plums for Abbot", "Gravy & Woe", "Pickled Herring",
+  "Wizard's Laundry", "Oxen & Quiet", "Bread & Cheese", "A Jug of Mead",
+  "Cobbler's Lament", "Squires & Omens", "Buzzards Aloft", "Velvet & Mud",
+  "Quartz & Flax", "Knaves at Dusk", "Pottage & Grumbles", "Wolves & Orchard",
+  "Moonlit Ruin", "Ashen Spire", "Shivering Vale", "Glass Daggers",
+  "Wyrmtongue", "Gilded Wyrm", "Salt & Sorcery", "Runes of Vaal",
+  "The Black Gate", "Hollow Crown", "Summoner's Rest", "Starmetal Shard",
   "Lichgate", "Velvet Grimoire", "Arcane Bazaar", "Duskwarden",
-  "Cinder & Psalm", "The Pale Wyrd", "Ghostlight Ford", "Glimmerwood",
-  "Oath of Ash", "Wraithcandle", "Vault of Echoes", "Riftglass",
-  "Bone & Beacon", "Silver Ley Line",
-  "Ash & Covenant", "The Dying Flame", "Forsaken Vigil", "The Waning Kings",
-  "Sundered Banner", "Hollow Bell", "Godless Garden", "The Gilded Rot",
-  "Cairn of Names", "The Slow Ruin", "Ember & Elegy", "Tomb of Verses",
-  "Ruinlight", "The Second Dawn", "Faithless Steel", "Weight of Crowns",
-  "The Unnamed Hour", "Nightfall Keep",
-  "The Beloved Waits", "A Heart Polished", "The Longing Itself",
-  "The Thirsty Return", "The Lamp Within", "Silence After Prayer",
-  "The Reed's Complaint", "A Love Without Why", "Poverty Before God",
-  "Remembrance & Rain",
+  "Cinder & Psalm", "Ghostlight Ford", "Glimmerwood", "Wraithcandle",
+  "Vault of Echoes", "Riftglass", "Bone & Beacon", "Silver Ley Line",
+  "The Dying Flame", "The Waning Kings", "Sundered Banner", "Hollow Bell",
+  "Godless Garden", "Cairn of Names", "Tomb of Verses", "Faithless Steel",
+  "Nightfall Keep", "The Reed's Complaint",
   "solar flares", "naked knight", "blue fireworks", "swollen palms",
-  "a thousand tears", "burnt sienna", "benevolence", "finality",
-  "mother and father", "brother and sister",
-  "Everything", "Longing", "Oxygen", "Daybreak", "Eggnog", "Oatmeal",
-  "Sweden", "Nights end", "Half-light", "Swimming in Ikea",
+  "burnt sienna", "mother and father", "brother and sister",
+  "Oxygen", "Eggnog", "Oatmeal", "Sweden",
+];
+
+/* Notions: a state, a quality, an hour, an event — something you could be
+   taught, could seek, or could be given instead of what you asked for. */
+const SLOT_NOTIONS = [
+  "Jousting at Dawn", "Crystal Vigil", "The Sundering", "Emberfall",
+  "Aether Drift", "Obsidian Oath", "Oath of Ash", "The Pale Wyrd",
+  "Ash & Covenant", "Forsaken Vigil", "The Gilded Rot", "The Slow Ruin",
+  "Ember & Elegy", "Ruinlight", "The Second Dawn", "Weight of Crowns",
+  "The Unnamed Hour",
+  "A Heart Polished", "The Longing Itself", "The Thirsty Return",
+  "The Lamp Within", "Silence After Prayer", "A Love Without Why",
+  "Poverty Before God", "Remembrance & Rain",
+  "a thousand tears", "benevolence", "finality",
+  "Everything", "Longing", "Daybreak", "Nights end", "Half-light",
+  "Swimming in Ikea",
 ];
 
 /* Paragraph specimens need running prose, not a label. These forms take two
-   phrases from the pool above, so the paragraphs keep the same old-world voice
-   as the waterfall rather than reading as lorem ipsum. */
+   phrases from the pools above, so the paragraphs keep the same old-world voice
+   as the waterfall rather than reading as lorem ipsum.
+
+   Grouped by which pool their slots can take, rather than tagged line by line,
+   so the strings stay readable. */
+const tagForms = (slots, forms) => forms.map((text) => ({ text, slots }));
+
 const SENTENCE_FORMS = [
-  "The steward promised {a}, and by Michaelmas the cellar held nothing but {b}.",
-  "No one at the long table spoke of {a}, least of all the man who had traded it for {b}.",
-  "They carried {a} over the frozen ford at dawn and left {b} for whoever came after.",
-  "It was written, in a hand nobody could read, that {a} must never be set beside {b}.",
-  "The abbot weighed {a} against {b} and found the scales no help at all.",
-  "Three hard winters of {a} taught the village more than any sermon on {b}.",
-  "Under the wet thatch they argued about {a} until somebody mentioned {b}.",
-  "Whatever the ledger claimed of {a}, the storeroom offered only {b}.",
-  "A boy was sent nine miles for {a} and came back at nightfall with {b}.",
-  "The miller would not say where {a} had gone, nor why {b} had taken its place.",
-  "Good {a} keeps. {b} does not.",
-  "Then came {b}, and nobody laughed.",
-  "By the second bell the question was no longer {a} but {b}, which was worse.",
-  "In the margin someone had drawn {a} being chased by {b}, and dated it wrongly.",
-  "The bridge toll was {a} on weekdays and {b} on feast days, which explains the feast days.",
-  "Ask the ferryman about {a} and he will tell you, at considerable length, about {b}.",
-  "Half the parish swore by {a}; the other half swore at {b}.",
-  "What the inventory called {a} the cook called {b}, and the cook was right.",
-  "It rained for nine days. On the tenth there was {a}, and on the eleventh, {b}.",
-  "Nobody has satisfactorily explained why {a} outlasted {b}, only that it did.",
-  "The physician recommended {a} for the humours and {b} for everything else.",
-  "Between {a} and {b} there is a difference, and the tanner will explain it whether you ask or not.",
-  "They buried the ledger under {a} and told the bishop it was {b}.",
-  "The widow kept {a} in a locked chest and {b} in plain sight, which tells you something.",
-  "Every spring the river took {a}, and every autumn it gave back {b}, seldom in the same condition.",
-  "There is a song about {a}. There is a longer song about {b}, and it is not as good.",
-  "He wagered {a} on a horse named after {b} and lost both before compline.",
-  "The chronicler devotes four pages to {a} and a single grudging line to {b}.",
-  // The same two slots, asked in a graver voice, so a page of prose is not
-  // always pitched at turnips.
-  "The pilgrim asked for {a} and was given {b}, which was the answer.",
-  "Between {a} and the one who made it there is only {b}, and not much of that.",
-  "They say the heart is polished by {a}; it is in fact polished by {b}.",
-  "What the seeker called {a} the teacher called {b}, and said nothing more for a year.",
-  "He prayed for {a}. He was answered with {b}, and understood it much later.",
-  "Of {a} the scholars wrote volumes; of {b} they wrote one line and wept.",
-  "The kingdom fell to {a} in a single night, and nobody in it spoke of {b} again.",
-  "Long after the banners rotted, {a} remained, and {b} did not.",
-  "They swore their oaths on {a} and buried them, in the end, with {b}.",
-  "Somewhere beneath the ruin lies {a}, and above it, unbothered, {b}.",
-  "The old wars were fought over {a}; the new ones are fought over {b}, which is worse.",
-  "Grief taught him {a}. Mercy, arriving late, taught him {b}.",
-  "Every name is forgotten but one, and it is neither {a} nor {b}.",
-  "The lamp burned all night over {a} and went out at the first word of {b}.",
-  "You will not find {a} by seeking it, nor {b} by refusing to.",
-  "There is a longing in {a} that only {b} has ever answered.",
+  // Slots that want a thing: carried, traded, stored, buried, wagered.
+  ...tagForms("things", [
+    "The steward promised {a}, and by Michaelmas the cellar held nothing but {b}.",
+    "No one at the long table spoke of {a}, least of all the man who had traded it for {b}.",
+    "They carried {a} over the frozen ford at dawn and left {b} for whoever came after.",
+    "Whatever the ledger claimed of {a}, the storeroom offered only {b}.",
+    "A boy was sent nine miles for {a} and came back at nightfall with {b}.",
+    "The miller would not say where {a} had gone, nor why {b} had taken its place.",
+    "Good {a} keeps. {b} does not.",
+    "In the margin someone had drawn {a} being chased by {b}, and dated it wrongly.",
+    "The bridge toll was {a} on weekdays and {b} on feast days, which explains the feast days.",
+    "What the inventory called {a} the cook called {b}, and the cook was right.",
+    "The physician recommended {a} for the humours and {b} for everything else.",
+    "They buried the ledger under {a} and told the bishop it was {b}.",
+    "The widow kept {a} in a locked chest and {b} in plain sight, which tells you something.",
+    "Every spring the river took {a}, and every autumn it gave back {b}, seldom in the same condition.",
+    "He wagered {a} on a horse named after {b} and lost both before compline.",
+    "They swore their oaths on {a} and buried them, in the end, with {b}.",
+    "Somewhere beneath the ruin lies {a}, and above it, unbothered, {b}.",
+    "The lamp burned all night over {a} and went out at the first word of {b}.",
+  ]),
+
+  // Slots that want a notion: taught, sought, prayed for, given instead.
+  ...tagForms("notions", [
+    "Three hard winters of {a} taught the village more than any sermon on {b}.",
+    "The pilgrim asked for {a} and was given {b}, which was the answer.",
+    "Between {a} and the one who made it there is only {b}, and not much of that.",
+    "They say the heart is polished by {a}; it is in fact polished by {b}.",
+    "He prayed for {a}. He was answered with {b}, and understood it much later.",
+    "Grief taught him {a}. Mercy, arriving late, taught him {b}.",
+    "You will not find {a} by seeking it, nor {b} by refusing to.",
+    "There is a longing in {a} that only {b} has ever answered.",
+    "The old wars were fought over {a}; the new ones are fought over {b}, which is worse.",
+  ]),
+
+  // Slots that read either way: argued about, weighed, sung about, written down.
+  ...tagForms("any", [
+    "It was written, in a hand nobody could read, that {a} must never be set beside {b}.",
+    "The abbot weighed {a} against {b} and found the scales no help at all.",
+    "Under the wet thatch they argued about {a} until somebody mentioned {b}.",
+    "Then came {b}, and nobody laughed.",
+    "By the second bell the question was no longer {a} but {b}, which was worse.",
+    "Ask the ferryman about {a} and he will tell you, at considerable length, about {b}.",
+    "Half the parish swore by {a}; the other half swore at {b}.",
+    "It rained for nine days. On the tenth there was {a}, and on the eleventh, {b}.",
+    "Nobody has satisfactorily explained why {a} outlasted {b}, only that it did.",
+    "Between {a} and {b} there is a difference, and the tanner will explain it whether you ask or not.",
+    "There is a song about {a}. There is a longer song about {b}, and it is not as good.",
+    "The chronicler devotes four pages to {a} and a single grudging line to {b}.",
+    "What the seeker called {a} the teacher called {b}, and said nothing more for a year.",
+    "Of {a} the scholars wrote volumes; of {b} they wrote one line and wept.",
+    "The kingdom fell to {a} in a single night, and nobody in it spoke of {b} again.",
+    "Long after the banners rotted, {a} remained, and {b} did not.",
+    "Every name is forgotten but one, and it is neither {a} nor {b}.",
+  ]),
 ];
 
 const PARAGRAPH_SENTENCES = 4;
@@ -434,27 +454,37 @@ function shuffled(list) {
   return copy;
 }
 
-/* Two generators fill these slots — the paragraph columns and the page — and
-   they used to name their own pool. When the slots were given a curated list of
-   their own, only one of them was switched over and the other went on drawing
-   from everything, which is how "twin moons rise" and "you > helvetica" kept
-   turning up mid-sentence. Both go through here now, so the pool is named once
-   and cannot be changed for one caller and missed for the other. */
-function slotPool() {
-  return shuffled(SLOT_PHRASES);
+/* Both generators — the paragraph columns and the page — fill their slots
+   through here, so the pools are named once and cannot be changed for one
+   caller and missed for the other. That has gone wrong before: entry 17.
+
+   A drawer holds one shuffled deck per kind and walks it, so a passage does not
+   repeat a phrase until its deck is spent, and a form asking for a thing never
+   gets handed a notion. */
+function slotDrawer() {
+  const decks = {
+    things: shuffled(SLOT_THINGS),
+    notions: shuffled(SLOT_NOTIONS),
+    any: shuffled([...SLOT_THINGS, ...SLOT_NOTIONS]),
+  };
+  const at = { things: 0, notions: 0, any: 0 };
+  return (kind) => {
+    const deck = decks[kind];
+    return deck[at[kind]++ % deck.length];
+  };
 }
 
-function fillSlots(form, pool, index) {
-  return form
-    .replace("{a}", pool[(index * 2) % pool.length].toLowerCase())
-    .replace("{b}", pool[(index * 2 + 1) % pool.length].toLowerCase());
+function fillSlots(form, draw) {
+  return form.text
+    .replace("{a}", draw(form.slots).toLowerCase())
+    .replace("{b}", draw(form.slots).toLowerCase());
 }
 
 function paragraphText(sentences = PARAGRAPH_SENTENCES) {
-  const pool = slotPool();
+  const draw = slotDrawer();
   return shuffled(SENTENCE_FORMS)
     .slice(0, sentences)
-    .map((form, i) => fillSlots(form, pool, i))
+    .map((form) => fillSlots(form, draw))
     .join(" ");
 }
 
@@ -1231,7 +1261,15 @@ function renderWaterfall() {
    different prose — the sizes changed, not the specimen. */
 let paragraphCopy = "";
 
-function renderParagraphs(text = paragraphText()) {
+/* Takes the copy to re-render, or makes fresh copy when called with nothing.
+   Deliberately not a default parameter: this is wired to a click handler, and a
+   default only fires for `undefined`, so `addEventListener("click", render)`
+   hands it a PointerEvent and the columns fill with "[object PointerEvent]".
+   That is precisely what happened, and it had already happened once to
+   renderPage — which is why that one is wrapped in an arrow. Checking the type
+   makes the function safe to pass directly, wrapped or not. */
+function renderParagraphs(copy) {
+  const text = typeof copy === "string" ? copy : paragraphText();
   paragraphCopy = text;
 
   el.paragraphs.replaceChildren(
@@ -1272,14 +1310,13 @@ function randInt([low, high]) {
    page of three paragraphs does not repeat a sentence shape across them. */
 function pageParagraphs() {
   const forms = shuffled(SENTENCE_FORMS);
-  const pool = slotPool();
+  const draw = slotDrawer();
   let form = 0;
-  let slot = 0;
 
   return Array.from({ length: randInt(PAGE_PARAGRAPH_BLOCKS) }, () => {
     const sentences = [];
     for (let i = 0; i < randInt(PAGE_PARAGRAPH_RANGE); i++) {
-      sentences.push(fillSlots(forms[form++ % forms.length], pool, slot++));
+      sentences.push(fillSlots(forms[form++ % forms.length], draw));
     }
     return sentences.join(" ");
   });
@@ -2317,7 +2354,7 @@ el.paragraphs.addEventListener("keydown", (e) => {
   syncParagraphs(edited); // execCommand does not always raise `input`
 });
 
-el.paraShuffle.addEventListener("click", renderParagraphs);
+el.paraShuffle.addEventListener("click", () => renderParagraphs());
 el.pageShuffle.addEventListener("click", () => renderPage());
 
 /* Paste lands as plain text everywhere that takes typing, so a paste from a

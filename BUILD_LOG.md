@@ -714,6 +714,62 @@ which is why it took a user to find it three times.
 
 ---
 
+## 21. The slots were the right shape and the wrong size
+
+**Symptom** Reported from the page, after entry 17 was supposed to have settled this:
+
+> "Grief taught him the slow ruin. **Mercy, arriving late, taught him vexed knights.**"
+> "The bridge toll was **poverty before god** on weekdays and pickled herring on feast days."
+
+**Cause** Entry 17 gave the slots a curated pool and asked one question of every phrase:
+is this a noun phrase? It is the wrong question on its own, because the holes are not all
+the same shape. "The bridge toll was ___" wants something you could put on a cart. "Grief
+taught him ___" wants something you could learn. Both take a noun phrase and they do not
+take the same ones, and with one pool feeding forty-four forms the mismatch was a matter of
+time.
+
+**Fix** The pool splits by what kind of noun each phrase is — 77 things you could point at,
+carry or find on a map; 34 notions, being states, hours, qualities and events. Every form
+declares which it takes, grouped under three headings rather than tagged line by line so the
+strings stay readable: 18 want things, 9 want notions, 17 read either way. A drawer holds
+one shuffled deck per kind, so a form asking for a thing cannot be handed a notion and a
+passage still does not repeat itself.
+
+One more clause slipped through entry 17's curation and came out here: "The Beloved Waits",
+which would have produced "of the beloved waits the scholars wrote volumes".
+
+**And then the test found something else.** Printing an actual paragraph rather than
+scanning it for banned words showed the columns rendering `[object PointerEvent]`.
+
+`renderParagraphs` had gained a `text` parameter when breakpoint re-rendering was added, so
+that crossing a breakpoint could re-set the same copy at new sizes. Its click handler was
+still `addEventListener("click", renderParagraphs)` — the handler is called with the event,
+a default parameter only fires for `undefined`, and a PointerEvent is not undefined. Every
+click of the paragraph Shuffle had been rendering the event object since that commit, live
+on the deployed site.
+
+This exact bug had already been caught once, on `renderPage`, which is why that listener
+reads `() => renderPage()`. I added a parameter to its sibling and did not look at the
+sibling's listener.
+
+It now takes `copy` with no default and checks `typeof copy === "string"`, so the function
+is safe to pass to `addEventListener` directly whether or not anyone remembers to wrap it.
+
+**Verified** Every form crossed with its own pool 40 times: no notion in a things slot, no
+thing in a notions slot. 160 shuffles across both generators: no `[object`, no `undefined`,
+no unfilled `{a}` or `{b}`.
+
+**Worth remembering** Two lessons, and the second is the expensive one. A categorisation is
+only as good as the question you asked of each item, and "is it a noun phrase" was a
+coarser question than the forms actually needed.
+
+But the bug I had not been told about was found by *printing the output and reading it*,
+after four rounds of tests that checked the output against a list and passed every time. A
+test that asks "does this contain anything forbidden" cannot tell you the text is nonsense.
+Look at the artefact.
+
+---
+
 ## Test matrix (all passing)
 
 | File | Format | Result |
