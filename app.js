@@ -615,28 +615,57 @@ if (hasLocalFonts && navigator.permissions) {
   navigator.permissions
     .query({ name: "local-fonts" })
     .then((status) => {
-      localFontsAllowed = status.state === "granted";
-      if (localFontsAllowed) renderSamples();
-      status.onchange = () => {
-        localFontsAllowed = status.state === "granted";
+      const sync = () => {
+        // Allowed is not the same as read: the bytes need a gesture to fetch.
+        localFontsAllowed = status.state === "granted" && localBuffers.size > 0;
         renderSamples();
       };
+      sync();
+      status.onchange = sync;
     })
     .catch(() => {});
 }
 
-async function localFontBuffer(entry) {
-  const found = await window.queryLocalFonts({ postscriptNames: [entry.ps] });
-  if (!found.length) throw new Error("not-installed");
-  return (await found[0].blob()).arrayBuffer();
+/* Read once, on the click that grants access, and kept. Every later use — a
+   hover preview, opening one, opening it again — comes from here.
+
+   Not an optimisation. queryLocalFonts wants user activation, and a hover is
+   not one, so calling it again on hover fails however freely access has been
+   given. Reading everything up front while the click is still live is the only
+   arrangement where the previews can work at all. */
+const localBuffers = new Map();
+
+async function readLocalFonts() {
+  const found = await window.queryLocalFonts({
+    postscriptNames: LOCAL_FONTS.map((f) => f.ps),
+  });
+
+  await Promise.all(
+    found.map(async (data) => {
+      try {
+        localBuffers.set(data.postscriptName, await (await data.blob()).arrayBuffer());
+      } catch {
+        // One unreadable face should not cost the rest.
+      }
+    })
+  );
+
+  return localBuffers.size;
+}
+
+function localFontBuffer(entry) {
+  const buffer = localBuffers.get(entry.ps);
+  if (!buffer) throw new Error("not-installed");
+  return buffer;
 }
 
 /* The click is the user gesture the permission prompt needs, so this must be
    called straight from the handler rather than after an await. */
 async function loadLocalFont(entry) {
   try {
-    const buffer = await localFontBuffer(entry);
-    await handleFile(new File([buffer], `${entry.name}.ttf`));
+    await handleFile(new File([localFontBuffer(entry)], `${entry.name}.ttf`), null, {
+      remember: false,
+    });
   } catch (err) {
     if (err && err.message === "not-installed") {
       /* Chrome reads the installed fonts once at startup, so a font added
@@ -846,7 +875,7 @@ function detectFormat(buffer) {
    check below returns before anything is torn down, so dropping a .mov onto a
    specimen you are reading leaves that specimen exactly where it was and says
    so in the corner. */
-async function handleFile(file, source = null) {
+async function handleFile(file, source = null, { remember = true } = {}) {
   let buffer;
   try {
     buffer = await file.arrayBuffer();
@@ -914,8 +943,10 @@ async function handleFile(file, source = null) {
   sectionWeights.clear();
   syncSectionWeights();
 
-  // Only what came from this machine — the library reopens from its own URL.
-  if (!source) rememberDropped(names.family, buffer);
+  /* Only what arrived as a file. The library reopens from its own URL and the
+     local group is listed permanently, so remembering either would just print
+     the same pill twice. */
+  if (!source && remember) rememberDropped(names.family, buffer);
 }
 
 /* opentype.js cannot read woff2's Brotli-compressed tables. We decompress to
@@ -1956,7 +1987,7 @@ function previewFace(sample) {
         if (sample.dropped) {
           buffer = sample.buffer;
         } else if (sample.local) {
-          buffer = await localFontBuffer(sample);
+          buffer = localFontBuffer(sample);
         } else {
           const res = await fetch(sampleUrl(sample, sample.weight));
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -2083,7 +2114,7 @@ function restPreview() {
 }
 
 function localItems() {
-  return LOCAL_FONTS.map((entry, i) => {
+  return LOCAL_FONTS.filter((entry) => localBuffers.has(entry.ps)).map((entry) => {
     const item = document.createElement("li");
     const button = document.createElement("button");
     button.type = "button";
@@ -2109,9 +2140,14 @@ function localItems() {
    single decision rather than one per font. The click is the gesture it needs. */
 async function requestLocalFonts() {
   try {
-    await window.queryLocalFonts({ postscriptNames: LOCAL_FONTS.map((f) => f.ps) });
+    const count = await readLocalFonts();
     localFontsAllowed = true;
     renderSamples();
+    if (!count) {
+      notify(
+        "None of those fonts were found — if you installed them just now, quit and reopen the browser so it rescans"
+      );
+    }
   } catch {
     notify("Access to your installed fonts was not granted");
   }
