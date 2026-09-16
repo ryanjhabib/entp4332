@@ -1575,7 +1575,7 @@ function openViewer(i) {
   if (!shownGlyphs.length) return;
   lastFocused = document.activeElement;
   viewerIndex = i;
-  viewerPair = colourPair; // open on the ground the page is already wearing
+  viewerStep = colourStep; // open on the ground the page is already wearing
   applyViewerPair();
   paintFace();
   paintViewer();
@@ -2086,10 +2086,22 @@ const COLOUR_PAIRS = [
   { fg: "#e8dcb0", bg: "#34381f" }, // pale gold on deep olive
 ];
 
-let colourPair = 0;
+/* The swatch walks a shuffled order rather than the order the pairs are written
+   in. The list is grouped by intent — the greens together, the muted ones
+   together, the newest at the end — which makes it readable and makes walking
+   it in source order useless: anything added lands last and takes forty clicks
+   to reach. Shuffled once per load, so the walk is still one complete cycle
+   with no repeats; it just no longer starts where the file does. */
+const colourOrder = shuffled(COLOUR_PAIRS.map((_, i) => i));
+
+function pairAt(step) {
+  return COLOUR_PAIRS[colourOrder[step % colourOrder.length]];
+}
+
+let colourStep = 0;
 
 function applyColourPair() {
-  const { fg, bg } = COLOUR_PAIRS[colourPair];
+  const { fg, bg } = pairAt(colourStep);
   el.page.style.setProperty("--page-fg", fg);
   el.page.style.setProperty("--page-bg", bg);
   // The swatch shows the pair it will produce, split down the middle.
@@ -2097,7 +2109,7 @@ function applyColourPair() {
 }
 
 el.pageColors.addEventListener("click", () => {
-  colourPair = (colourPair + 1) % COLOUR_PAIRS.length;
+  colourStep = (colourStep + 1) % colourOrder.length;
   applyColourPair();
 });
 
@@ -2105,17 +2117,17 @@ el.pageColors.addEventListener("click", () => {
    while looking at one letter should not quietly restyle the page you will be
    back on when you close it. It opens on whatever the page is showing, so the
    two are continuous without being coupled. */
-let viewerPair = 0;
+let viewerStep = 0;
 
 function applyViewerPair() {
-  const { fg, bg } = COLOUR_PAIRS[viewerPair];
+  const { fg, bg } = pairAt(viewerStep);
   el.viewer.style.setProperty("--viewer-fg", fg);
   el.viewer.style.setProperty("--viewer-bg", bg);
   el.viewerColors.style.background = `linear-gradient(90deg, ${bg} 0 50%, ${fg} 50% 100%)`;
 }
 
 el.viewerColors.addEventListener("click", () => {
-  viewerPair = (viewerPair + 1) % COLOUR_PAIRS.length;
+  viewerStep = (viewerStep + 1) % colourOrder.length;
   applyViewerPair();
 });
 
@@ -2124,10 +2136,10 @@ el.viewerColors.addEventListener("click", () => {
    never plain black on white, which is what the page would look like if the
    colour had failed to apply at all. The swatch still reaches it. */
 function randomColourPair() {
-  const others = COLOUR_PAIRS.map((pair, i) => ({ pair, i })).filter(
-    ({ pair, i }) => i !== colourPair && pair.opening !== false
-  );
-  colourPair = others[Math.floor(Math.random() * others.length)].i;
+  const others = colourOrder
+    .map((_, step) => step)
+    .filter((step) => step !== colourStep && pairAt(step).opening !== false);
+  colourStep = others[Math.floor(Math.random() * others.length)];
   applyColourPair();
 }
 
