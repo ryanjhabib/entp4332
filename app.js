@@ -1380,12 +1380,19 @@ function renderSamples() {
 /* Opened from the name in the header. It closes when the pointer leaves the
    picker rather than the menu alone, so crossing the gap between the button
    and the panel does not dismiss it. */
+/* A moment's grace before closing, cancelled if the pointer comes back. Without
+   it, clipping a corner of the menu on the way to a pill dismisses it. */
+const MENU_GRACE_MS = 160;
+let menuCloseTimer = null;
+
 function openFontMenu() {
+  clearTimeout(menuCloseTimer);
   el.fontMenu.classList.add("is-open");
   el.headerFont.setAttribute("aria-expanded", "true");
 }
 
 function closeFontMenu() {
+  clearTimeout(menuCloseTimer);
   el.fontMenu.classList.remove("is-open");
   el.headerFont.setAttribute("aria-expanded", "false");
 }
@@ -1556,18 +1563,22 @@ const pageTracking = scrubControl({
 const COLOUR_PAIRS = [
   { fg: "#111111", bg: "#f0f0f0" }, // ink on grey
   { fg: "#ffffff", bg: "#111111" }, // paper on ink
-  { fg: "#111111", bg: "#ffffff" }, // ink on paper
+  { fg: "#111111", bg: "#ffffff", opening: false }, // ink on paper
   { fg: "#ffffff", bg: "#4671c4" }, // paper on blue, a shade under the banner to clear 4.5:1
   { fg: "#d9f24a", bg: "#14140f" }, // lime on near-black
   { fg: "#e8f2ea", bg: "#043d2d" }, // pale mint on racing green
+  { fg: "#111111", bg: "#ff5fa2" }, // ink on hot pink
   { fg: "#5c1a1a", bg: "#d9e0cf" }, // oxblood on sage
   { fg: "#f9e7ff", bg: "#5b1a8f" }, // lilac on raspberry purple
+  { fg: "#06262b", bg: "#22d3ee" }, // deep teal on cyan
   { fg: "#10243a", bg: "#cfe3f5" }, // ink blue on pale sky
   { fg: "#1c1a17", bg: "#f2ece1" }, // ink on cream
   { fg: "#12143a", bg: "#ffd400" }, // navy on vivid yellow
+  { fg: "#f5e0c0", bg: "#4a0d1f" }, // pale gold on deep wine
   { fg: "#f4efe4", bg: "#0d1b3e" }, // cream on midnight navy
   { fg: "#0f3a3a", bg: "#e6b8a2" }, // deep teal on terracotta
   { fg: "#111111", bg: "#ff7a00" }, // ink on vibrant orange
+  { fg: "#f2f0ff", bg: "#2b1b9c" }, // ice on electric indigo
   { fg: "#3a2718", bg: "#f0dcc0" }, // bark on wheat
   { fg: "#2e1a3a", bg: "#e3e8b0" }, // aubergine on pale chartreuse
   { fg: "#fff1f2", bg: "#c1121f" }, // pale rose on cherry red
@@ -1590,10 +1601,14 @@ el.pageColors.addEventListener("click", () => {
 });
 
 /* Each font arrives on a ground it has not just been seen on. Never the pair
-   already showing, or loading a font would look like nothing happened. */
+   already showing, or loading a font would look like nothing happened — and
+   never plain black on white, which is what the page would look like if the
+   colour had failed to apply at all. The swatch still reaches it. */
 function randomColourPair() {
-  const others = COLOUR_PAIRS.map((_, i) => i).filter((i) => i !== colourPair);
-  colourPair = others[Math.floor(Math.random() * others.length)];
+  const others = COLOUR_PAIRS.map((pair, i) => ({ pair, i })).filter(
+    ({ pair, i }) => i !== colourPair && pair.opening !== false
+  );
+  colourPair = others[Math.floor(Math.random() * others.length)].i;
   applyColourPair();
 }
 
@@ -1609,7 +1624,10 @@ el.home.addEventListener("click", () => {
 });
 
 el.headerFont.addEventListener("click", toggleFontMenu);
-el.fontPicker.addEventListener("mouseleave", closeFontMenu);
+el.fontPicker.addEventListener("mouseleave", () => {
+  menuCloseTimer = setTimeout(closeFontMenu, MENU_GRACE_MS);
+});
+el.fontPicker.addEventListener("mouseenter", () => clearTimeout(menuCloseTimer));
 el.menuList.addEventListener("click", closeFontMenu);
 
 window.addEventListener("keydown", (e) => {

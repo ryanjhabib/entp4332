@@ -159,29 +159,31 @@ body:not(.has-font) .site-header { display: none; }
 
 .font-picker h1 { min-width: 0; }
 
-/* The library, hanging off the name. Opaque enough that the grey pills inside
-   still read against whatever is scrolling underneath. */
+/* The library, hanging off the name. It sits flush against the button and
+   carries its own breathing room as padding: an offset would leave a strip
+   belonging to neither, and the pointer crossing it would leave the picker and
+   dismiss the menu on the way to it. No panel behind the pills — they carry
+   their own grounds. */
 .font-menu {
   position: absolute;
-  top: calc(100% + var(--space-2));
+  top: 100%;
   left: 0;
   z-index: 20;
   width: max-content;
   max-width: min(640px, 70vw);
-  padding: var(--space-3);
-  border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(38px);
-  -webkit-backdrop-filter: blur(38px);
+  padding-top: var(--space-2);
   opacity: 0;
   visibility: hidden;
-  transition: opacity 180ms ease, visibility 0s linear 180ms;
+  /* The base rule governs the way out, the .is-open rule the way in: quick to
+     arrive, slow to leave. The visibility delay has to match the fade or the
+     panel would vanish partway through it. */
+  transition: opacity 450ms ease, visibility 0s linear 450ms;
 }
 
 .font-menu.is-open {
   opacity: 1;
   visibility: visible;
-  transition: opacity 180ms ease;
+  transition: opacity 160ms ease;
 }
 
 /* The footer's half-measure cap is meaningless inside a panel. */
