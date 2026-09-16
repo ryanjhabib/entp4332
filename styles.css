@@ -55,11 +55,18 @@
 
   /* Layout — content runs edge to edge inside a gutter, no centered column. */
   --gutter: 24px;          /* phone            */
-  --section-gap: 128px;    /* space, not rules, separates the sections */
+  /* Phones get the most space between sections, not the least: one column
+     means every section reads as a continuation of the last unless the gap is
+     large enough to say otherwise. */
+  --section-gap: 256px;    /* space, not rules, separates the sections */
   --radius: 8px;
   --radius-pill: 999px;
   --border: 1px solid var(--color-rule);
   --glyph-min: 96px;
+  /* The size label's column plus the gap before it. Held as a token because the
+     label sits on top of the line rather than beside it, so the line has to
+     reserve the same width as padding. */
+  --waterfall-gutter: 52px;
 }
 
 @media (min-width: 768px)  { :root { --gutter: 48px;  --section-gap: 160px; } }  /* tablet  */
@@ -315,26 +322,29 @@ body.has-font .loader { display: none; }
     position: static;
     transform: none;
   }
-
-  /* Half a phone screen is not a usable measure. */
-  .sample-list { max-width: 100%; }
 }
 
 /* A centred row directly beneath the banner, which stays dead centre. The
    offset is the banner's own half-height plus a gap, so the two stay related
    if the banner's geometry changes. width: max-content keeps the row only as
    wide as its pills; max-width lets it wrap rather than run off the screen. */
-/* Left-aligned and capped at half the measure, so it wraps into a block rather
-   than running the full width of the page. Same treatment in both states. */
+/* Left-aligned, and edge to edge by default. Half a phone or tablet measure is
+   not enough room for a name like Manufacturing Consent — the library only gets
+   capped once there is width to spare. */
 .sample-list {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
-  max-width: 50%;
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+/* Capped at half the measure so the library wraps into a block rather than
+   running the full width of a wide page. The menu sets its own width. */
+@media (min-width: 1200px) {
+  .site-footer .sample-list { max-width: 50%; }
 }
 
 .notice {
@@ -483,23 +493,21 @@ body.has-font .loader { display: none; }
    a section be set in a different weight from the hero. */
 .specimen-type { font-family: var(--face, "SpecimenFont"), var(--font-ui); }
 
-/* The intro: family name as the hero, style as quiet subtext beneath it. */
-.specimen-intro { margin-top: var(--section-gap); }
+/* The intro: family name as the hero, style as quiet subtext beneath it.
 
-/* The first screen is the typeface name and nothing else. The intro fills the
+   The first screen is the typeface name and nothing else. The intro fills the
    viewport below the header and pushes its contents to the bottom, so the space
-   lands above the name and the waterfall starts below the fold.
+   lands above the name and the waterfall starts below the fold. Phones get this
+   too — it is the part that makes the page feel like a specimen rather than a
+   list, and a phone screen is the one place a name can fill the whole view.
    --intro-offset is measured in JS: it is how far down the page the intro
    starts, which depends on the header, and CSS cannot know it. */
-@media (min-width: 768px) {
-  .specimen-intro {
-    margin-top: 0;
-    min-height: calc(100svh - var(--intro-offset, 140px));
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding-bottom: var(--banner-inset);
-  }
+.specimen-intro {
+  min-height: calc(100svh - var(--intro-offset, 140px));
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-bottom: var(--banner-inset);
 }
 
 /* The sticky bar would otherwise sit on top of the first line scrolled to. */
@@ -534,9 +542,7 @@ html { scroll-padding-top: var(--space-16); }
 
 /* Same line box and same inset as the banner, so the style subtext and the
    banner sit on one centre line across the bottom of the first screen. */
-@media (min-width: 768px) {
-  .font-style { line-height: var(--banner-height); }
-}
+.font-style { line-height: var(--banner-height); }
 
 .font-name {
   margin: 0;
@@ -575,23 +581,34 @@ html { scroll-padding-top: var(--space-16); }
 /* Waterfall */
 /* Space sits above each line, not below, so the type reads as sitting on its
    rule rather than floating between two of them. */
+/* The line and its size label share one grid cell rather than sitting in two
+   columns. The label is pushed to the right end and the line reserves the same
+   width as padding, so the text wraps exactly where it did before — but the
+   line's box, and so its focus ground, now runs the full width of the row and
+   passes under the number. */
 .waterfall-row {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr;
   align-items: baseline;
-  gap: var(--space-8);
   padding: var(--space-12) 0 var(--space-2);
   border-bottom: var(--border);
 }
+
+.waterfall-row > .waterfall-line { grid-area: 1 / 1; padding-right: var(--waterfall-gutter); }
+.waterfall-row > .waterfall-size { grid-area: 1 / 1; justify-self: end; }
 
 /* On phones the size drops below the line so the type gets full width —
    128px in a 250px column would wrap to two characters per line. */
 @media (max-width: 767px) {
   .waterfall-row {
-    grid-template-columns: 1fr;
-    gap: var(--space-1);
+    row-gap: var(--space-1);
     padding: var(--space-8) 0 var(--space-2);
   }
+
+  /* Back into two rows: the line has the width to itself, so it reserves
+     nothing and the label sits under it. */
+  .waterfall-row > .waterfall-line { grid-area: 1 / 1; padding-right: 0; }
+  .waterfall-row > .waterfall-size { grid-area: 2 / 1; justify-self: stretch; }
 }
 
 .waterfall-size {

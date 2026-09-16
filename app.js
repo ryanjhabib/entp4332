@@ -111,6 +111,102 @@ const PHRASES = [
   "Riftglass",
   "Bone & Beacon",
   "Silver Ley Line",
+  // Darker fantasy: ruined kingdoms and late oaths rather than taverns.
+  "Ash & Covenant",
+  "The Dying Flame",
+  "Kindle the Dark",
+  "A Colossus Sleeps",
+  "Forsaken Vigil",
+  "The Waning Kings",
+  "Sundered Banner",
+  "Hollow Bell",
+  "Godless Garden",
+  "The Gilded Rot",
+  "Sworn to No King",
+  "Cairn of Names",
+  "Where Giants Knelt",
+  "The Slow Ruin",
+  "Ember & Elegy",
+  "Tomb of Verses",
+  "A Kingdom Forgets",
+  "Ruinlight",
+  "The Second Dawn",
+  "Faithless Steel",
+  "Weight of Crowns",
+  "The Unnamed Hour",
+  "Nightfall Keep",
+  "Of Dust & Oath",
+  // Devotional. A specimen is read slowly and closely, which is the one place
+  // language like this belongs; it is also the register that puts the most
+  // pressure on a face — long ascenders, held vowels, a lot of soft letters.
+  "God Is the Light",
+  "Nearer Than the Vein",
+  "The Beloved Waits",
+  "A Heart Polished",
+  "Mercy Precedes Wrath",
+  "The Longing Itself",
+  "Wounded by Nearness",
+  "Every Atom Praises",
+  "Remembrance & Rain",
+  "The Thirsty Return",
+  "Be Undone",
+  "The Veil Is Thin",
+  "He Answers the Cry",
+  "Poverty Before God",
+  "The Lamp Within",
+  "Drunk on His Name",
+  "Silence After Prayer",
+  "Break & Be Filled",
+  "Nothing but His Face",
+  "The Reed's Complaint",
+  "Ask, and Be Emptied",
+  "A Love Without Why",
+  // The author's own, kept in their own lowercase.
+  "finality",
+  "i promise",
+  "solar flares",
+  "naked knight",
+  "blue fireworks",
+  "swollen palms",
+  "cross my heart",
+  "fasabrun jameel",
+  "a thousand tears",
+  "mercy stays warm",
+  "beauty as evidence",
+  "illuminate our souls",
+];
+
+/* Full lines rather than labels. Too long for the waterfall — past about
+   sixteen characters the 128px step wraps and stops being a size specimen —
+   so these are drawn only by the page, which is centred and has the measure
+   for them. The author's own lines are kept in their own lowercase. */
+const LINES = [
+  "how many more acts will you leave behind before your written departure",
+  "there is a universe of weariness in my parents eyes",
+  "let's be each other's heroes",
+  "an irreverence for love",
+  "grant me your eyes to hold",
+  "our planet migrates tomorrow",
+  "god spilled a bit of his light on us",
+  "i'm not so much a fighter",
+  "wedding with eternity",
+  "experience raw emotion",
+  "he is nearer to you than your own jugular vein",
+  "the heart was made to be broken open, not kept",
+  "i asked for the world and was given the one who made it",
+  "all this longing was only ever his invitation",
+  "what you call absence is the veil of too much nearness",
+  "every atom of the earth is already praising him",
+  "mercy arrived before the reckoning and stayed",
+  "to be emptied of yourself is the only wealth",
+  "the reed cries because it remembers the reedbed",
+  "love has no why, and that is how you know it is his",
+  "the kingdom remembers nothing of the ones who held it",
+  "somewhere a bell is rung for a name no one recalls",
+  "they will build nothing on this ground and call it peace",
+  "we were told the flame would last and it did not",
+  "the colossus lay down and the valley went quiet",
+  "every oath here was sworn to something already dead",
 ];
 
 /* The waterfall lines are edited in place, so the test string lives here rather
@@ -149,6 +245,24 @@ const SENTENCE_FORMS = [
   "There is a song about {a}. There is a longer song about {b}, and it is not as good.",
   "He wagered {a} on a horse named after {b} and lost both before compline.",
   "The chronicler devotes four pages to {a} and a single grudging line to {b}.",
+  // The same two slots, asked in a graver voice, so a page of prose is not
+  // always pitched at turnips.
+  "The pilgrim asked for {a} and was given {b}, which was the answer.",
+  "Between {a} and the one who made it there is only {b}, and not much of that.",
+  "They say the heart is polished by {a}; it is in fact polished by {b}.",
+  "What the seeker called {a} the teacher called {b}, and said nothing more for a year.",
+  "He prayed for {a}. He was answered with {b}, and understood it much later.",
+  "Of {a} the scholars wrote volumes; of {b} they wrote one line and wept.",
+  "The kingdom fell to {a} in a single night, and nobody in it spoke of {b} again.",
+  "Long after the banners rotted, {a} remained, and {b} did not.",
+  "They swore their oaths on {a} and buried them, in the end, with {b}.",
+  "Somewhere beneath the ruin lies {a}, and above it, unbothered, {b}.",
+  "The old wars were fought over {a}; the new ones are fought over {b}, which is worse.",
+  "Grief taught him {a}. Mercy, arriving late, taught him {b}.",
+  "Every name is forgotten but one, and it is neither {a} nor {b}.",
+  "The lamp burned all night over {a} and went out at the first word of {b}.",
+  "You will not find {a} by seeking it, nor {b} by refusing to.",
+  "There is a longing in {a} that only {b} has ever answered.",
 ];
 
 const PARAGRAPH_SENTENCES = 4;
@@ -395,6 +509,11 @@ async function handleFile(file, source = null) {
 
   el.specimen.hidden = false;
   document.body.classList.add("has-font");
+  // The preview slot is about to be hidden. Rest it now: a click on a sample
+  // pill hides the pill under the cursor, and an element removed from under
+  // the pointer does not reliably fire mouseleave, so the state it was left in
+  // would still be there the next time the slot is shown.
+  restPreview();
   if (source) {
     activeSample = source.sample;
     activeWeight = source.weight;
@@ -932,7 +1051,9 @@ function pick(list) {
 function pageSample(shape) {
   // Running text arrives as one to three paragraphs, each of varying length.
   if (shape === "paragraph") return pageParagraphs();
-  if (shape === "phrase") return pick(PHRASES);
+  // Even odds between a label and a full line, rather than weighting by pool
+  // size — there are far more phrases, and the lines would hardly ever appear.
+  if (shape === "phrase") return pick(Math.random() < 0.5 ? LINES : PHRASES);
 
   // A single word, long enough to be worth looking at and never an ampersand.
   const words = PHRASES.join(" ")
@@ -1195,6 +1316,7 @@ function resetSpecimen() {
   el.specimen.hidden = true;
   document.body.classList.remove("has-font");
   placeBanner();
+  restPreview(); // never come back to the empty state holding the last hover
   el.fontName.textContent = "";
   el.fontStyle.textContent = "";
   el.headerFont.textContent = "";

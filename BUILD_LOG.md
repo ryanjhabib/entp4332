@@ -375,6 +375,79 @@ fail.
 
 ---
 
+## 13. Going home showed the last font you hovered
+
+**Symptom** Reported from Safari: after opening a font and clicking Home, the line of
+subtext above the sample library — normally "Explore sample typefaces" in the UI font at
+10px — sometimes rendered in whichever typeface had last been hovered, at that same small
+size. Intermittent, and it looked enough like a font-loading artifact to be dismissed as a
+browser quirk.
+
+**Cause** Not a browser quirk. The preview slot has two pieces of state set on hover: its
+text, and an inline `font-family` naming the hovered sample's face. `restPreview()` clears
+both, and it was wired to `mouseleave` and `focusout` on the sample list.
+
+Clicking a sample pill loads the font, which adds `has-font` to the body, which sets the
+whole preview slot to `display: none` — the pill is removed from under the cursor while
+the pointer is still over it. An element that disappears under the pointer does not
+reliably fire `mouseleave`. So the handler never ran, and the slot kept the last hover's
+family and text the entire time it was hidden. Clicking Home unhid it and there it was.
+
+The small size is the other half of the same state. `fitPreview()` sizes the text by
+measuring the laid-out element and returns early when `clientWidth` is 0, which it is
+while hidden — so on the paths where the inline size had been cleared but the family had
+not, the name came back at the stylesheet's 10px in the sample's own face.
+
+**Fix** Stop relying on the pointer to report a transition the app is making itself.
+`restPreview()` is now called at both state changes: when `has-font` goes on, and inside
+`resetSpecimen()` when it comes off. The slot is left resting whenever it is not visible.
+
+**Verified** Hover a pill, click it without moving the pointer, click Home: the slot reads
+"Explore sample typefaces" with no inline `font-family` or `font-size`, and its computed
+family is the UI stack. Before the fix the same sequence left `font-family: "Preview0"`
+and the sample's name in place.
+
+**Worth remembering** Mouse events describe the pointer, not the application. Any cleanup
+hung off `mouseleave` is a cleanup that will not happen the moment your own code hides the
+element. Tie state resets to the state change, not to the gesture that usually precedes it.
+
+---
+
+## 14. The phone never got the rule written for the phone
+
+**Symptom** The sample library wrapped into a narrow column on a phone, taking half the
+screen and breaking long names like "Manufacturing Consent" across lines, despite a rule
+in the stylesheet that said exactly the opposite.
+
+**Cause** Declaration order, not specificity. The two rules were:
+
+```css
+@media (max-width: 767px) {
+  .sample-list { max-width: 100%; }   /* line 326 */
+}
+
+.sample-list { max-width: 50%; }      /* line 334 */
+```
+
+A media query adds nothing to specificity. Both selectors are a single class, so they tie,
+and a tie is broken by whichever comes last in the source. The phone rule was written
+first, so on a phone both rules matched and the 50% cap won every time. The override had
+never once applied.
+
+**Fix** The base rule now carries the unconstrained value and the cap is the exception,
+moved into `@media (min-width: 1200px)` and scoped to the footer. The only rules inside a
+breakpoint are ones that genuinely belong to that breakpoint.
+
+**Verified** At 760px the list measures 712px against 712px of footer content — edge to
+edge. At 1280px its computed `max-width` is 50% and it occupies exactly half. Before the
+fix, 760px gave the same 50%.
+
+**Worth remembering** A media query is a condition, not a promotion. Mobile-specific rules
+have to come *after* the rules they are meant to override, or be written as the default
+with the wider case as the exception — which is the version that cannot rot.
+
+---
+
 ## Test matrix (all passing)
 
 | File | Format | Result |
