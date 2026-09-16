@@ -529,6 +529,49 @@ this program exists precisely because those two things come apart.
 
 ---
 
+## 17. Fixed in one of the two places it was wrong, and tested only the one I fixed
+
+**Symptom** Reported by the user, after entry 15 was supposed to have dealt with it:
+
+> "Under the wet thatch they argued about **twin moons rise** until somebody mentioned the
+> sundering. What the inventory called longing the cook called **you > helvetica**, and the
+> cook was right."
+
+Both of those are on the exclusion list. Both were still reaching a sentence slot.
+
+**Cause** There are two paragraph generators, not one. `pageParagraphs()` builds the big
+page; `paragraphText()` builds the two columns in the paragraphs section. Both fill the
+same `{a}` / `{b}` slots, and each named its own pool:
+
+```js
+const phrases = shuffled(SLOT_PHRASES);   // pageParagraphs  — switched over
+const pool    = shuffled(PHRASES);        // paragraphText   — missed
+```
+
+When the curated slot list was introduced I changed one and did not look for the other.
+
+The part worth keeping is why the test passed. The verification drove `page-shuffle` 300
+times and found nothing, because `page-shuffle` runs the generator that had been fixed.
+`para-shuffle` was never clicked. The test proved the fix worked where I had applied it —
+which is not the same claim as the fix being complete, though the green result reads
+identically.
+
+**Fix** The pool is named once now, in `slotPool()`, and the substitution happens once, in
+`fillSlots()`. Both generators call both. Changing the pool for one caller and missing the
+other is no longer something the code allows.
+
+**Verified** 100 paragraph shuffles and 100 page shuffles, scanned against all 37 phrases
+that are in the main pool but deliberately not in the slot list: zero in either. Matched on
+word boundaries after a first pass on raw substrings reported a false "squire" — which is
+the legal slot phrase "squires & omens" containing it.
+
+**Worth remembering** Two questions, and the second is the one that gets skipped: *did my
+change work*, and *did I change every place that needed it*. A passing test answers the
+first. Only a grep for the old pattern answers the second, and it costs a few seconds:
+`shuffled(PHRASES)` would have found the second call site immediately.
+
+---
+
 ## Test matrix (all passing)
 
 | File | Format | Result |

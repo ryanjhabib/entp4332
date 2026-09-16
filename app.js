@@ -352,15 +352,27 @@ function shuffled(list) {
   return copy;
 }
 
+/* Two generators fill these slots — the paragraph columns and the page — and
+   they used to name their own pool. When the slots were given a curated list of
+   their own, only one of them was switched over and the other went on drawing
+   from everything, which is how "twin moons rise" and "you > helvetica" kept
+   turning up mid-sentence. Both go through here now, so the pool is named once
+   and cannot be changed for one caller and missed for the other. */
+function slotPool() {
+  return shuffled(SLOT_PHRASES);
+}
+
+function fillSlots(form, pool, index) {
+  return form
+    .replace("{a}", pool[(index * 2) % pool.length].toLowerCase())
+    .replace("{b}", pool[(index * 2 + 1) % pool.length].toLowerCase());
+}
+
 function paragraphText(sentences = PARAGRAPH_SENTENCES) {
-  const forms = shuffled(SENTENCE_FORMS).slice(0, sentences);
-  const pool = shuffled(PHRASES);
-  return forms
-    .map((form, i) =>
-      form
-        .replace("{a}", pool[(i * 2) % pool.length].toLowerCase())
-        .replace("{b}", pool[(i * 2 + 1) % pool.length].toLowerCase())
-    )
+  const pool = slotPool();
+  return shuffled(SENTENCE_FORMS)
+    .slice(0, sentences)
+    .map((form, i) => fillSlots(form, pool, i))
     .join(" ");
 }
 
@@ -1121,18 +1133,14 @@ function randInt([low, high]) {
    page of three paragraphs does not repeat a sentence shape across them. */
 function pageParagraphs() {
   const forms = shuffled(SENTENCE_FORMS);
-  const phrases = shuffled(SLOT_PHRASES);
+  const pool = slotPool();
   let form = 0;
-  let phrase = 0;
+  let slot = 0;
 
   return Array.from({ length: randInt(PAGE_PARAGRAPH_BLOCKS) }, () => {
     const sentences = [];
     for (let i = 0; i < randInt(PAGE_PARAGRAPH_RANGE); i++) {
-      sentences.push(
-        forms[form++ % forms.length]
-          .replace("{a}", phrases[phrase++ % phrases.length].toLowerCase())
-          .replace("{b}", phrases[phrase++ % phrases.length].toLowerCase())
-      );
+      sentences.push(fillSlots(forms[form++ % forms.length], pool, slot++));
     }
     return sentences.join(" ");
   });
