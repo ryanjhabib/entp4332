@@ -17,7 +17,6 @@
      One size, one weight, everywhere. Hierarchy comes from spacing,
      rules and muted colour, never from scaling type up. */
   --font-ui: ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --size-ui: 14px;
   --weight-ui: 400;
   --leading-ui: 1.5;
@@ -113,6 +112,8 @@ button:hover { border-color: var(--color-accent); }
   text-align: left;
 }
 .loader.is-loaded .dropzone-text { display: none; }
+/* The blurb is empty-state copy — once a specimen is on screen it is noise. */
+body.has-font .lede { display: none; }
 .loader.is-loaded .status { margin-top: var(--space-2); }
 
 .status { margin: var(--space-4) 0 0; min-height: 1.5em; color: var(--color-muted); }
@@ -158,6 +159,15 @@ button:hover { border-color: var(--color-accent); }
 /* Any element rendered in the user's font */
 .specimen-type { font-family: "SpecimenFont", var(--font-ui); }
 
+/* The intro: the family name, set as large as the viewport allows. */
+.font-name {
+  margin: var(--space-8) 0 var(--space-24);
+  font-size: clamp(48px, 11vw, 180px);
+  font-weight: normal;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
 /* Info */
 .info-grid {
   display: grid;
@@ -166,7 +176,7 @@ button:hover { border-color: var(--color-accent); }
   margin: 0;
 }
 .info-grid dt { color: var(--color-muted); }
-.info-grid dd { margin: 0; font-family: var(--font-mono); font-size: var(--size-ui); }
+.info-grid dd { margin: 0; font-size: var(--size-ui); }
 
 /* Test string control */
 .sample-control { margin-bottom: var(--space-8); }
@@ -185,29 +195,31 @@ button:hover { border-color: var(--color-accent); }
 .sample-control .hint { margin: var(--space-2) 0 0; }
 
 /* Waterfall */
+/* Space sits above each line, not below, so the type reads as sitting on its
+   rule rather than floating between two of them. */
 .waterfall-row {
   display: grid;
-  grid-template-columns: 56px 1fr;
+  grid-template-columns: 1fr auto;
   align-items: baseline;
   gap: var(--space-8);
-  padding: var(--space-8) 0;
+  padding: var(--space-12) 0 var(--space-2);
   border-bottom: var(--border);
 }
 
-/* On phones the size label sits above the line so the type gets full width —
+/* On phones the size drops below the line so the type gets full width —
    128px in a 250px column would wrap to two characters per line. */
 @media (max-width: 767px) {
   .waterfall-row {
     grid-template-columns: 1fr;
-    gap: var(--space-2);
-    padding: var(--space-6) 0;
+    gap: var(--space-1);
+    padding: var(--space-8) 0 var(--space-2);
   }
 }
 
 .waterfall-size {
   font-size: var(--size-ui);
   color: var(--color-muted);
-  font-family: var(--font-mono);
+  text-align: right;
 }
 
 /* No overflow clipping here. `overflow: hidden` crops the line box on BOTH
@@ -215,8 +227,8 @@ button:hover { border-color: var(--color-accent); }
    96px and above. Lines wrap instead of truncating, and the line-height leaves
    room for fonts whose ink exceeds their em box. */
 .waterfall-line {
-  line-height: 1.3;
-  padding-bottom: 0.08em; /* clears descenders on fonts with deep tails */
+  line-height: 1.15;
+  padding-bottom: 0.06em; /* clears descenders without floating off the rule */
   /* A single long word at 128px is wider than a phone screen and has no space
      to break at, so allow a mid-word break rather than let the page scroll
      sideways. Only ever kicks in when the word genuinely cannot fit. */
@@ -249,7 +261,6 @@ button:hover { border-color: var(--color-accent); }
 .glyph-label {
   max-width: 100%;
   padding: 0 var(--space-1);
-  font-family: var(--font-mono);
   font-size: var(--size-ui);
   color: var(--color-muted);
   /* Long production names (acute.loclPL) are truncated here; the full name is

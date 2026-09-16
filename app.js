@@ -15,6 +15,7 @@ const el = {
   browse: document.getElementById("browse"),
   status: document.getElementById("status"),
   specimen: document.getElementById("specimen"),
+  fontName: document.getElementById("font-name"),
   infoGrid: document.getElementById("info-grid"),
   sample: document.getElementById("sample"),
   waterfall: document.getElementById("waterfall"),
@@ -101,6 +102,8 @@ async function handleFile(file) {
 
   el.specimen.hidden = false;
   el.loader.classList.add("is-loaded");
+  document.body.classList.add("has-font");
+  renderTitle(file, parsed);
   renderInfo(file, format, parsed);
   renderWaterfall();
   renderGlyphs(parsed);
@@ -181,6 +184,13 @@ function pickName(nameRecord) {
   return nameRecord.en || Object.values(nameRecord)[0] || null;
 }
 
+/* The family name is the typeface's own name, so it is what the specimen is
+   titled with. Files we could not parse fall back to the filename. */
+function renderTitle(file, { font }) {
+  const family = font && pickName(font.names.fontFamily);
+  el.fontName.textContent = family || file.name.replace(/\.(ttf|otf|woff2?|ttc)$/i, "");
+}
+
 function renderInfo(file, format, { font }) {
   const names = font ? font.names : null;
   const rows = [
@@ -223,16 +233,17 @@ function renderWaterfall() {
       const row = document.createElement("div");
       row.className = "waterfall-row";
 
-      const label = document.createElement("span");
-      label.className = "waterfall-size";
-      label.textContent = `${size}`;
-
       const line = document.createElement("div");
       line.className = "waterfall-line specimen-type";
       line.style.fontSize = `${size}px`;
       line.textContent = text;
 
-      row.append(label, line);
+      const label = document.createElement("span");
+      label.className = "waterfall-size";
+      label.textContent = `${size}`;
+
+      // Line first, label second — the size sits to the right of the specimen.
+      row.append(line, label);
       return row;
     })
   );
@@ -316,6 +327,8 @@ function glyphSvg(glyph, font) {
 function resetSpecimen() {
   el.specimen.hidden = true;
   el.loader.classList.remove("is-loaded");
+  document.body.classList.remove("has-font");
+  el.fontName.textContent = "";
   el.infoGrid.replaceChildren();
   el.waterfall.replaceChildren();
   el.glyphGrid.replaceChildren();
