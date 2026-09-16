@@ -1904,6 +1904,18 @@ const COLOUR_PAIRS = [
   { fg: "#4a3a30", bg: "#d8cabb" }, // cocoa on putty
   { fg: "#cec5e4", bg: "#2b2733" }, // lavender on slate plum
   { fg: "#4a2c34", bg: "#e0c9cc" }, // mulberry on dusty rose
+  // Greens, across the range rather than one more of the same.
+  { fg: "#f3f0e3", bg: "#1f3b2c" }, // cream on forest
+  { fg: "#eef5e8", bg: "#2f5d34" }, // pale on moss
+  { fg: "#86d9a8", bg: "#0a1f16" }, // mint on pine, the green as the ink
+  { fg: "#0d2818", bg: "#a8e063" }, // dark green on acid
+  { fg: "#14281d", bg: "#b8d8b0" }, // ink green on celadon
+  { fg: "#3a4a24", bg: "#e8eed8" }, // olive on pale celadon
+  // Ground the set was missing entirely.
+  { fg: "#f5ead6", bg: "#3b2a1c" }, // cream on chocolate
+  { fg: "#2b2117", bg: "#f0b478" }, // bark on apricot
+  { fg: "#fdf6e3", bg: "#7a3b2e" }, // cream on brick
+  { fg: "#2a2e45", bg: "#c9c4b4" }, // slate on warm stone
 ];
 
 let colourPair = 0;
