@@ -595,8 +595,8 @@ body:not(.has-font) #print { display: none; }
 .font-preview {
   display: none;
   width: 100%;
-  margin-bottom: 60px;
-  font-size: 32px;
+  margin-bottom: 45px;
+  font-size: 24px;
   line-height: 1;
   overflow-wrap: anywhere;
 }

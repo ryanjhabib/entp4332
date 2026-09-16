@@ -720,7 +720,7 @@ function previewCeiling() {
 }
 
 const PREVIEW_TOP_GAP = 24; // clearance from the top of the window
-const PREVIEW_RESTING = "Hover to view sample typefaces";
+const PREVIEW_RESTING = "Explore sample typefaces";
 
 /* Each face is fetched once and kept. The map holds the in-flight promise, not
    the result, so hovering the same pill twice in quick succession does not
