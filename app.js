@@ -289,7 +289,7 @@ const PHRASES = [
    for them. The author's own lines are kept in their own lowercase. */
 const LINES = [
   "how many more acts will you leave behind before your written departure",
-  "there is a universe of weariness in my parents eyes",
+  "there is a universe of weariness in her eyes",
   "let's be each other's heroes",
   "an irreverence for love",
   "grant me your eyes to hold",
