@@ -49,14 +49,14 @@
 
   /* Layout — content runs edge to edge inside a gutter, no centered column. */
   --gutter: 24px;          /* phone            */
-  --section-gap: 96px;     /* space, not rules, separates the sections */
+  --section-gap: 128px;    /* space, not rules, separates the sections */
   --radius: 8px;
   --radius-pill: 999px;
   --border: 1px solid var(--color-rule);
   --glyph-min: 96px;
 }
 
-@media (min-width: 768px)  { :root { --gutter: 48px;  --section-gap: 144px; } }  /* tablet  */
+@media (min-width: 768px)  { :root { --gutter: 48px;  --section-gap: 160px; } }  /* tablet  */
 @media (min-width: 1200px) { :root { --gutter: 60px;  --section-gap: 192px; } }  /* desktop */
 
 /* ==========================================================================
@@ -372,7 +372,9 @@ body.has-font .loader { display: none; }
 }
 
 @media (max-width: 767px) {
-  .paragraphs { grid-template-columns: 1fr; gap: var(--space-12); }
+  /* Stacked, these read as two blocks rather than a pair, so they want more
+     between them than the 64px that reads as a column gutter side by side. */
+  .paragraphs { grid-template-columns: 1fr; gap: var(--space-24); }
 }
 
 /* The rule sits above each column rather than below it. A paragraph ends
