@@ -80,8 +80,8 @@ function shuffled(list) {
   return copy;
 }
 
-function paragraphText() {
-  const forms = shuffled(SENTENCE_FORMS).slice(0, PARAGRAPH_SENTENCES);
+function paragraphText(sentences = PARAGRAPH_SENTENCES) {
+  const forms = shuffled(SENTENCE_FORMS).slice(0, sentences);
   const pool = shuffled(PHRASES);
   return forms
     .map((form, i) =>
@@ -173,6 +173,17 @@ const el = {
   paraTrackingInput: document.getElementById("para-tracking-input"),
   paraLeadingScrub: document.getElementById("para-leading-scrub"),
   paraLeadingInput: document.getElementById("para-leading-input"),
+  paraShuffle: document.getElementById("para-shuffle"),
+  page: document.getElementById("page"),
+  pageText: document.getElementById("page-text"),
+  pageShuffle: document.getElementById("page-shuffle"),
+  pageColors: document.getElementById("page-colors"),
+  pageSizeScrub: document.getElementById("page-size-scrub"),
+  pageSizeInput: document.getElementById("page-size-input"),
+  pageLeadingScrub: document.getElementById("page-leading-scrub"),
+  pageLeadingInput: document.getElementById("page-leading-input"),
+  pageTrackingScrub: document.getElementById("page-tracking-scrub"),
+  pageTrackingInput: document.getElementById("page-tracking-input"),
   bannerBrowse: document.getElementById("banner-browse"),
   print: document.getElementById("print"),
 };
@@ -266,6 +277,7 @@ async function handleFile(file) {
   renderInfo(file, format, parsed, names);
   setPhrase(randomPhrase()); // a fresh phrase per font, and it renders the waterfall
   renderParagraphs();
+  renderPage();
   renderGlyphs(parsed);
 
   setStatus(`Loaded ${file.name}`);
@@ -544,11 +556,23 @@ function renderParagraphs() {
       body.className = "paragraph specimen-type";
       body.style.fontSize = `${size}px`;
       body.textContent = text;
+      body.contentEditable = "true";
+      body.spellcheck = false;
+      body.setAttribute("role", "textbox");
+      body.setAttribute("aria-label", `Paragraph at ${size} pixels`);
 
       column.append(label, body);
       return column;
     })
   );
+}
+
+/* A page holds fewer sentences than the columns: at 64px four of them would
+   run off the bottom of the section. */
+const PAGE_SENTENCES = 2;
+
+function renderPage() {
+  el.pageText.textContent = paragraphText(PAGE_SENTENCES);
 }
 
 /* -------------------------------------------------------------------------
@@ -756,6 +780,7 @@ function resetSpecimen() {
   el.infoGrid.replaceChildren();
   el.waterfall.replaceChildren();
   el.paragraphs.replaceChildren();
+  el.pageText.textContent = "";
   el.glyphGrid.replaceChildren();
   el.glyphCount.textContent = "";
   el.glyphNotice.hidden = true;
@@ -1047,6 +1072,64 @@ const paragraphLeading = scrubControl({
   apply: (v) => el.paragraphs.style.setProperty("--para-leading", String(v / 100)),
 });
 
+scrubControl({
+  scrub: el.pageSizeScrub,
+  input: el.pageSizeInput,
+  min: 12,
+  max: 240,
+  initial: 64,
+  apply: (v) => el.page.style.setProperty("--page-size", `${v}px`),
+});
+
+scrubControl({
+  scrub: el.pageLeadingScrub,
+  input: el.pageLeadingInput,
+  min: 80,
+  max: 260,
+  initial: 120,
+  apply: (v) => el.page.style.setProperty("--page-leading", String(v / 100)),
+});
+
+scrubControl({
+  scrub: el.pageTrackingScrub,
+  input: el.pageTrackingInput,
+  min: -100,
+  max: 100,
+  initial: 0,
+  apply: (v) => el.page.style.setProperty("--page-tracking", String(v / 1000)),
+});
+
+/* -------------------------------------------------------------------------
+   Page colour pairs
+   ---------------------------------------------------------------------- */
+/* Type behaves differently on a dark ground than a light one — the same weight
+   reads heavier reversed out. Cycling pairs is the quickest way to see it. */
+const COLOUR_PAIRS = [
+  { fg: "#111111", bg: "#f0f0f0" },
+  { fg: "#ffffff", bg: "#111111" },
+  { fg: "#111111", bg: "#ffffff" },
+  { fg: "#ffffff", bg: "#4c78cd" },
+  { fg: "#1c1a17", bg: "#f2ece1" },
+  { fg: "#4c78cd", bg: "#f0f0f0" },
+];
+
+let colourPair = 0;
+
+function applyColourPair() {
+  const { fg, bg } = COLOUR_PAIRS[colourPair];
+  el.page.style.setProperty("--page-fg", fg);
+  el.page.style.setProperty("--page-bg", bg);
+  // The swatch shows the pair it will produce, split down the middle.
+  el.pageColors.style.background = `linear-gradient(90deg, ${bg} 0 50%, ${fg} 50% 100%)`;
+}
+
+el.pageColors.addEventListener("click", () => {
+  colourPair = (colourPair + 1) % COLOUR_PAIRS.length;
+  applyColourPair();
+});
+
+applyColourPair();
+
 /* -------------------------------------------------------------------------
    Events
    ---------------------------------------------------------------------- */
@@ -1127,6 +1210,35 @@ el.waterfall.addEventListener("paste", (e) => {
 });
 
 el.shuffle.addEventListener("click", () => setPhrase(randomPhrase()));
+
+/* Both columns carry the same words, so editing one retypes the other. The
+   edited element is left alone, or the caret collapses on every keystroke. */
+el.paragraphs.addEventListener("input", (e) => {
+  const edited = e.target.closest(".paragraph");
+  if (!edited) return;
+  for (const other of el.paragraphs.querySelectorAll(".paragraph")) {
+    if (other !== edited) other.textContent = edited.textContent;
+  }
+});
+
+// One block per column: a return would split it and desync the two.
+el.paragraphs.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && e.target.closest(".paragraph")) e.preventDefault();
+});
+
+el.paraShuffle.addEventListener("click", renderParagraphs);
+el.pageShuffle.addEventListener("click", renderPage);
+
+/* Paste lands as plain text everywhere that takes typing, so a paste from a
+   styled document cannot drag its own font in with it. */
+for (const field of [el.paragraphs, el.pageText]) {
+  field.addEventListener("paste", (e) => {
+    if (!e.target.closest(".paragraph, .page-text")) return;
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData("text");
+    document.execCommand("insertText", false, text.replace(/\s+/g, " "));
+  });
+}
 
 el.sampleList.addEventListener("mouseleave", restPreview);
 el.sampleList.addEventListener("focusout", restPreview);

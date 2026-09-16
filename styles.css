@@ -343,13 +343,24 @@ body.has-font .loader { display: none; }
   .paragraphs { grid-template-columns: 1fr; gap: var(--space-12); }
 }
 
+/* The rule sits above each column rather than below it. A paragraph ends
+   ragged, so a rule underneath would float at an arbitrary distance from the
+   last line; above, it reads as a header for the column. */
+.paragraph-column {
+  border-top: var(--border);
+  padding-top: var(--space-4);
+}
+
 .paragraph-size {
   margin-bottom: var(--space-4);
   color: var(--color-muted);
 }
 
+.paragraph:focus { outline: none; background: var(--color-field); }
+
 .paragraph {
   margin: 0;
+  cursor: text;
   /* Both resolve per element: the custom property carries a bare number and
      the `1em` is applied here, against this paragraph's own size. */
   letter-spacing: calc(var(--para-tracking, 0) * 1em);
@@ -595,6 +606,43 @@ body.is-dragging .drop-banner,
 body.is-viewing .drop-banner { display: none; }
 
 /* ==========================================================================
+   Page
+   ========================================================================== */
+/* A sheet to set type on. The colour pair is applied here as two custom
+   properties, so the text inside inherits both without being touched. */
+.page {
+  --page-fg: #111111;
+  --page-bg: #f0f0f0;
+  min-height: 70vh;
+  padding: var(--space-12);
+  border-radius: 24px;
+  background: var(--page-bg);
+  color: var(--page-fg);
+}
+
+.page-text {
+  margin: 0;
+  outline: none;
+  cursor: text;
+  font-size: var(--page-size, 64px);
+  line-height: var(--page-leading, 1.2);
+  /* Resolves against the page's own size, as everywhere else. */
+  letter-spacing: calc(var(--page-tracking, 0) * 1em);
+  overflow-wrap: anywhere;
+}
+
+/* Shows the pair it will produce: ground on the left, type on the right. */
+.swatch {
+  width: var(--pill-height);
+  height: var(--pill-height);
+  padding: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.swatch:hover { opacity: 0.85; }
+.swatch:focus-visible { outline: 2px solid var(--color-banner); outline-offset: 2px; }
+
+/* ==========================================================================
    Glyph viewer
    ========================================================================== */
 body.is-viewing { overflow: hidden; }
@@ -723,4 +771,14 @@ body:not(.has-font) #print { display: none; }
   .glyph-grid { gap: 2px; }
 
   .notice { break-inside: avoid; }
+
+  /* Whatever pair is on screen, paper gets ink on white. */
+  .page {
+    min-height: 0;
+    padding: 0;
+    background: #ffffff;
+    color: #111111;
+  }
+
+  .paragraph-column { break-inside: avoid; }
 }
