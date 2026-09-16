@@ -719,6 +719,7 @@ const PREVIEW_RESTING = "Hover to view sample typefaces";
    start a second request. */
 const previewFaces = new Map();
 let hoveredSample = null;
+let previewFamily = null;
 
 function previewFace(sample, index) {
   if (!previewFaces.has(sample.name)) {
@@ -756,6 +757,7 @@ async function showPreview(sample, index) {
   // `inherit` is not a valid entry inside a font list — it invalidates the whole
   // declaration, which silently leaves the UI stack in place.
   el.fontPreview.style.fontFamily = `"${family}", sans-serif`;
+  previewFamily = family;
   fitPreview();
 }
 
@@ -784,8 +786,26 @@ function fitPreview() {
   const headroom = el.sampleList.getBoundingClientRect().top - gap - PREVIEW_TOP_GAP;
   const maxHeight = Math.max(PREVIEW_MIN, headroom);
 
-  let low = PREVIEW_MIN;
+  /* A word must never be broken across lines. `overflow-wrap: anywhere` is on
+     the element as a last resort, but a name splitting mid-word reads as a
+     bug — so the size is capped at whatever keeps the longest word on one
+     line. Wide faces like Michroma are constrained by this long before they
+     are constrained by height. */
+  const longest = preview.textContent
+    .split(/\s+/)
+    .reduce((a, b) => (b.length > a.length ? b : a), "");
+
   let high = previewCeiling();
+  if (previewFamily && longest) {
+    titleCtx.font = `100px "${previewFamily}"`;
+    const wordAt100 = titleCtx.measureText(longest).width;
+    if (wordAt100) {
+      high = Math.min(high, Math.floor((preview.clientWidth / wordAt100) * 100));
+    }
+  }
+  high = Math.max(high, PREVIEW_MIN);
+
+  let low = PREVIEW_MIN;
   let best = PREVIEW_MIN;
 
   while (low <= high) {
@@ -807,6 +827,7 @@ function fitPreview() {
    it back to the UI font. */
 function restPreview() {
   hoveredSample = null;
+  previewFamily = null;
   el.fontPreview.textContent = PREVIEW_RESTING;
   el.fontPreview.style.fontFamily = "";
   el.fontPreview.style.fontSize = "";
