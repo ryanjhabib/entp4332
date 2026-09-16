@@ -1061,6 +1061,11 @@ body:not(.has-font) #print { display: none; }
 /* Hovering a sample font names it, set in itself, above the pills. Hidden by
    default and only on a desktop-width empty state — it is a pointer gesture,
    and there is no room for it beside a specimen. */
+/* Its own, longer than the pills': it is a 300px word rather than a 24px pill,
+   and the same duration on that much area reads as a flicker. Declared after
+   the shared rule so it wins. */
+.font-preview { transition: opacity 260ms ease; }
+
 .font-preview {
   display: none;
   width: 100%;
