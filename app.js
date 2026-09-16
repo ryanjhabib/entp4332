@@ -423,6 +423,7 @@ function sampleFile(sample, weight) {
 let activeSample = null;
 let activeWeight = null;
 const SAMPLE_FONTS = [
+  { name: "Alegreya", id: "alegreya", weights: [400, 500, 600, 700, 800, 900], weight: 400 },
   { name: "Archivo", id: "archivo", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 600 },
   { name: "Arimo", id: "arimo", weights: [400, 500, 600, 700], weight: 400 },
   { name: "Bodoni Moda", id: "bodoni-moda", weights: [400, 500, 600, 700, 800, 900], weight: 400 },
@@ -434,6 +435,7 @@ const SAMPLE_FONTS = [
   { name: "IBM Plex Sans", id: "ibm-plex-sans", weights: [100, 200, 300, 400, 500, 600, 700], weight: 400 },
   { name: "IM Fell English", id: "im-fell-english", weights: [400], weight: 400 },
   { name: "Instrument Sans", id: "instrument-sans", weights: [400, 500, 600, 700], weight: 400 },
+  { name: "Instrument Serif", id: "instrument-serif", weights: [400], weight: 400 },
   { name: "Inter", id: "inter", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
   { name: "JetBrains Mono", id: "jetbrains-mono", weights: [100, 200, 300, 400, 500, 600, 700, 800], weight: 400 },
   { name: "Jim Nightshade", id: "jim-nightshade", weights: [400], weight: 400 },
@@ -442,6 +444,7 @@ const SAMPLE_FONTS = [
   { name: "Libre Baskerville", id: "libre-baskerville", weights: [400, 500, 600, 700], weight: 400 },
   { name: "Manrope", id: "manrope", weights: [200, 300, 400, 500, 600, 700, 800], weight: 400 },
   { name: "Manufacturing Consent", id: "manufacturing-consent", weights: [400], weight: 400 },
+  { name: "Martian Mono", id: "martian-mono", weights: [100, 200, 300, 400, 500, 600, 700, 800], weight: 400 },
   { name: "Michroma", id: "michroma", weights: [400], weight: 400 },
   { name: "Micro 5", id: "micro-5", weights: [400], weight: 400 },
   { name: "Newsreader", id: "newsreader", weights: [200, 300, 400, 500, 600, 700, 800], weight: 400 },
@@ -449,9 +452,13 @@ const SAMPLE_FONTS = [
   { name: "Playfair Display", id: "playfair-display", weights: [400, 500, 600, 700, 800, 900], weight: 400 },
   { name: "Poppins", id: "poppins", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
   { name: "Public Sans", id: "public-sans", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
+  { name: "Redaction", id: "redaction", weights: [400, 700], weight: 400 },
   { name: "Schibsted Grotesk", id: "schibsted-grotesk", weights: [400, 500, 600, 700, 800, 900], weight: 400 },
   { name: "Source Serif 4", id: "source-serif-4", weights: [200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
   { name: "Space Grotesk", id: "space-grotesk", weights: [300, 400, 500, 600, 700], weight: 500 },
+  { name: "Spectral", id: "spectral", weights: [200, 300, 400, 500, 600, 700, 800], weight: 400 },
+  { name: "Syne", id: "syne", weights: [400, 500, 600, 700, 800], weight: 600 },
+  { name: "Unbounded", id: "unbounded", weights: [200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
   { name: "UnifrakturMaguntia", id: "unifrakturmaguntia", weights: [400], weight: 400 },
   { name: "Work Sans", id: "work-sans", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
 ];
