@@ -690,7 +690,11 @@ function paintGlyphs() {
   el.glyphGrid.replaceChildren(
     ...shownGlyphs.map((glyph, i) => glyphCell(glyph, currentFont, i))
   );
-  el.glyphCount.textContent = `— ${shownGlyphs.length}`;
+  // The only section that keeps a heading, because the count is worth stating.
+  el.glyphCount.textContent =
+    shownGlyphs.length === allGlyphs.length
+      ? `${shownGlyphs.length} Glyphs`
+      : `${shownGlyphs.length} of ${allGlyphs.length} Glyphs`;
   el.glyphToggle.hidden = allGlyphs.length <= basicGlyphs.length;
   el.glyphToggle.textContent = showingAll
     ? "Show the basic set"

@@ -271,13 +271,15 @@ body.has-font .loader { display: none; }
   font-size: var(--size-ui);
 }
 
-/* The hint and any controls for a section share one row, hint left. */
+/* The hint and any controls for a section share one row, hint left. These
+   sections carry no heading, so there is nothing to tuck under — unlike the
+   bare .hint above, which still sits beneath the Glyphs heading. */
 .section-controls {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  margin: calc(var(--space-8) * -1) 0 var(--space-12);
+  margin: 0 0 var(--space-12);
 }
 .section-controls .hint { margin: 0; }
 
@@ -380,8 +382,6 @@ body.has-font .loader { display: none; }
   font-weight: var(--weight-ui);
   color: var(--color-muted);
 }
-
-.section-note { color: var(--color-muted); }
 
 /* Any element rendered in the user's font */
 .specimen-type { font-family: "SpecimenFont", var(--font-ui); }
