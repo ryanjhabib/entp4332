@@ -112,6 +112,12 @@ let loadedFace = null; // the FontFace currently registered, so we can swap it o
 /* -------------------------------------------------------------------------
    Status messages
    ---------------------------------------------------------------------- */
+/* Library and browser errors arrive with their own full stops; UI copy here
+   carries none, so they are trimmed at the point of interpolation. */
+function trimStop(text) {
+  return String(text).replace(/\s*\.\s*$/, "");
+}
+
 function setStatus(message, isError = false) {
   el.status.textContent = message;
   el.status.classList.toggle("is-error", isError);
@@ -147,17 +153,17 @@ async function handleFile(file) {
   try {
     buffer = await file.arrayBuffer();
   } catch (err) {
-    return setStatus(`Could not read ${file.name}: ${err.message}`, true);
+    return setStatus(`Could not read ${file.name}: ${trimStop(err.message)}`, true);
   }
 
   if (buffer.byteLength < 4) {
-    return setStatus(`${file.name} is empty or too small to be a font file.`, true);
+    return setStatus(`${file.name} is empty or too small to be a font file`, true);
   }
 
   const format = detectFormat(buffer);
   if (!format) {
     return setStatus(
-      `${file.name} does not look like a font file. Supported: .ttf, .otf, .woff, .woff2`,
+      `${file.name} does not look like a font file — supported: .ttf, .otf, .woff, .woff2`,
       true
     );
   }
@@ -173,7 +179,7 @@ async function handleFile(file) {
   } catch (err) {
     loadedFace = null;
     return setStatus(
-      `The browser could not render ${file.name}. The file may be corrupt or use an unsupported flavour. (${err.message})`,
+      `The browser could not render ${file.name} — it may be corrupt or use an unsupported flavour (${trimStop(err.message)})`,
       true
     );
   }
@@ -191,7 +197,7 @@ async function handleFile(file) {
   setPhrase(randomPhrase()); // a fresh phrase per font, and it renders the waterfall
   renderGlyphs(parsed);
 
-  setStatus(`Loaded ${file.name}.`);
+  setStatus(`Loaded ${file.name}`);
 }
 
 /* opentype.js cannot read woff2's Brotli-compressed tables. We decompress to
@@ -207,7 +213,7 @@ async function parseFont(buffer, format) {
     } catch (err) {
       return {
         font: null,
-        note: "Glyph data for WOFF2 could not be decompressed in this browser, so the information and glyph sections are unavailable. The specimen above still renders correctly. Try a .ttf, .otf or .woff copy of the font for the full breakdown.",
+        note: "Glyph data for WOFF2 could not be decompressed in this browser, so the information and glyph sections are unavailable — the specimen above still renders correctly. For the full breakdown, try a .ttf, .otf or .woff copy of the font",
       };
     }
   }
@@ -218,7 +224,7 @@ async function parseFont(buffer, format) {
   } catch (err) {
     return {
       font: null,
-      note: `Glyph data could not be parsed (${err.message}). The specimen above still renders correctly.`,
+      note: `Glyph data could not be parsed (${trimStop(err.message)}) — the specimen above still renders correctly`,
     };
   }
 }
@@ -506,14 +512,14 @@ function renderGlyphs({ font, note }) {
   const duplicates = scanned - all.length;
   const parts = [];
   if (duplicates > 0) {
-    parts.push(`${duplicates} glyph${duplicates === 1 ? "" : "s"} repeated an outline already shown and ${duplicates === 1 ? "was" : "were"} collapsed.`);
+    parts.push(`${duplicates} glyph${duplicates === 1 ? "" : "s"} repeated an outline already shown and ${duplicates === 1 ? "was" : "were"} collapsed`);
   }
   if (scanned < font.numGlyphs) {
-    parts.push(`This font has ${font.numGlyphs} glyphs; the first ${scanned} were scanned to keep the page responsive.`);
+    parts.push(`This font has ${font.numGlyphs} glyphs; the first ${scanned} were scanned to keep the page responsive`);
   }
   if (parts.length && !note) {
     el.glyphNotice.hidden = false;
-    el.glyphNotice.textContent = parts.join(" ");
+    el.glyphNotice.textContent = parts.join(" · ");
   }
 }
 
@@ -652,7 +658,7 @@ async function loadSample(sample) {
     await handleFile(new File([blob], sample.file, { type: "font/woff2" }));
   } catch (err) {
     setStatus(
-      `Could not fetch ${sample.name} (${err.message}). Drop a font file instead.`,
+      `Could not fetch ${sample.name} (${trimStop(err.message)}) — drop a font file instead`,
       true
     );
   }
