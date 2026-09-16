@@ -853,12 +853,12 @@ const el = {
   pageColors: document.getElementById("page-colors"),
   viewerColors: document.getElementById("viewer-colors"),
   viewerFace: document.getElementById("viewer-face"),
-  viewerSizeScrub: document.getElementById("viewer-size-scrub"),
-  viewerSizeInput: document.getElementById("viewer-size-input"),
+  viewerSizeRange: document.getElementById("viewer-size-range"),
+  viewerSizeValue: document.getElementById("viewer-size-value"),
   localAccess: document.getElementById("local-access"),
   siteFooter: document.querySelector(".site-footer"),
-  pageSizeScrub: document.getElementById("page-size-scrub"),
-  pageSizeInput: document.getElementById("page-size-input"),
+  pageSizeRange: document.getElementById("page-size-range"),
+  pageSizeValue: document.getElementById("page-size-value"),
   pageLeadingScrub: document.getElementById("page-leading-scrub"),
   pageLeadingInput: document.getElementById("page-leading-input"),
   pageTrackingScrub: document.getElementById("page-tracking-scrub"),
@@ -2459,6 +2459,43 @@ const CONTROL_DRAG_STEP = 5;
 const TRACKING_MIN = -500;
 const TRACKING_MAX = 1000;
 
+/* The same contract scrubControl offers — set, get, isByUser, reset — so the
+   two are interchangeable to everything that holds one. A range input owns its
+   own clamping and its own keyboard handling, so there is far less here; what
+   it does not do is tell set from a person and set from a render, which the
+   page size fitter needs, hence the flag. */
+function sliderControl({ range, value: output, min, max, initial, apply }) {
+  let value = initial;
+  let byUser = false;
+
+  range.min = String(min);
+  range.max = String(max);
+
+  function set(next) {
+    value = Math.max(min, Math.min(max, Math.round(next) || min));
+    range.value = String(value);
+    output.textContent = String(value);
+    apply(value);
+  }
+
+  range.addEventListener("input", () => {
+    byUser = true;
+    set(Number(range.value));
+  });
+
+  set(initial);
+
+  return {
+    set,
+    get: () => value,
+    isByUser: () => byUser,
+    reset: (next) => {
+      byUser = false;
+      set(next);
+    },
+  };
+}
+
 function scrubControl({ scrub, input, min, max, initial, apply }) {
   let value = initial;
   let from = null;
@@ -2564,9 +2601,9 @@ const paragraphLeading = scrubControl({
   apply: (v) => el.paragraphs.style.setProperty("--para-leading", String(v / 100)),
 });
 
-const pageSize = scrubControl({
-  scrub: el.pageSizeScrub,
-  input: el.pageSizeInput,
+const pageSize = sliderControl({
+  range: el.pageSizeRange,
+  value: el.pageSizeValue,
   min: 12,
   max: PAGE_MAX_SIZE,
   initial: 64,
@@ -2720,9 +2757,9 @@ function applyViewerPair() {
 /* Never reset. Closing the viewer leaves it where it was, so coming back to
    another glyph shows it at the size you had chosen — the same way the colour
    pair survives. */
-const viewerSize = scrubControl({
-  scrub: el.viewerSizeScrub,
-  input: el.viewerSizeInput,
+const viewerSize = sliderControl({
+  range: el.viewerSizeRange,
+  value: el.viewerSizeValue,
   min: 5,
   max: 300,
   initial: 70,

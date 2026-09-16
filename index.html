@@ -61,12 +61,11 @@
                     title="Cycle through colour pairs"></button>
           </div>
 
-          <div class="control">
-            <span class="control-scrub" id="page-size-scrub" role="slider" tabindex="0"
-                  aria-label="Text size in pixels" aria-valuemin="12" aria-valuemax="600" aria-valuenow="64"
-                  title="Drag left or right to change size">TT</span>
-            <input class="control-input" id="page-size-input" type="number"
-                   value="64" step="1" min="12" max="600" aria-label="Text size">
+          <div class="control control--slider">
+            <span class="control-label">TT</span>
+            <input class="control-range" id="page-size-range" type="range"
+                   value="64" step="1" min="12" max="600" aria-label="Text size in pixels">
+            <output class="control-value" id="page-size-value">64</output>
           </div>
 
           <div class="control">
@@ -193,12 +192,11 @@
               title="Cycle through colour pairs"></button>
     </div>
 
-    <div class="control">
-      <span class="control-scrub" id="viewer-size-scrub" role="slider" tabindex="0"
-            aria-label="Glyph size, percent of the frame" aria-valuemin="5" aria-valuemax="300"
-            aria-valuenow="70" title="Drag left or right to change the size">TT</span>
-      <input class="control-input" id="viewer-size-input" type="number"
-             value="70" step="1" min="5" max="300" aria-label="Glyph size percent">
+    <div class="control control--slider">
+      <span class="control-label">TT</span>
+      <input class="control-range" id="viewer-size-range" type="range"
+             value="70" step="1" min="5" max="300" aria-label="Glyph size, percent of the frame">
+      <output class="control-value" id="viewer-size-value">70</output>
     </div>
   </div>
 </div>
