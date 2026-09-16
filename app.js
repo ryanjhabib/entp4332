@@ -84,7 +84,7 @@ const SAMPLE_FONTS = [
   { name: "League Gothic", file: "LeagueGothic-Regular.woff2", path: "@fontsource/league-gothic/files/league-gothic-latin-400-normal.woff2" },
   { name: "Newsreader", file: "Newsreader-Regular.woff2", path: "@fontsource/newsreader/files/newsreader-latin-400-normal.woff2" },
   { name: "Source Serif 4", file: "SourceSerif4-Regular.woff2", path: "@fontsource/source-serif-4/files/source-serif-4-latin-400-normal.woff2" },
-  { name: "Cormorant", file: "Cormorant-Regular.woff2", path: "@fontsource/cormorant/files/cormorant-latin-400-normal.woff2" },
+  { name: "Cormorant Garamond", file: "CormorantGaramond-Regular.woff2", path: "@fontsource/cormorant-garamond/files/cormorant-garamond-latin-400-normal.woff2" },
   { name: "EB Garamond", file: "EBGaramond-Regular.woff2", path: "@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff2" },
   { name: "Libre Baskerville", file: "LibreBaskerville-Regular.woff2", path: "@fontsource/libre-baskerville/files/libre-baskerville-latin-400-normal.woff2" },
   { name: "Goudy Bookletter 1911", file: "GoudyBookletter1911-Regular.woff2", path: "@fontsource/goudy-bookletter-1911/files/goudy-bookletter-1911-latin-400-normal.woff2" },
