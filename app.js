@@ -2072,6 +2072,18 @@ const COLOUR_PAIRS = [
   { fg: "#e8ddc8", bg: "#1d3f44" }, // warm cream on petrol
   { fg: "#3b2d12", bg: "#d2a94f" }, // olive brown on ochre
   { fg: "#23255c", bg: "#c3c7f0" }, // indigo on periwinkle
+  /* Five more in the same vein. Two of them do what the periwinkle does — a
+     pale ground with a deep ink drawn from its own family — and the rest go
+     where the set had nothing: 292 and 328 degrees fill the whole stretch
+     between the purple at 273 and the pink at 335, and the olive fills the gap
+     under the greens. The charcoal is the subdued one: at 5% saturation it is
+     a dark that is not black and not a colour either, which the set had no
+     example of. */
+  { fg: "#3d1f3f", bg: "#dcc2e0" }, // aubergine on soft orchid
+  { fg: "#14343d", bg: "#b8d6e0" }, // deep petrol on duck egg
+  { fg: "#f0cdd5", bg: "#3a1c2c" }, // blush on deep plum
+  { fg: "#c8c3b4", bg: "#2a2a26" }, // warm grey on charcoal
+  { fg: "#e8dcb0", bg: "#34381f" }, // pale gold on deep olive
 ];
 
 let colourPair = 0;
