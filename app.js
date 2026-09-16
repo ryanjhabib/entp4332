@@ -607,11 +607,15 @@ function rememberDropped(name, weight, buffer, format) {
     entry = { name, dropped: true, uid: `d${droppedSeq++}`, cuts: new Map() };
   }
 
+  // Whether this exact cut is new, so a re-drop can say so rather than looking
+  // like nothing happened.
+  const added = !entry.cuts.has(weight);
+
   entry.cuts.set(weight, { buffer, format });
   droppedFonts.unshift(entry);
   droppedFonts.splice(DROPPED_LIMIT);
   renderSamples();
-  return entry;
+  return { entry, added };
 }
 
 /* The shape the weight machinery expects, so a dropped family can use it
@@ -948,7 +952,11 @@ async function handleFiles(list) {
     return notify("Only .ttf, .otf, .woff and .woff2 files");
   }
 
-  for (const cut of filed) rememberDropped(cut.family, cut.weight, cut.buffer, cut.format);
+  let repeats = 0;
+  for (const cut of filed) {
+    const { added } = rememberDropped(cut.family, cut.weight, cut.buffer, cut.format);
+    if (!added) repeats++;
+  }
 
   /* Open the lightest cut of the first family dropped, so a family arrives on
      its lightest weight with the rest under the toggle, and a mixed drop opens
@@ -962,8 +970,9 @@ async function handleFiles(list) {
 
   const families = new Set(filed.map((cut) => cut.family)).size;
   const skipped = unreadable ? `, ${unreadable} skipped` : "";
+  const already = repeats ? `, ${repeats} already added` : "";
   notify(
-    `${filed.length} files in ${families} ${families === 1 ? "family" : "families"}${skipped}`
+    `${filed.length} files in ${families} ${families === 1 ? "family" : "families"}${skipped}${already}`
   );
 }
 
@@ -1027,9 +1036,22 @@ async function handleFile(file, source = null, { remember = true } = {}) {
        Dropping a second cut of a family already held makes it a two-weight
        family, and it then drives the weight toggles like any other sample. */
     const weight = droppedWeightOf(parsed.font);
-    const entry = rememberDropped(fontNames(file, parsed.font).family, weight, buffer, format);
+    const { entry, added } = rememberDropped(
+      fontNames(file, parsed.font).family,
+      weight,
+      buffer,
+      format
+    );
     activeSample = entry.cuts.size > 1 ? droppedSample(entry, weight) : null;
     activeWeight = activeSample ? weight : null;
+
+    /* It still opens — you asked to look at it and there it is — but say so, or
+       dropping the same file twice looks like the second one did nothing.
+
+       And a drop that did add something clears whatever was showing, so a
+       notice about the last font is not still on screen describing this one. */
+    if (added) notify("");
+    else notify(`${entry.name} ${weightName(weight)} was already added`);
   }
   // Decided here, not per render: renderPage runs before renderGlyphs sets
   // currentFont, so it cannot ask the parsed font itself.
