@@ -2723,7 +2723,7 @@ function applyViewerPair() {
 const viewerSize = scrubControl({
   scrub: el.viewerSizeScrub,
   input: el.viewerSizeInput,
-  min: 20,
+  min: 5,
   max: 300,
   initial: 70,
   apply: (v) => el.viewer.style.setProperty("--glyph-size", String(v)),
