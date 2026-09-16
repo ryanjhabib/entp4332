@@ -10,8 +10,16 @@
 
 <header class="site-header no-print">
   <div class="header-bar">
-    <h1><button type="button" class="home-button" id="home">Font Specimen</button></h1>
-    <span class="header-font" id="header-font"></span>
+    <div class="font-picker" id="font-picker">
+      <h1><button type="button" class="header-font" id="header-font" aria-haspopup="true"
+                  aria-expanded="false" title="Open the font library"></button></h1>
+
+      <div class="font-menu" id="font-menu" aria-label="Font library">
+        <ul class="sample-list" id="menu-list"></ul>
+      </div>
+    </div>
+
+    <button type="button" class="home-button" id="home">Home</button>
   </div>
 </header>
 

@@ -147,7 +147,45 @@ body:not(.has-font) .site-header { display: none; }
   white-space: nowrap;
   text-overflow: ellipsis;
   color: var(--color-muted);
+  cursor: pointer;
 }
+.header-font:hover { color: var(--color-text); }
+
+.font-picker {
+  position: relative;
+  pointer-events: auto;
+  min-width: 0;
+}
+
+.font-picker h1 { min-width: 0; }
+
+/* The library, hanging off the name. Opaque enough that the grey pills inside
+   still read against whatever is scrolling underneath. */
+.font-menu {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  z-index: 20;
+  width: max-content;
+  max-width: min(640px, 70vw);
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(38px);
+  -webkit-backdrop-filter: blur(38px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 180ms ease, visibility 0s linear 180ms;
+}
+
+.font-menu.is-open {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 180ms ease;
+}
+
+/* The footer's half-measure cap is meaningless inside a panel. */
+.font-menu .sample-list { max-width: none; }
 
 
 /* Every button is a pill on the one height. The glyph cells are buttons too but

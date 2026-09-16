@@ -250,6 +250,9 @@ const el = {
   fontStyle: document.getElementById("font-style"),
   headerFont: document.getElementById("header-font"),
   home: document.getElementById("home"),
+  fontPicker: document.getElementById("font-picker"),
+  fontMenu: document.getElementById("font-menu"),
+  menuList: document.getElementById("menu-list"),
   infoGrid: document.getElementById("info-grid"),
   waterfall: document.getElementById("waterfall"),
   glyphGrid: document.getElementById("glyph-grid"),
@@ -404,6 +407,7 @@ async function handleFile(file, source = null) {
   renderParagraphs();
   renderPage();
   randomColourPair();
+  closeFontMenu();
   renderGlyphs(parsed);
   sectionWeights.clear();
   syncSectionWeights();
@@ -1359,6 +1363,29 @@ function restPreview() {
 
 function renderSamples() {
   el.sampleList.replaceChildren(...sampleItems(SAMPLE_FONTS));
+  // The same library again, behind the name in the header.
+  el.menuList.replaceChildren(...sampleItems(SAMPLE_FONTS));
+}
+
+/* -------------------------------------------------------------------------
+   Font library menu
+   ---------------------------------------------------------------------- */
+/* Opened from the name in the header. It closes when the pointer leaves the
+   picker rather than the menu alone, so crossing the gap between the button
+   and the panel does not dismiss it. */
+function openFontMenu() {
+  el.fontMenu.classList.add("is-open");
+  el.headerFont.setAttribute("aria-expanded", "true");
+}
+
+function closeFontMenu() {
+  el.fontMenu.classList.remove("is-open");
+  el.headerFont.setAttribute("aria-expanded", "false");
+}
+
+function toggleFontMenu() {
+  if (el.fontMenu.classList.contains("is-open")) closeFontMenu();
+  else openFontMenu();
 }
 
 /* The banner is part of the centred row on the empty state and a pinned bar
@@ -1572,6 +1599,14 @@ el.home.addEventListener("click", () => {
   resetSpecimen();
   notify("");
   window.scrollTo(0, 0);
+});
+
+el.headerFont.addEventListener("click", toggleFontMenu);
+el.fontPicker.addEventListener("mouseleave", closeFontMenu);
+el.menuList.addEventListener("click", closeFontMenu);
+
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && el.fontMenu.classList.contains("is-open")) closeFontMenu();
 });
 
 el.bannerBrowse.addEventListener("click", () => el.fileInput.click());
