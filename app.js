@@ -594,13 +594,42 @@ const DROPPED_LIMIT = 12;
 const droppedFonts = [];
 let droppedSeq = 0;
 
-function rememberDropped(name, buffer) {
-  const already = droppedFonts.findIndex((d) => d.name === name);
-  if (already >= 0) droppedFonts.splice(already, 1);
+/* Keyed by family, holding one buffer per weight. Two cuts of the same family
+   are one entry with two weights — keying on the family alone and storing a
+   single buffer meant the second drop replaced the first, so two weights went
+   in and one pill with one weight came out. */
+function rememberDropped(name, weight, buffer, format) {
+  let entry = droppedFonts.find((d) => d.name === name);
 
-  droppedFonts.unshift({ name, buffer, dropped: true, uid: `d${droppedSeq++}` });
+  if (entry) {
+    droppedFonts.splice(droppedFonts.indexOf(entry), 1);
+  } else {
+    entry = { name, dropped: true, uid: `d${droppedSeq++}`, cuts: new Map() };
+  }
+
+  entry.cuts.set(weight, { buffer, format });
+  droppedFonts.unshift(entry);
   droppedFonts.splice(DROPPED_LIMIT);
   renderSamples();
+  return entry;
+}
+
+/* The shape the weight machinery expects, so a dropped family can use it
+   unchanged: a sorted list of the weights actually held, and which one is
+   showing. */
+function droppedSample(entry, weight) {
+  return {
+    name: entry.name,
+    uid: entry.uid,
+    dropped: true,
+    weights: [...entry.cuts.keys()].sort((a, b) => a - b),
+    weight,
+  };
+}
+
+function droppedWeightOf(font) {
+  const declared = font && font.tables && font.tables.os2 && font.tables.os2.usWeightClass;
+  return Number.isFinite(declared) && declared > 0 ? declared : 400;
 }
 
 const hasLocalFonts = typeof window.queryLocalFonts === "function";
@@ -926,6 +955,17 @@ async function handleFile(file, source = null, { remember = true } = {}) {
   if (source) {
     activeSample = source.sample;
     activeWeight = source.weight;
+  } else if (remember) {
+    /* Only what arrived as a file. The library reopens from its own URL and the
+       local group is listed permanently, so remembering either would print the
+       same pill twice.
+
+       Dropping a second cut of a family already held makes it a two-weight
+       family, and it then drives the weight toggles like any other sample. */
+    const weight = droppedWeightOf(parsed.font);
+    const entry = rememberDropped(fontNames(file, parsed.font).family, weight, buffer, format);
+    activeSample = entry.cuts.size > 1 ? droppedSample(entry, weight) : null;
+    activeWeight = activeSample ? weight : null;
   }
   // Decided here, not per render: renderPage runs before renderGlyphs sets
   // currentFont, so it cannot ask the parsed font itself.
@@ -942,11 +982,6 @@ async function handleFile(file, source = null, { remember = true } = {}) {
   renderGlyphs(parsed);
   sectionWeights.clear();
   syncSectionWeights();
-
-  /* Only what arrived as a file. The library reopens from its own URL and the
-     local group is listed permanently, so remembering either would just print
-     the same pill twice. */
-  if (!source && remember) rememberDropped(names.family, buffer);
 }
 
 /* opentype.js cannot read woff2's Brotli-compressed tables. We decompress to
@@ -1192,6 +1227,13 @@ function renderStyle(names) {
    face. Everything after the first visit to a weight is instant. */
 async function faceFor(sample, weight) {
   if (faces.has(weight)) return faces.get(weight);
+
+  if (sample.dropped) {
+    const held = droppedFonts.find((d) => d.uid === sample.uid);
+    const cut = held && held.cuts.get(weight);
+    if (!cut) throw new Error("no-such-cut");
+    return registerFace(weight, cut.buffer, cut.format);
+  }
 
   const res = await fetch(sampleUrl(sample, weight));
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -1985,7 +2027,8 @@ function previewFace(sample) {
       (async () => {
         let buffer;
         if (sample.dropped) {
-          buffer = sample.buffer;
+          const lightest = [...sample.cuts.keys()].sort((a, b) => a - b)[0];
+          buffer = sample.cuts.get(lightest).buffer;
         } else if (sample.local) {
           buffer = localFontBuffer(sample);
         } else {
@@ -2178,7 +2221,8 @@ function droppedItems() {
     button.textContent = entry.name;
     button.title = `${entry.name}, opened here earlier`;
     button.addEventListener("click", () => {
-      handleFile(new File([entry.buffer], `${entry.name}.ttf`));
+      const lightest = [...entry.cuts.keys()].sort((a, b) => a - b)[0];
+      handleFile(new File([entry.cuts.get(lightest).buffer], `${entry.name}.ttf`));
     });
 
     const preview = () => showPreview(entry);
