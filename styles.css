@@ -836,15 +836,26 @@ body.is-viewing { overflow: hidden; }
   transform: translateX(-50%);
 }
 
-/* Close alone now. The glyph's details moved to the foot of the screen, so the
-   top edge carries only the way out. */
+/* What you are looking at on the left, the way out on the right. The glyph's
+   own details are at the foot of the screen — this half of the bar says which
+   face and which weight they belong to, which the glyph alone cannot tell you. */
 .viewer-bar {
   position: absolute;
   top: var(--space-4);
   left: var(--gutter);
   right: var(--gutter);
   display: flex;
-  justify-content: flex-end;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.viewer-face {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
 }
 
 /* Bottom left, one pill per fact, count first. Same treatment as the hero's
@@ -893,6 +904,13 @@ body.is-viewing { overflow: hidden; }
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
+
+/* The hero's style note is the brightest grey on the page because it sits
+   beside the weight toggle and has to read as not being one. Nothing down here
+   needs telling apart from an adjacent control, so these take the ordinary
+   muted grey: 4.89:1 on the pill rather than 3.08:1, which is the difference
+   between quiet and washed out. */
+.glyph-viewer .style-note { color: var(--color-muted); }
 
 .glyph-viewer .link-button:hover,
 .viewer-arrow:hover { background: var(--color-field-strong); }

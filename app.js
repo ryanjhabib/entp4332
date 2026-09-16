@@ -620,6 +620,7 @@ const el = {
   pageShuffle: document.getElementById("page-shuffle"),
   pageColors: document.getElementById("page-colors"),
   viewerColors: document.getElementById("viewer-colors"),
+  viewerFace: document.getElementById("viewer-face"),
   pageSizeScrub: document.getElementById("page-size-scrub"),
   pageSizeInput: document.getElementById("page-size-input"),
   pageLeadingScrub: document.getElementById("page-leading-scrub"),
@@ -935,7 +936,13 @@ function fontNames(file, font) {
   return { family, style: label, markers, declared };
 }
 
+/* Held so the viewer can name the face it is showing. It covers the whole
+   screen, so without this there is nothing on it to say which font the letter
+   belongs to. */
+let currentNames = null;
+
 function renderTitle(names) {
+  currentNames = names;
   el.fontName.textContent = names.family;
   el.headerFont.textContent = names.family;
   renderStyle(names);
@@ -1570,10 +1577,28 @@ function openViewer(i) {
   viewerIndex = i;
   viewerPair = colourPair; // open on the ground the page is already wearing
   applyViewerPair();
+  paintFace();
   paintViewer();
   el.viewer.hidden = false;
   document.body.classList.add("is-viewing");
   el.viewerNext.focus();
+}
+
+/* The glyph grid is parsed from the loaded file, so it is always the base
+   weight — the per-section toggles do not reach it. The weight named here is
+   that file's, not whatever the waterfall happens to be set to. */
+function paintFace() {
+  if (!currentNames) return;
+
+  const weight = activeWeight ? weightName(activeWeight) : currentNames.style;
+  el.viewerFace.replaceChildren(
+    ...[currentNames.family, weight].filter(Boolean).map((text) => {
+      const note = document.createElement("span");
+      note.className = "style-note";
+      note.textContent = text;
+      return note;
+    })
+  );
 }
 
 function paintViewer() {
