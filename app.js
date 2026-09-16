@@ -67,6 +67,24 @@ const SENTENCE_FORMS = [
   "Whatever the ledger claimed of {a}, the storeroom offered only {b}.",
   "A boy was sent nine miles for {a} and came back at nightfall with {b}.",
   "The miller would not say where {a} had gone, nor why {b} had taken its place.",
+  "Good {a} keeps. {b} does not.",
+  "Then came {b}, and nobody laughed.",
+  "By the second bell the question was no longer {a} but {b}, which was worse.",
+  "In the margin someone had drawn {a} being chased by {b}, and dated it wrongly.",
+  "The bridge toll was {a} on weekdays and {b} on feast days, which explains the feast days.",
+  "Ask the ferryman about {a} and he will tell you, at considerable length, about {b}.",
+  "Half the parish swore by {a}; the other half swore at {b}.",
+  "What the inventory called {a} the cook called {b}, and the cook was right.",
+  "It rained for nine days. On the tenth there was {a}, and on the eleventh, {b}.",
+  "Nobody has satisfactorily explained why {a} outlasted {b}, only that it did.",
+  "The physician recommended {a} for the humours and {b} for everything else.",
+  "Between {a} and {b} there is a difference, and the tanner will explain it whether you ask or not.",
+  "They buried the ledger under {a} and told the bishop it was {b}.",
+  "The widow kept {a} in a locked chest and {b} in plain sight, which tells you something.",
+  "Every spring the river took {a}, and every autumn it gave back {b}, seldom in the same condition.",
+  "There is a song about {a}. There is a longer song about {b}, and it is not as good.",
+  "He wagered {a} on a horse named after {b} and lost both before compline.",
+  "The chronicler devotes four pages to {a} and a single grudging line to {b}.",
 ];
 
 const PARAGRAPH_SENTENCES = 4;
@@ -570,6 +588,7 @@ function renderParagraphs() {
 /* A page holds fewer sentences than the columns: at 64px four of them would
    run off the bottom of the section. */
 const PAGE_SENTENCES = 2;
+const PAGE_PARAGRAPH_RANGE = [2, 8];
 
 /* Shuffling the page moves between three lengths rather than always handing
    back prose. A single word shows the letterforms, a phrase shows fit and
@@ -590,7 +609,11 @@ function pick(list) {
 }
 
 function pageSample(shape) {
-  if (shape === "paragraph") return paragraphText(PAGE_SENTENCES);
+  // Length varies: sometimes a couple of lines, sometimes a full column of it.
+  if (shape === "paragraph") {
+    const [low, high] = PAGE_PARAGRAPH_RANGE;
+    return paragraphText(low + Math.floor(Math.random() * (high - low + 1)));
+  }
   if (shape === "phrase") return pick(PHRASES);
 
   // A single word, long enough to be worth looking at and never an ampersand.
