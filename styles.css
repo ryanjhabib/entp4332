@@ -1117,11 +1117,26 @@ body.is-viewing { overflow: hidden; }
 /* The glyph is positioned rather than laid out, so its size cannot move
    anything else. It used to be a grid item: at 100 it stood 100vh tall inside a
    frame 128px shorter than that, overflowed, and the row grew — which slid both
-   arrows down 64px. Nothing but the glyph moves now, at any size. */
+   arrows down 64px. Nothing but the glyph moves now, at any size.
+
+   Positioning it had a cost that had to be paid back below. A positioned
+   element paints above every earlier sibling, so past 100 — where the glyph
+   overflows on purpose — it covered the previous arrow, the metadata and the
+   Close button, and swallowed their clicks. The next arrow was fine only
+   because it happens to come after the stage in the markup. Everything that is
+   not the glyph is lifted over it explicitly now, rather than by accident of
+   source order. */
 .viewer-stage {
   position: relative;
   align-self: stretch;
   min-width: 0;
+}
+
+.viewer-bar,
+.viewer-meta,
+.viewer-arrow,
+.viewer-controls {
+  z-index: 1;
 }
 
 /* Measured against the frame rather than the screen: the viewer is inset by its
