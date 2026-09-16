@@ -8,6 +8,60 @@ const GLYPH_LIMIT = 1500;
 // The family name we register every loaded font under, so the CSS never changes.
 const FAMILY = "SpecimenFont";
 
+/* Test strings. Deliberately short — at 128px a line much past ~16 characters
+   wraps on a normal desktop, which spoils the largest step. Between them they
+   exercise ascenders, descenders, ampersands, apostrophes and the awkward
+   letters (Q, J, Z, W, X, K). */
+const PHRASES = [
+  "Eggs & Potatoes",
+  "Quills & Ink",
+  "Mead & Vespers",
+  "Ye Olde Fox",
+  "Baron's Turnips",
+  "Vexed Knights",
+  "Blacksmith's Jig",
+  "Hogs & Vellum",
+  "Plump Pheasants",
+  "A Wretched Feast",
+  "Crypts & Quails",
+  "Frogs in the Moat",
+  "Quigley's Zephyr",
+  "Brazen Squid",
+  "The Alchemist",
+  "Minstrels & Mud",
+  "Bewitched Turnip",
+  "Plums for Abbot",
+  "Gravy & Woe",
+  "Jousting at Dawn",
+  "Pickled Herring",
+  "Wizard's Laundry",
+  "Oxen & Quiet",
+  "Bread & Cheese",
+  "A Jug of Mead",
+  "Cobbler's Lament",
+  "Squires & Omens",
+  "Buzzards Aloft",
+  "Velvet & Mud",
+  "Quartz & Flax",
+  "Knaves at Dusk",
+  "Pottage & Grumbles",
+  "The Jester Wept",
+  "Wolves & Orchard",
+];
+
+/* Never hand back the phrase already on screen — a shuffle that appears to do
+   nothing reads as a broken button. */
+function randomPhrase() {
+  const current = el.sample.textContent.trim();
+  const pool = PHRASES.filter((p) => p !== current);
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function setPhrase(text) {
+  el.sample.textContent = text;
+  renderWaterfall();
+}
+
 const el = {
   loader: document.getElementById("loader"),
   dropzone: document.getElementById("dropzone"),
@@ -22,6 +76,7 @@ const el = {
   glyphGrid: document.getElementById("glyph-grid"),
   glyphCount: document.getElementById("glyph-count"),
   glyphNotice: document.getElementById("glyph-notice"),
+  shuffle: document.getElementById("shuffle"),
   print: document.getElementById("print"),
   reset: document.getElementById("reset"),
 };
@@ -105,7 +160,7 @@ async function handleFile(file) {
   document.body.classList.add("has-font");
   renderTitle(file, parsed);
   renderInfo(file, format, parsed);
-  renderWaterfall();
+  setPhrase(randomPhrase()); // a fresh phrase per font, and it renders the waterfall
   renderGlyphs(parsed);
 
   setStatus(`Loaded ${file.name}.`);
@@ -384,6 +439,8 @@ window.addEventListener("dragover", (e) => e.preventDefault());
 window.addEventListener("drop", (e) => e.preventDefault());
 
 el.sample.addEventListener("input", renderWaterfall);
+
+el.shuffle.addEventListener("click", () => setPhrase(randomPhrase()));
 
 el.print.addEventListener("click", () => window.print());
 
