@@ -351,8 +351,11 @@ body.has-font .loader { display: none; }
   .site-footer .sample-list { max-width: 50%; }
 }
 
+/* Sits directly above the glyph grid, so it keeps the grid's own gap beneath
+   it and reads as the first row of the same field rather than as a separate
+   banner floating above one. Its radius already matches the cells. */
 .notice {
-  margin: 0 0 var(--space-4);
+  margin: 0 0 var(--space-1);
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius);
   background: var(--color-field);
