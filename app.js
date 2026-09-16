@@ -590,10 +590,10 @@ function fontNames(file, font) {
   return { family, style: label, markers, declared };
 }
 
-function renderTitle({ family, style }) {
-  el.fontName.textContent = family;
-  el.headerFont.textContent = family;
-  renderStyle(style);
+function renderTitle(names) {
+  el.fontName.textContent = names.family;
+  el.headerFont.textContent = names.family;
+  renderStyle(names);
   sizeIntro();
   fitTitle();
 }
@@ -601,13 +601,19 @@ function renderTitle({ family, style }) {
 /* The style line is a button when the family has other weights to show, and
    plain text when it does not — a dropped file is one weight, and a control
    that cannot do anything is worse than no control. */
-/* Two pills. The first states what the file says about itself — style, and any
-   trial marking — and does nothing. The second is the weight control, and only
-   appears when there is another weight to go to. */
-function renderStyle(style) {
+/* Two pills. The first counts what the family has to offer, the way the glyph
+   heading counts glyphs, and carries any trial marking. It does nothing. The
+   second is the weight control, and only appears when there is another weight
+   to go to. */
+function renderStyle(names) {
+  const count = activeSample ? activeSample.weights.length : 1;
+
   const note = document.createElement("span");
   note.className = "style-note";
-  note.textContent = style;
+  note.textContent = [
+    `${count} Style${count === 1 ? "" : "s"}`,
+    ...names.markers,
+  ].join(" · ");
 
   if (!activeSample || activeSample.weights.length < 2) {
     el.fontStyle.replaceChildren(note);
