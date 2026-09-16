@@ -47,6 +47,39 @@ const PHRASES = [
   "Pottage & Grumbles",
   "The Jester Wept",
   "Wolves & Orchard",
+  // Further afield: high fantasy, same length discipline.
+  "Crystal Vigil",
+  "Moonlit Ruin",
+  "Ashen Spire",
+  "The Sundering",
+  "Emberfall",
+  "Shivering Vale",
+  "Glass Daggers",
+  "Wyrmtongue",
+  "Gilded Wyrm",
+  "Salt & Sorcery",
+  "Runes of Vaal",
+  "The Black Gate",
+  "Hollow Crown",
+  "Aether Drift",
+  "Summoner's Rest",
+  "Starmetal Shard",
+  "Obsidian Oath",
+  "Lichgate",
+  "Velvet Grimoire",
+  "Twin Moons Rise",
+  "Arcane Bazaar",
+  "Duskwarden",
+  "Cinder & Psalm",
+  "The Pale Wyrd",
+  "Ghostlight Ford",
+  "Glimmerwood",
+  "Oath of Ash",
+  "Wraithcandle",
+  "Vault of Echoes",
+  "Riftglass",
+  "Bone & Beacon",
+  "Silver Ley Line",
 ];
 
 /* The waterfall lines are edited in place, so the test string lives here rather
@@ -1235,11 +1268,13 @@ const COLOUR_PAIRS = [
   { fg: "#ffffff", bg: "#4671c4" }, // paper on blue, a shade under the banner to clear 4.5:1
   { fg: "#d9f24a", bg: "#14140f" }, // lime on near-black
   { fg: "#5c1a1a", bg: "#d9e0cf" }, // oxblood on sage
-  { fg: "#12143a", bg: "#ffd400" }, // navy on vivid yellow
+  { fg: "#f9e7ff", bg: "#5b1a8f" }, // lilac on raspberry purple
   { fg: "#1c1a17", bg: "#f2ece1" }, // ink on cream
-  { fg: "#111111", bg: "#ff5a3c" }, // ink on vermilion
+  { fg: "#12143a", bg: "#ffd400" }, // navy on vivid yellow
   { fg: "#0f3a3a", bg: "#e6b8a2" }, // deep teal on terracotta
+  { fg: "#111111", bg: "#ff7a00" }, // ink on vibrant orange
   { fg: "#2e1a3a", bg: "#e3e8b0" }, // aubergine on pale chartreuse
+  { fg: "#fff1f2", bg: "#c1121f" }, // pale rose on cherry red
   { fg: "#3a63a8", bg: "#f0f0f0" }, // blue on grey
 ];
 
