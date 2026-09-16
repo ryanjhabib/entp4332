@@ -55,7 +55,9 @@ main { display: flex; flex-direction: column; }
 
 body {
   margin: 0;
-  padding: var(--space-8) var(--gutter) var(--space-16);
+  /* No top padding: the sticky header owns its own breathing room, so the page
+     looks identical on load and once the header has pinned. */
+  padding: 0 var(--gutter) var(--space-16);
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-ui);
