@@ -579,6 +579,7 @@ const SAMPLE_FONTS = [
   { name: "Fredoka", id: "fredoka", weights: [300, 400, 500, 600, 700], weight: 400 },
   { name: "Fustat", id: "fustat", weights: [200, 300, 400, 500, 600, 700, 800], weight: 400 },
   { name: "Geist", id: "geist", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
+  { name: "Gelasio", id: "gelasio", weights: [400, 500, 600, 700], weight: 400 },
   { name: "Goudy Bookletter 1911", id: "goudy-bookletter-1911", weights: [400], weight: 400 },
   { name: "Grenze Gotisch", id: "grenze-gotisch", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
   { name: "IBM Plex Sans", id: "ibm-plex-sans", weights: [100, 200, 300, 400, 500, 600, 700], weight: 400 },
