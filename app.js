@@ -599,8 +599,10 @@ if (hasLocalFonts && navigator.permissions) {
     .query({ name: "local-fonts" })
     .then((status) => {
       localFontsAllowed = status.state === "granted";
+      if (localFontsAllowed) renderSamples();
       status.onchange = () => {
         localFontsAllowed = status.state === "granted";
+        renderSamples();
       };
     })
     .catch(() => {});
@@ -668,6 +670,7 @@ const SAMPLE_FONTS = [
   { name: "Fustat", id: "fustat", weights: [200, 300, 400, 500, 600, 700, 800], weight: 400 },
   { name: "Geist", id: "geist", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
   { name: "Gelasio", id: "gelasio", weights: [400, 500, 600, 700], weight: 400 },
+  { name: "Google Sans", id: "google-sans", weights: [400, 500, 600, 700], weight: 400 },
   { name: "Goudy Bookletter 1911", id: "goudy-bookletter-1911", weights: [400], weight: 400 },
   { name: "Grenze Gotisch", id: "grenze-gotisch", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
   { name: "IBM Plex Sans", id: "ibm-plex-sans", weights: [100, 200, 300, 400, 500, 600, 700], weight: 400 },
@@ -685,8 +688,10 @@ const SAMPLE_FONTS = [
   { name: "Manrope", id: "manrope", weights: [200, 300, 400, 500, 600, 700, 800], weight: 400 },
   { name: "Manufacturing Consent", id: "manufacturing-consent", weights: [400], weight: 400 },
   { name: "Martian Mono", id: "martian-mono", weights: [100, 200, 300, 400, 500, 600, 700, 800], weight: 400 },
+  { name: "Meie Script", id: "meie-script", weights: [400], weight: 400, script: true },
   { name: "Michroma", id: "michroma", weights: [400], weight: 400 },
   { name: "Micro 5", id: "micro-5", weights: [400], weight: 400 },
+  { name: "Monsieur La Doulaise", id: "monsieur-la-doulaise", weights: [400], weight: 400, script: true },
   { name: "Newsreader", id: "newsreader", weights: [200, 300, 400, 500, 600, 700, 800], weight: 400 },
   { name: "Old Standard TT", id: "old-standard-tt", weights: [400, 700], weight: 400 },
   { name: "Oxygen", id: "oxygen", weights: [300, 400, 700], weight: 400 },
@@ -2065,14 +2070,45 @@ function localItems() {
   });
 }
 
+/* Asking for the whole curated set at once, which is what makes the prompt a
+   single decision rather than one per font. The click is the gesture it needs. */
+async function requestLocalFonts() {
+  try {
+    await window.queryLocalFonts({ postscriptNames: LOCAL_FONTS.map((f) => f.ps) });
+    localFontsAllowed = true;
+    renderSamples();
+  } catch {
+    notify("Access to your installed fonts was not granted");
+  }
+}
+
+function localAccessItem() {
+  const item = document.createElement("li");
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "link-button";
+  button.textContent = "Use my installed fonts";
+  button.title = "Read a short list of fonts from this machine, with your permission";
+  button.addEventListener("click", requestLocalFonts);
+  item.append(button);
+  return item;
+}
+
 /* The machine's fonts come after the library's rather than being merged into
-   it. They behave differently — one weight, a permission prompt, and absent
-   altogether in Safari — and a group makes that legible instead of looking
-   like the list is shorter on some browsers for no reason. */
+   it. They behave differently — one weight, read off the disk, and absent
+   altogether in Safari, which does not implement the API — and a group makes
+   that legible instead of the list just being shorter on some browsers.
+
+   Nothing from the machine is listed until access has been given: naming
+   somebody's installed fonts back at them before they have agreed to that is
+   the wrong way round. Until then there is one pill offering the exchange, and
+   in Safari not even that. */
 function libraryItems() {
-  return hasLocalFonts
-    ? [...sampleItems(SAMPLE_FONTS), ...localItems()]
-    : sampleItems(SAMPLE_FONTS);
+  const items = sampleItems(SAMPLE_FONTS);
+  if (!hasLocalFonts) return items;
+  return localFontsAllowed
+    ? [...items, ...localItems()]
+    : [...items, localAccessItem()];
 }
 
 function renderSamples() {
