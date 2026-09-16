@@ -11,6 +11,10 @@
   --color-field: #f4f4f4;        /* light ground that replaces every border */
   --color-field-strong: #eaeaea; /* the same ground, on hover */
   --color-scrim: rgba(0, 0, 0, 0.32);
+
+  /* The banner's geometry, shared so the hero can line up with it. */
+  --banner-inset: 24px;
+  --banner-height: 30px;
   --color-accent: #111111;
   --color-error: #a11;
 
@@ -242,7 +246,7 @@ body.has-font .samples { display: none; }
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    padding-bottom: var(--space-16);
+    padding-bottom: var(--banner-inset);
   }
 }
 
@@ -253,6 +257,12 @@ html { scroll-padding-top: var(--space-16); }
   margin: var(--space-4) 0 0;
   color: var(--color-muted);
   font-size: var(--size-ui);
+}
+
+/* Same line box and same inset as the banner, so the style subtext and the
+   banner sit on one centre line across the bottom of the first screen. */
+@media (min-width: 768px) {
+  .font-style { line-height: var(--banner-height); }
 }
 
 .font-name {
@@ -384,7 +394,7 @@ html { scroll-padding-top: var(--space-16); }
 .drop-banner {
   position: fixed;
   left: 50%;
-  bottom: var(--space-6);
+  bottom: var(--banner-inset);
   transform: translateX(-50%);
   z-index: 15;
   display: flex;
