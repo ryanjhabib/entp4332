@@ -37,7 +37,7 @@
   /* Layout — content runs edge to edge inside a gutter, no centered column. */
   --gutter: 24px;          /* phone            */
   --section-gap: 96px;     /* space, not rules, separates the sections */
-  --radius: 2px;
+  --radius: 0;
   --border: 1px solid var(--color-rule);
   --border-soft: 1px solid var(--color-border);
   --glyph-min: 96px;
@@ -314,6 +314,12 @@ html { scroll-padding-top: var(--space-16); }
 }
 
 .glyph-cell {
+  appearance: none;
+  font: inherit;
+  color: inherit;
+  background: var(--color-bg);
+  cursor: pointer;
+  padding: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -324,6 +330,9 @@ html { scroll-padding-top: var(--space-16); }
   border-radius: var(--radius);
   overflow: hidden;
 }
+
+.glyph-cell:hover { border-color: var(--color-rule); }
+.glyph-cell:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
 
 .glyph-mark { line-height: 1; }
 .glyph-mark svg { display: block; width: 40px; height: 40px; }
@@ -340,6 +349,59 @@ html { scroll-padding-top: var(--space-16); }
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+
+/* ==========================================================================
+   Glyph viewer
+   ========================================================================== */
+body.is-viewing { overflow: hidden; }
+
+.glyph-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-16) var(--gutter) var(--space-8);
+  background: var(--color-bg);
+}
+
+.viewer-bar {
+  position: absolute;
+  top: var(--space-4);
+  left: var(--gutter);
+  right: var(--gutter);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.viewer-meta { color: var(--color-muted); }
+
+.viewer-stage {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+}
+
+.viewer-stage svg {
+  width: auto;
+  height: min(70vh, 70vw);
+  max-width: 100%;
+}
+.viewer-stage svg path { fill: var(--color-text); }
+
+.viewer-arrow {
+  border: 0;
+  background: none;
+  padding: var(--space-4);
+  font-size: var(--size-ui);
+  color: var(--color-muted);
+  cursor: pointer;
+}
+.viewer-arrow:hover { color: var(--color-text); }
 
 /* Footer */
 .site-footer {

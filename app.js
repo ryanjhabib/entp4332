@@ -81,6 +81,13 @@ const el = {
   glyphGrid: document.getElementById("glyph-grid"),
   glyphCount: document.getElementById("glyph-count"),
   glyphNotice: document.getElementById("glyph-notice"),
+  glyphToggle: document.getElementById("glyph-toggle"),
+  viewer: document.getElementById("glyph-viewer"),
+  viewerStage: document.getElementById("viewer-stage"),
+  viewerMeta: document.getElementById("viewer-meta"),
+  viewerPrev: document.getElementById("viewer-prev"),
+  viewerNext: document.getElementById("viewer-next"),
+  viewerClose: document.getElementById("viewer-close"),
   shuffle: document.getElementById("shuffle"),
   print: document.getElementById("print"),
 };
@@ -414,37 +421,104 @@ function renderWaterfall() {
 /* -------------------------------------------------------------------------
    Render: glyph grid
    ---------------------------------------------------------------------- */
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+// Printable ASCII — the set most people actually want to look at.
+const BASIC_FIRST = 0x20;
+const BASIC_LAST = 0x7e;
+
+let currentFont = null;
+let allGlyphs = [];
+let basicGlyphs = [];
+let shownGlyphs = [];
+let showingAll = false;
+
+function glyphLabel(glyph) {
+  return glyph.unicode !== undefined
+    ? `U+${glyph.unicode.toString(16).toUpperCase().padStart(4, "0")}`
+    : glyph.name || `#${glyph.index}`;
+}
+
+/* A glyph's outline normalised to a 1000-unit em, so two glyphs can be compared
+   regardless of the font's own units. Fonts carry a lot of genuinely identical
+   shapes under different codepoints — the same A serving Latin, Greek and
+   Cyrillic, or a codepoint aliased to an existing outline. Those are what make
+   the grid look so repetitive, and they are safe to collapse. Accented forms
+   have different outlines and all survive. */
+function outlineKey(glyph, font) {
+  const advance = Math.round(((glyph.advanceWidth || 0) * 1000) / font.unitsPerEm);
+  return `${glyph.getPath(0, 0, 1000).toPathData(1)}|${advance}`;
+}
+
+function buildGlyphSets(font) {
+  const seen = new Set();
+  const all = [];
+  const scanned = Math.min(font.numGlyphs, GLYPH_LIMIT);
+
+  for (let i = 0; i < scanned; i++) {
+    const glyph = font.glyphs.get(i);
+    const key = outlineKey(glyph, font);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    all.push(glyph);
+  }
+
+  const basic = all.filter(
+    (g) => g.unicode >= BASIC_FIRST && g.unicode <= BASIC_LAST
+  );
+  return { all, basic, scanned };
+}
+
 function renderGlyphs({ font, note }) {
+  currentFont = font;
   el.glyphNotice.hidden = !note;
   el.glyphNotice.textContent = note || "";
 
   if (!font) {
+    allGlyphs = basicGlyphs = shownGlyphs = [];
     el.glyphCount.textContent = "";
     el.glyphGrid.replaceChildren();
+    el.glyphToggle.hidden = true;
     return;
   }
 
-  const total = font.numGlyphs;
-  const shown = Math.min(total, GLYPH_LIMIT);
-  el.glyphCount.textContent =
-    shown < total ? `— showing ${shown} of ${total}` : `— ${total}`;
+  const { all, basic, scanned } = buildGlyphSets(font);
+  allGlyphs = all;
+  basicGlyphs = basic.length ? basic : all;
+  showingAll = false;
+  paintGlyphs();
 
-  if (shown < total && !note) {
+  const duplicates = scanned - all.length;
+  const parts = [];
+  if (duplicates > 0) {
+    parts.push(`${duplicates} glyph${duplicates === 1 ? "" : "s"} repeated an outline already shown and ${duplicates === 1 ? "was" : "were"} collapsed.`);
+  }
+  if (scanned < font.numGlyphs) {
+    parts.push(`This font has ${font.numGlyphs} glyphs; the first ${scanned} were scanned to keep the page responsive.`);
+  }
+  if (parts.length && !note) {
     el.glyphNotice.hidden = false;
-    el.glyphNotice.textContent = `This font has ${total} glyphs. The first ${shown} are shown to keep the page responsive.`;
+    el.glyphNotice.textContent = parts.join(" ");
   }
-
-  const cells = [];
-  for (let i = 0; i < shown; i++) {
-    const glyph = font.glyphs.get(i);
-    cells.push(glyphCell(glyph, font));
-  }
-  el.glyphGrid.replaceChildren(...cells);
 }
 
-function glyphCell(glyph, font) {
-  const cell = document.createElement("div");
+function paintGlyphs() {
+  shownGlyphs = showingAll ? allGlyphs : basicGlyphs;
+  el.glyphGrid.replaceChildren(
+    ...shownGlyphs.map((glyph, i) => glyphCell(glyph, currentFont, i))
+  );
+  el.glyphCount.textContent = `— ${shownGlyphs.length}`;
+  el.glyphToggle.hidden = allGlyphs.length <= basicGlyphs.length;
+  el.glyphToggle.textContent = showingAll
+    ? "Show the basic set"
+    : `Show all ${allGlyphs.length}`;
+}
+
+function glyphCell(glyph, font, i) {
+  const cell = document.createElement("button");
+  cell.type = "button";
   cell.className = "glyph-cell";
+  cell.dataset.index = i;
 
   const mark = document.createElement("div");
   mark.className = "glyph-mark";
@@ -454,20 +528,14 @@ function glyphCell(glyph, font) {
 
   const label = document.createElement("div");
   label.className = "glyph-label";
-  label.textContent = glyph.unicode !== undefined
-    ? `U+${glyph.unicode.toString(16).toUpperCase().padStart(4, "0")}`
-    : glyph.name || `#${glyph.index}`;
+  label.textContent = glyphLabel(glyph);
 
   cell.append(mark, label);
   cell.title = glyph.name ? `${glyph.name} (#${glyph.index})` : `#${glyph.index}`;
   return cell;
 }
 
-const SVG_NS = "http://www.w3.org/2000/svg";
-
-function glyphSvg(glyph, font) {
-  const box = 40;
-  const size = 28;
+function glyphSvg(glyph, font, box = 40, size = 28) {
   const scale = size / font.unitsPerEm;
   const advance = (glyph.advanceWidth || font.unitsPerEm) * scale;
   const x = (box - advance) / 2;
@@ -481,6 +549,47 @@ function glyphSvg(glyph, font) {
   path.setAttribute("d", glyph.getPath(x, baseline, size).toPathData(2));
   svg.append(path);
   return svg;
+}
+
+/* -------------------------------------------------------------------------
+   Glyph viewer
+   ---------------------------------------------------------------------- */
+let viewerIndex = -1;
+let lastFocused = null;
+
+function openViewer(i) {
+  if (!shownGlyphs.length) return;
+  lastFocused = document.activeElement;
+  viewerIndex = i;
+  paintViewer();
+  el.viewer.hidden = false;
+  document.body.classList.add("is-viewing");
+  el.viewerNext.focus();
+}
+
+function paintViewer() {
+  const glyph = shownGlyphs[viewerIndex];
+  if (!glyph) return;
+  el.viewerStage.replaceChildren(glyphSvg(glyph, currentFont, 100, 72));
+  el.viewerMeta.textContent = [
+    glyphLabel(glyph),
+    glyph.name,
+    `${viewerIndex + 1} of ${shownGlyphs.length}`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+function stepViewer(delta) {
+  const count = shownGlyphs.length;
+  viewerIndex = (viewerIndex + delta + count) % count; // wraps at both ends
+  paintViewer();
+}
+
+function closeViewer() {
+  el.viewer.hidden = true;
+  document.body.classList.remove("is-viewing");
+  if (lastFocused) lastFocused.focus();
 }
 
 /* -------------------------------------------------------------------------
@@ -586,5 +695,33 @@ el.waterfall.addEventListener("paste", (e) => {
 });
 
 el.shuffle.addEventListener("click", () => setPhrase(randomPhrase()));
+
+el.glyphToggle.addEventListener("click", () => {
+  showingAll = !showingAll;
+  paintGlyphs();
+});
+
+el.glyphGrid.addEventListener("click", (e) => {
+  const cell = e.target.closest(".glyph-cell");
+  if (cell) openViewer(Number(cell.dataset.index));
+});
+
+el.viewerPrev.addEventListener("click", () => stepViewer(-1));
+el.viewerNext.addEventListener("click", () => stepViewer(1));
+el.viewerClose.addEventListener("click", closeViewer);
+
+// Clicking the backdrop closes; clicking the glyph or the controls does not.
+el.viewer.addEventListener("click", (e) => {
+  if (e.target === el.viewer || e.target === el.viewerStage) closeViewer();
+});
+
+window.addEventListener("keydown", (e) => {
+  if (el.viewer.hidden) return;
+  if (e.key === "Escape") closeViewer();
+  else if (e.key === "ArrowLeft") stepViewer(-1);
+  else if (e.key === "ArrowRight") stepViewer(1);
+  else return;
+  e.preventDefault();
+});
 
 el.print.addEventListener("click", () => window.print());

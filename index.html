@@ -56,6 +56,7 @@
     <!-- 6. Glyph grid -->
     <section class="specimen-section" id="glyphs-section">
       <h2 class="section-title">Glyphs <span class="section-note" id="glyph-count"></span></h2>
+      <p class="hint no-print">Click any glyph to enlarge it. <button type="button" class="link-button" id="glyph-toggle" hidden></button></p>
       <p class="notice" id="glyph-notice" hidden></p>
       <div class="glyph-grid" id="glyph-grid"></div>
     </section>
@@ -66,6 +67,16 @@
 <footer class="site-footer no-print">
   <button type="button" id="print">Print / Save as PDF</button>
 </footer>
+
+<div class="glyph-viewer no-print" id="glyph-viewer" hidden role="dialog" aria-modal="true" aria-label="Glyph detail">
+  <div class="viewer-bar">
+    <span class="viewer-meta" id="viewer-meta"></span>
+    <button type="button" class="link-button" id="viewer-close">Close</button>
+  </div>
+  <button type="button" class="viewer-arrow" id="viewer-prev" aria-label="Previous glyph">&larr;</button>
+  <div class="viewer-stage" id="viewer-stage"></div>
+  <button type="button" class="viewer-arrow" id="viewer-next" aria-label="Next glyph">&rarr;</button>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js"></script>
 <script src="app.js"></script>
