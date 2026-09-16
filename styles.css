@@ -205,15 +205,35 @@ body.has-font .loader { display: none; }
   transform: translate(-50%, -50%);
 }
 
-.status { margin: var(--space-4) 0 0; color: var(--color-muted); }
-
-.loader .status {
-  position: absolute;
+/* Fixed to the page rather than to a section, so it appears in the same place
+   whichever state you are in. pointer-events: none so a notice about a bad file
+   never sits between you and the control you are reaching for. */
+.toast {
+  position: fixed;
+  top: var(--space-16);
   left: var(--gutter);
-  right: var(--gutter);
-  bottom: var(--space-12);
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  height: var(--pill-height);
+  max-width: calc(100% - var(--gutter) * 2);
   margin: 0;
-  text-align: center;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  background: #a34567;
+  color: #ffffff;
+  pointer-events: none;
+  opacity: 0;
+  /* Delaying visibility until the fade finishes keeps it out of the way, and
+     out of the accessibility tree, rather than sitting there invisible. */
+  visibility: hidden;
+  transition: opacity 240ms ease, visibility 0s linear 240ms;
+}
+
+.toast.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 240ms ease;
 }
 
 /* Too narrow for a left stack and a centred banner to coexist: below this the
@@ -236,7 +256,6 @@ body.has-font .loader { display: none; }
   /* Half a phone screen is not a usable measure. */
   .sample-list { max-width: 100%; }
 }
-.status.is-error { color: var(--color-error); }
 
 /* A centred row directly beneath the banner, which stays dead centre. The
    offset is the banner's own half-height plus a gap, so the two stay related

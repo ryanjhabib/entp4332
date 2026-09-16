@@ -208,7 +208,7 @@ const SAMPLE_FONTS = [
 const el = {
   loader: document.getElementById("loader"),
   fileInput: document.getElementById("file-input"),
-  status: document.getElementById("status"),
+  toast: document.getElementById("toast"),
   sampleList: document.getElementById("sample-list"),
   fontPreview: document.getElementById("font-preview"),
   bannerSlot: document.getElementById("banner-slot"),
@@ -266,9 +266,24 @@ function trimStop(text) {
   return String(text).replace(/\s*\.\s*$/, "");
 }
 
-function setStatus(message, isError = false) {
-  el.status.textContent = message;
-  el.status.classList.toggle("is-error", isError);
+/* A short-lived notice in the top corner. It lives on the body rather than in
+   any section, so it reads the same whichever state the page is in, and it is
+   only ever used for things that went wrong — a specimen appearing is its own
+   confirmation that nothing did. */
+const TOAST_MS = 10000;
+let toastTimer = null;
+
+function notify(message) {
+  clearTimeout(toastTimer);
+
+  if (!message) {
+    el.toast.classList.remove("is-visible");
+    return;
+  }
+
+  el.toast.textContent = message;
+  el.toast.classList.add("is-visible");
+  toastTimer = setTimeout(() => el.toast.classList.remove("is-visible"), TOAST_MS);
 }
 
 /* -------------------------------------------------------------------------
@@ -295,25 +310,21 @@ function detectFormat(buffer) {
    ---------------------------------------------------------------------- */
 async function handleFile(file, source = null) {
   resetSpecimen();
-  setStatus(`Reading ${file.name}…`);
 
   let buffer;
   try {
     buffer = await file.arrayBuffer();
   } catch (err) {
-    return setStatus(`Could not read ${file.name}: ${trimStop(err.message)}`, true);
+    return notify("That file could not be read");
   }
 
   if (buffer.byteLength < 4) {
-    return setStatus(`${file.name} is empty or too small to be a font file`, true);
+    return notify("That file is empty");
   }
 
   const format = detectFormat(buffer);
   if (!format) {
-    return setStatus(
-      `${file.name} does not look like a font file — supported: .ttf, .otf, .woff, .woff2`,
-      true
-    );
+    return notify("Only .ttf, .otf, .woff and .woff2 files");
   }
 
   // Step 1: render it. The FontFace API handles every format the browser
@@ -326,10 +337,7 @@ async function handleFile(file, source = null) {
     await document.fonts.ready; // canvas cannot measure the face until it is live
   } catch (err) {
     loadedFace = null;
-    return setStatus(
-      `The browser could not render ${file.name} — it may be corrupt or use an unsupported flavour (${trimStop(err.message)})`,
-      true
-    );
+    return notify("That font could not be rendered");
   }
 
   // Step 2: parse it for metadata and outlines. This can fail independently of
@@ -351,7 +359,6 @@ async function handleFile(file, source = null) {
   renderPage();
   renderGlyphs(parsed);
 
-  setStatus(`Loaded ${file.name}`);
 }
 
 /* opentype.js cannot read woff2's Brotli-compressed tables. We decompress to
@@ -1205,7 +1212,6 @@ function placeBanner() {
 }
 
 async function loadSample(sample, weight = sample.weight) {
-  setStatus(`Fetching ${sample.name}…`);
   try {
     const res = await fetch(sampleUrl(sample, weight));
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -1213,10 +1219,7 @@ async function loadSample(sample, weight = sample.weight) {
     const file = new File([blob], sampleFile(sample, weight), { type: "font/woff2" });
     await handleFile(file, { sample, weight });
   } catch (err) {
-    setStatus(
-      `Could not fetch ${sample.name} (${trimStop(err.message)}) — drop a font file instead`,
-      true
-    );
+    notify(`Could not fetch ${sample.name}`);
   }
 }
 
@@ -1397,7 +1400,7 @@ applyColourPair();
    ---------------------------------------------------------------------- */
 el.home.addEventListener("click", () => {
   resetSpecimen();
-  setStatus("");
+  notify("");
   window.scrollTo(0, 0);
 });
 
