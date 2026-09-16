@@ -584,21 +584,50 @@ const LOCAL_FONTS = [
   { name: "Impact", ps: "Impact" },
   { name: "Luminari", ps: "Luminari-Regular" },
   { name: "Times New Roman", ps: "TimesNewRomanPSMT" },
-];
+].map((entry) => ({ ...entry, local: true }));
 
 const hasLocalFonts = typeof window.queryLocalFonts === "function";
+
+/* Whether the reader has already allowed font access. Hovering must never
+   provoke the prompt — it is not a user gesture, so the call would throw
+   anyway — so the hover preview is offered only once a click has been through
+   the prompt, and this tracks that without asking anything. */
+let localFontsAllowed = false;
+
+if (hasLocalFonts && navigator.permissions) {
+  navigator.permissions
+    .query({ name: "local-fonts" })
+    .then((status) => {
+      localFontsAllowed = status.state === "granted";
+      status.onchange = () => {
+        localFontsAllowed = status.state === "granted";
+      };
+    })
+    .catch(() => {});
+}
+
+async function localFontBuffer(entry) {
+  const found = await window.queryLocalFonts({ postscriptNames: [entry.ps] });
+  if (!found.length) throw new Error("not-installed");
+  return (await found[0].blob()).arrayBuffer();
+}
 
 /* The click is the user gesture the permission prompt needs, so this must be
    called straight from the handler rather than after an await. */
 async function loadLocalFont(entry) {
   try {
-    const found = await window.queryLocalFonts({ postscriptNames: [entry.ps] });
-    if (!found.length) {
-      return notify(`${entry.name} is not installed on this machine`);
-    }
-    const blob = await found[0].blob();
-    await handleFile(new File([blob], `${entry.name}.ttf`, { type: blob.type }));
+    const buffer = await localFontBuffer(entry);
+    await handleFile(new File([buffer], `${entry.name}.ttf`));
   } catch (err) {
+    if (err && err.message === "not-installed") {
+      /* Chrome reads the installed fonts once at startup, so a font added
+         while it was open is invisible to it until it is restarted. That is
+         the usual reason for a miss, and much likelier than the font really
+         being absent. */
+      return notify(
+        `${entry.name} was not found — if you installed it just now, quit and reopen the browser so it rescans`
+      );
+    }
     // Refusing the prompt lands here, and is a decision rather than a fault.
     notify(
       err && err.name === "SecurityError"
@@ -1884,9 +1913,15 @@ function previewFace(sample, index) {
     previewFaces.set(
       sample.name,
       (async () => {
-        const res = await fetch(sampleUrl(sample, sample.weight));
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const face = new FontFace(family, await res.arrayBuffer());
+        let buffer;
+        if (sample.local) {
+          buffer = await localFontBuffer(sample);
+        } else {
+          const res = await fetch(sampleUrl(sample, sample.weight));
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          buffer = await res.arrayBuffer();
+        }
+        const face = new FontFace(family, buffer);
         await face.load();
         document.fonts.add(face);
         return family;
@@ -2006,7 +2041,7 @@ function restPreview() {
 }
 
 function localItems() {
-  return LOCAL_FONTS.map((entry) => {
+  return LOCAL_FONTS.map((entry, i) => {
     const item = document.createElement("li");
     const button = document.createElement("button");
     button.type = "button";
@@ -2014,6 +2049,17 @@ function localItems() {
     button.textContent = entry.name;
     button.title = `${entry.name}, from this machine`;
     button.addEventListener("click", () => loadLocalFont(entry));
+
+    /* Offset past the library so two pills never share a preview family. Only
+       previews once access has been allowed — before that the call would throw
+       for want of a gesture, and the pill still works on click. */
+    const index = SAMPLE_FONTS.length + i;
+    const preview = () => {
+      if (localFontsAllowed) showPreview(entry, index);
+    };
+    button.addEventListener("mouseenter", preview);
+    button.addEventListener("focus", preview);
+
     item.append(button);
     return item;
   });
