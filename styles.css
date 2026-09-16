@@ -13,18 +13,15 @@
   --color-muted-soft: #8c8c8c;
   --color-rule: #111111;   /* the waterfall rules — the only strokes on the page */
   --color-field: #f5f5f5;        /* light ground that replaces every border */
-  --color-field-strong: #d9d9d9; /* the same ground, on hover */
+  --color-field-strong: #e3e3e3; /* the same ground, on hover */
   /* Two steps down from the library pills for the fonts that came off this
      machine — 245 to 221, which reads as a group across the width of the list
      rather than only where the two happen to touch.
 
-     That does put it near the library's hover at 217. Deliberate: a hovered
-     pill has the cursor on it and there is only ever one, so the pair are told
-     apart by where the pointer is rather than by four steps of grey. The hover
-     keeps the same 28-step drop as the light pills, so both groups respond by
-     the same amount. */
+     The library's hover lands at 227, lighter than this, so a hovered library
+     pill never passes for one of these. */
   --color-field-mine: #dddddd;
-  --color-field-mine-strong: #c1c1c1;
+  --color-field-mine-strong: #cbcbcb;
   --color-banner: #4c78cd;                 /* the empty state */
   --color-banner-quiet: rgba(0, 0, 0, 0.32); /* over a specimen */
   /* Glass is now only for things that float over moving type and never change
@@ -48,11 +45,14 @@
      through: over paper it lands back on #F4F4F4, so nothing looks different
      until something passes underneath. */
   --color-field-glass: rgba(240, 240, 240, 0.72);
-  /* Deep enough to see. These were 12 steps of 255 away from the resting
-     ground, which is below the threshold where a transition has anything to
-     show — the hover read as static not because it was too fast but because
-     almost nothing was changing. Both land ~28 steps down now, matched so the
-     glass pills and the solid ones move by the same amount. */
+  /* Eighteen steps of 255 below the resting ground. Twelve was too few to see —
+     the hover read as static because almost nothing was changing — and
+     twenty-eight was more contrast than a hover wants. The transition is what
+     carries it now that the pills are solid and it actually runs; the endpoints
+     only have to be far enough apart to register.
+
+     Matched across both groups, so the library and the machine's fonts respond
+     by the same amount. */
   --color-field-glass-strong: rgba(208, 208, 208, 0.84);
   --blur: blur(38px);
   --color-control: #3d3d3d;        /* the one dark control on the page */
