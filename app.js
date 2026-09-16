@@ -549,6 +549,58 @@ function sampleFile(sample, weight) {
   return `${sample.name.replace(/\s+/g, "")}-${weight}.woff2`;
 }
 
+/* Fonts from the machine rather than from a CDN, read through the Local Font
+   Access API. They cannot be shipped — every one of these is licensed to run on
+   a Mac, not to be served from a website — but nothing is being served: the
+   bytes are read from the reader's own disk at the moment they click, which is
+   the same arrangement as dropping the file in, minus the dragging.
+
+   Asked for by PostScript name, so the query returns these fifteen rather than
+   the four hundred installed. Chrome and Edge implement this; Safari does not,
+   and there the group simply does not appear.
+
+   Single-face files only. A .ttc hands back the whole collection and neither
+   FontFace nor opentype.js will take one. */
+const LOCAL_FONTS = [
+  { name: "Andale Mono", ps: "AndaleMono" },
+  { name: "Apple Chancery", ps: "Apple-Chancery" },
+  { name: "Arial", ps: "ArialMT" },
+  { name: "Big Caslon", ps: "BigCaslon-Medium" },
+  { name: "Bodoni 72 Smallcaps", ps: "BodoniSvtyTwoSCITCTT-Book" },
+  { name: "Bodoni Ornaments", ps: "BodoniOrnamentsITCTT" },
+  { name: "Brush Script", ps: "BrushScriptMT" },
+  { name: "Chalkduster", ps: "Chalkduster" },
+  { name: "Comic Sans MS", ps: "ComicSansMS" },
+  { name: "Courier New", ps: "CourierNewPSMT" },
+  { name: "Georgia", ps: "Georgia" },
+  { name: "Herculanum", ps: "Herculanum" },
+  { name: "Impact", ps: "Impact" },
+  { name: "Luminari", ps: "Luminari-Regular" },
+  { name: "Times New Roman", ps: "TimesNewRomanPSMT" },
+];
+
+const hasLocalFonts = typeof window.queryLocalFonts === "function";
+
+/* The click is the user gesture the permission prompt needs, so this must be
+   called straight from the handler rather than after an await. */
+async function loadLocalFont(entry) {
+  try {
+    const found = await window.queryLocalFonts({ postscriptNames: [entry.ps] });
+    if (!found.length) {
+      return notify(`${entry.name} is not installed on this machine`);
+    }
+    const blob = await found[0].blob();
+    await handleFile(new File([blob], `${entry.name}.ttf`, { type: blob.type }));
+  } catch (err) {
+    // Refusing the prompt lands here, and is a decision rather than a fault.
+    notify(
+      err && err.name === "SecurityError"
+        ? "Access to your installed fonts was not granted"
+        : `Could not read ${entry.name} from this machine`
+    );
+  }
+}
+
 /* Which sample is on screen, if any. A dropped file leaves this null, which is
    what keeps the weight control off for fonts we only have one file of. */
 let activeSample = null;
@@ -1946,10 +1998,34 @@ function restPreview() {
   el.fontPreview.style.opacity = "1"; // whatever happened, it comes back lit
 }
 
+function localItems() {
+  return LOCAL_FONTS.map((entry) => {
+    const item = document.createElement("li");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "link-button";
+    button.textContent = entry.name;
+    button.title = `${entry.name}, from this machine`;
+    button.addEventListener("click", () => loadLocalFont(entry));
+    item.append(button);
+    return item;
+  });
+}
+
+/* The machine's fonts come after the library's rather than being merged into
+   it. They behave differently — one weight, a permission prompt, and absent
+   altogether in Safari — and a group makes that legible instead of looking
+   like the list is shorter on some browsers for no reason. */
+function libraryItems() {
+  return hasLocalFonts
+    ? [...sampleItems(SAMPLE_FONTS), ...localItems()]
+    : sampleItems(SAMPLE_FONTS);
+}
+
 function renderSamples() {
-  el.sampleList.replaceChildren(...sampleItems(SAMPLE_FONTS));
+  el.sampleList.replaceChildren(...libraryItems());
   // The same library again, behind the name in the header.
-  el.menuList.replaceChildren(...sampleItems(SAMPLE_FONTS));
+  el.menuList.replaceChildren(...libraryItems());
 }
 
 /* -------------------------------------------------------------------------
