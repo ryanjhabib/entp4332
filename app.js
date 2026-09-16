@@ -174,6 +174,12 @@ const PHRASES = [
   "mercy stays warm",
   "beauty as evidence",
   "illuminate our souls",
+  "benevolence",
+  "burnt sienna",
+  "mother and father",
+  "brother and sister",
+  "you deserve nothing",
+  "you > helvetica",
 ];
 
 /* Full lines rather than labels. Too long for the waterfall — past about
@@ -189,8 +195,12 @@ const LINES = [
   "our planet migrates tomorrow",
   "god spilled a bit of his light on us",
   "i'm not so much a fighter",
-  "wedding with eternity",
+  "awaiting my wedding with eternity",
   "experience raw emotion",
+  "to see the next part of the dream",
+  "my heart tore on the tennis courts",
+  "the power lines are my pyramids",
+  "laying my sword on destiny’s palms",
   "he is nearer to you than your own jugular vein",
   "the heart was made to be broken open, not kept",
   "i asked for the world and was given the one who made it",
@@ -1087,10 +1097,16 @@ function pageSample(shape) {
     return sentenceCase(pickFresh(pool, "page-phrase"));
   }
 
-  // A single word, long enough to be worth looking at and never an ampersand.
-  const words = PHRASES.join(" ")
+  /* A single word, long enough to be worth looking at and never an ampersand.
+     Drawn from the lines as well as the phrases: the lines are where the best
+     of them are, and a word set at 180px owes nothing to the sentence it came
+     from. Punctuation is trimmed off the ends so a word lifted out of the
+     middle of one does not arrive still wearing its comma. */
+  const words = [...PHRASES, ...LINES]
+    .join(" ")
     .split(/\s+/)
-    .filter((w) => /[A-Za-z]{4,}/.test(w));
+    .map((w) => w.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, ""))
+    .filter((w) => /^[A-Za-z]{4,}$/.test(w));
   return sentenceCase(pickFresh(words, "page-word"));
 }
 
