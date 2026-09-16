@@ -941,7 +941,17 @@ const STYLE_WORDS =
    and when they do not we lift trailing style words off the family ourselves. */
 function fontNames(file, font) {
   const fallback = file.name.replace(/\.(ttf|otf|woff2?|ttc)$/i, "");
-  if (!font) return { family: fallback, style: "" };
+
+  /* Same shape on both exits. It used to return a two-key object here and a
+     five-key one below, and renderStyle spreads `names.markers` — so a font the
+     browser could render but opentype could not parse threw
+     "names.markers is not iterable" out of the middle of handleFile, after
+     has-font had gone on and the hero had been set but before the waterfall,
+     paragraphs, page and glyphs were rendered. The specimen came up empty and
+     stayed empty until something re-ran a generator, which is why clicking
+     Shuffle appeared to fix it. parseFont's note has always promised that the
+     specimen still renders when parsing fails; this is what makes that true. */
+  if (!font) return { family: fallback, style: "", markers: [], declared: "" };
 
   const names = font.names;
   let family = pickName(names.preferredFamily) || pickName(names.fontFamily) || fallback;

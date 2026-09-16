@@ -823,6 +823,52 @@ a letter they know the shape of and say that is not quite right.
 
 ---
 
+## 23. One function, two exits, two different shapes
+
+**Symptom** "Sometimes when i drag in a new font, it doesnt load in until i click shuffle or
+the buttons." The specimen came up with the typeface name at the top and everything under it
+empty — no waterfall, no paragraphs, no page, no glyphs — and clicking any Shuffle filled
+that section in.
+
+**Cause** `fontNames` returns the family and style to show. It has two exits:
+
+```js
+if (!font) return { family: fallback, style: "" };
+...
+return { family, style: label, markers, declared };
+```
+
+Two keys on one path, four on the other. `renderStyle` spreads `names.markers`, so the short
+shape threw `TypeError: names.markers is not iterable` — and it threw from the middle of
+`handleFile`, after `has-font` had been added and `renderTitle` had run, but before the
+waterfall, paragraphs, page and glyphs were rendered. A half-built specimen, left standing.
+Clicking Shuffle re-ran one generator and filled one section, which is exactly what the
+report described.
+
+The short exit is taken when `font` is null, and `font` is null when opentype.js cannot parse
+the file. So it failed on exactly the fonts that fail to parse and on no others, which is
+what made it "sometimes" — the sample library all parses, and the user had dropped Avenir.
+
+The sharpest part: `parseFont` has always returned a note reading "the specimen above still
+renders correctly", written when that degradation was designed. It had not been true since
+`markers` was added to the other exit, and the note itself is what made the claim plausible
+enough not to check.
+
+**Fix** Both exits return the same four keys. That is the whole change.
+
+**Verified** With parsing forced to fail: no throw, and the specimen comes up complete — hero
+from the filename, 6 waterfall lines, 2 paragraph columns, page text, the info table showing
+dashes for the rows that need parsing, no glyph grid, and the notice explaining why. A font
+that parses is unchanged, from a drop and from the library.
+
+**Worth remembering** A function with more than one exit has more than one chance to invent
+a shape. Every caller was written against the long one. And this is the second time a comment
+in this codebase asserted a behaviour that had quietly stopped being true — a promise in
+prose is not a test, and it is worse than no comment, because it answers the question you
+would otherwise have gone and checked.
+
+---
+
 ## Test matrix (all passing)
 
 | File | Format | Result |
