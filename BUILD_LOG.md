@@ -290,6 +290,50 @@ given its unit at the point of use.
 
 ---
 
+## 11. The weight control reported the wrong weight
+
+**Symptom** Adding a control to step through a family's weights, the label was wrong for
+Manrope: weight 400 read "ExtraLight", and so did weight 200. Stepping to 700 left
+"ExtraLight" stuck in the family name — the hero read "Manrope ExtraLight".
+
+**Cause** The name table, again, but worse than entry 7. Manrope's files are *all* named
+"Manrope ExtraLight", at every weight, in name ID 1 **and** in ID 16:
+
+| Weight | ID 1 | ID 2 | ID 16 | OS/2 |
+|---|---|---|---|---|
+| 400 | `Manrope ExtraLight` | Regular | — | **400** |
+| 700 | `Manrope ExtraLight` | Bold | — | 700 |
+| 500 | `Manrope ExtraLight Medium` | Regular | `Manrope ExtraLight` | 500 |
+
+Entry 7's fix trusted ID 16 when it existed. Here ID 16 is polluted too, so the lift was
+skipped and "ExtraLight" survived into the family. And the style label was coming from the
+name table, which says ExtraLight for a 400.
+
+**Fix, in two parts.**
+
+*The label comes from a number, not a name.* OS/2 `usWeightClass` is what the renderer
+itself uses to pick a weight, and it is correct in every file. Mapped to the standard nine
+names, nearest step with ties going down — Manrope's 200 declares itself 250. For a sample
+font the requested weight is known outright, which is better still.
+
+*The lift is unconditional, and only for weight words.* Neither ID 1 nor ID 16 can be
+trusted, so a trailing weight word comes off the family whatever they say. Width words were
+removed from that list entirely: "Archivo Narrow" and "Roboto Condensed" are families in
+their own right, and stripping the width would merge them into families they are not. A
+weight on the end of a family name is nearly always an artefact of the build; a width
+nearly never is.
+
+**Verified** All seven Manrope weights now read "Manrope" with the correct label. The
+parser regression set still holds: Inter SemiBold splits, Archivo Narrow and Roboto
+Condensed keep their widths, a family literally called "Black" keeps its name, and
+"GT America Trial SemiBold" still resolves to GT America / SemiBold · Trial.
+
+**Worth remembering** Three separate fields in a font claim to describe its weight, and on
+a badly built family all three can disagree. The numeric one is the only one anything
+actually renders from.
+
+---
+
 ## Test matrix (all passing)
 
 | File | Format | Result |

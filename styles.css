@@ -414,6 +414,10 @@ html { scroll-padding-top: var(--space-16); }
   font-size: var(--size-ui);
 }
 
+/* Reads as the style line until you notice it is a control. */
+.weight-button { color: var(--color-muted); }
+.weight-button:hover { color: var(--color-text); }
+
 /* Same line box and same inset as the banner, so the style subtext and the
    banner sit on one centre line across the bottom of the first screen. */
 @media (min-width: 768px) {

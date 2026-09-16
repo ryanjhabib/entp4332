@@ -158,36 +158,51 @@ function setPhrase(text) {
 /* Open-licence faces served from the same CDN as the libraries. Nothing is
    uploaded — these are downloads, so the page's privacy claim still holds. */
 const SAMPLE_CDN = "https://cdn.jsdelivr.net/npm/";
+
+/* Built from the family id and a weight rather than stored per file, so a
+   family with nine weights is one entry instead of nine. */
+function sampleUrl(sample, weight) {
+  return `${SAMPLE_CDN}@fontsource/${sample.id}/files/${sample.id}-latin-${weight}-normal.woff2`;
+}
+
+function sampleFile(sample, weight) {
+  return `${sample.name.replace(/\s+/g, "")}-${weight}.woff2`;
+}
+
+/* Which sample is on screen, if any. A dropped file leaves this null, which is
+   what keeps the weight control off for fonts we only have one file of. */
+let activeSample = null;
+let activeWeight = null;
 const SAMPLE_FONTS = [
-  { name: "Inter", file: "Inter-Regular.woff2", path: "@fontsource/inter/files/inter-latin-400-normal.woff2" },
-  { name: "Geist", file: "Geist-Regular.woff2", path: "@fontsource/geist/files/geist-latin-400-normal.woff2" },
-  { name: "Work Sans", file: "WorkSans-Regular.woff2", path: "@fontsource/work-sans/files/work-sans-latin-400-normal.woff2" },
-  { name: "Poppins", file: "Poppins-Regular.woff2", path: "@fontsource/poppins/files/poppins-latin-400-normal.woff2" },
-  { name: "Oxygen", file: "Oxygen-Regular.woff2", path: "@fontsource/oxygen/files/oxygen-latin-400-normal.woff2" },
-  { name: "Manrope", file: "Manrope-Regular.woff2", path: "@fontsource/manrope/files/manrope-latin-400-normal.woff2" },
-  { name: "IBM Plex Sans", file: "IBMPlexSans-Regular.woff2", path: "@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2" },
-  { name: "Archivo", file: "Archivo-SemiBold.woff2", path: "@fontsource/archivo/files/archivo-latin-600-normal.woff2" },
-  { name: "Instrument Sans", file: "InstrumentSans-Regular.woff2", path: "@fontsource/instrument-sans/files/instrument-sans-latin-400-normal.woff2" },
-  { name: "Bricolage Grotesque", file: "BricolageGrotesque-Regular.woff2", path: "@fontsource/bricolage-grotesque/files/bricolage-grotesque-latin-400-normal.woff2" },
-  { name: "Space Grotesk", file: "SpaceGrotesk-Medium.woff2", path: "@fontsource/space-grotesk/files/space-grotesk-latin-500-normal.woff2" },
-  { name: "Michroma", file: "Michroma-Regular.woff2", path: "@fontsource/michroma/files/michroma-latin-400-normal.woff2" },
-  { name: "League Gothic", file: "LeagueGothic-Regular.woff2", path: "@fontsource/league-gothic/files/league-gothic-latin-400-normal.woff2" },
-  { name: "Newsreader", file: "Newsreader-Regular.woff2", path: "@fontsource/newsreader/files/newsreader-latin-400-normal.woff2" },
-  { name: "Source Serif 4", file: "SourceSerif4-Regular.woff2", path: "@fontsource/source-serif-4/files/source-serif-4-latin-400-normal.woff2" },
-  { name: "Cormorant Garamond", file: "CormorantGaramond-Regular.woff2", path: "@fontsource/cormorant-garamond/files/cormorant-garamond-latin-400-normal.woff2" },
-  { name: "EB Garamond", file: "EBGaramond-Regular.woff2", path: "@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff2" },
-  { name: "Libre Baskerville", file: "LibreBaskerville-Regular.woff2", path: "@fontsource/libre-baskerville/files/libre-baskerville-latin-400-normal.woff2" },
-  { name: "Goudy Bookletter 1911", file: "GoudyBookletter1911-Regular.woff2", path: "@fontsource/goudy-bookletter-1911/files/goudy-bookletter-1911-latin-400-normal.woff2" },
-  { name: "IM Fell English", file: "IMFellEnglish-Regular.woff2", path: "@fontsource/im-fell-english/files/im-fell-english-latin-400-normal.woff2" },
-  { name: "Playfair Display", file: "PlayfairDisplay-Regular.woff2", path: "@fontsource/playfair-display/files/playfair-display-latin-400-normal.woff2" },
-  { name: "Fraunces", file: "Fraunces-Regular.woff2", path: "@fontsource/fraunces/files/fraunces-latin-400-normal.woff2" },
-  { name: "Bodoni Moda", file: "BodoniModa-Regular.woff2", path: "@fontsource/bodoni-moda/files/bodoni-moda-latin-400-normal.woff2" },
-  { name: "Jim Nightshade", file: "JimNightshade-Regular.woff2", path: "@fontsource/jim-nightshade/files/jim-nightshade-latin-400-normal.woff2" },
-  { name: "Kapakana", file: "Kapakana-Regular.woff2", path: "@fontsource/kapakana/files/kapakana-latin-400-normal.woff2" },
-  { name: "UnifrakturMaguntia", file: "UnifrakturMaguntia-Regular.woff2", path: "@fontsource/unifrakturmaguntia/files/unifrakturmaguntia-latin-400-normal.woff2" },
-  { name: "Manufacturing Consent", file: "ManufacturingConsent-Regular.woff2", path: "@fontsource/manufacturing-consent/files/manufacturing-consent-latin-400-normal.woff2" },
-  { name: "Micro 5", file: "Micro5-Regular.woff2", path: "@fontsource/micro-5/files/micro-5-latin-400-normal.woff2" },
-  { name: "JetBrains Mono", file: "JetBrainsMono-Regular.woff2", path: "@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2" },
+  { name: "Inter", id: "inter", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
+  { name: "Geist", id: "geist", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
+  { name: "Work Sans", id: "work-sans", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
+  { name: "Poppins", id: "poppins", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
+  { name: "Oxygen", id: "oxygen", weights: [300, 400, 700], weight: 400 },
+  { name: "Manrope", id: "manrope", weights: [200, 300, 400, 500, 600, 700, 800], weight: 400 },
+  { name: "IBM Plex Sans", id: "ibm-plex-sans", weights: [100, 200, 300, 400, 500, 600, 700], weight: 400 },
+  { name: "Archivo", id: "archivo", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 600 },
+  { name: "Instrument Sans", id: "instrument-sans", weights: [400, 500, 600, 700], weight: 400 },
+  { name: "Bricolage Grotesque", id: "bricolage-grotesque", weights: [200, 300, 400, 500, 600, 700, 800], weight: 400 },
+  { name: "Space Grotesk", id: "space-grotesk", weights: [300, 400, 500, 600, 700], weight: 500 },
+  { name: "Michroma", id: "michroma", weights: [400], weight: 400 },
+  { name: "League Gothic", id: "league-gothic", weights: [400], weight: 400 },
+  { name: "Newsreader", id: "newsreader", weights: [200, 300, 400, 500, 600, 700, 800], weight: 400 },
+  { name: "Source Serif 4", id: "source-serif-4", weights: [200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
+  { name: "Cormorant Garamond", id: "cormorant-garamond", weights: [300, 400, 500, 600, 700], weight: 400 },
+  { name: "EB Garamond", id: "eb-garamond", weights: [400, 500, 600, 700, 800], weight: 400 },
+  { name: "Libre Baskerville", id: "libre-baskerville", weights: [400, 500, 600, 700], weight: 400 },
+  { name: "Goudy Bookletter 1911", id: "goudy-bookletter-1911", weights: [400], weight: 400 },
+  { name: "IM Fell English", id: "im-fell-english", weights: [400], weight: 400 },
+  { name: "Playfair Display", id: "playfair-display", weights: [400, 500, 600, 700, 800, 900], weight: 400 },
+  { name: "Fraunces", id: "fraunces", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
+  { name: "Bodoni Moda", id: "bodoni-moda", weights: [400, 500, 600, 700, 800, 900], weight: 400 },
+  { name: "Jim Nightshade", id: "jim-nightshade", weights: [400], weight: 400 },
+  { name: "Kapakana", id: "kapakana", weights: [300, 400], weight: 400 },
+  { name: "UnifrakturMaguntia", id: "unifrakturmaguntia", weights: [400], weight: 400 },
+  { name: "Manufacturing Consent", id: "manufacturing-consent", weights: [400], weight: 400 },
+  { name: "Micro 5", id: "micro-5", weights: [400], weight: 400 },
+  { name: "JetBrains Mono", id: "jetbrains-mono", weights: [100, 200, 300, 400, 500, 600, 700, 800], weight: 400 },
 ];
 
 const el = {
@@ -277,7 +292,7 @@ function detectFormat(buffer) {
 /* -------------------------------------------------------------------------
    Load pipeline
    ---------------------------------------------------------------------- */
-async function handleFile(file) {
+async function handleFile(file, source = null) {
   resetSpecimen();
   setStatus(`Reading ${file.name}…`);
 
@@ -322,6 +337,10 @@ async function handleFile(file) {
 
   el.specimen.hidden = false;
   document.body.classList.add("has-font");
+  if (source) {
+    activeSample = source.sample;
+    activeWeight = source.weight;
+  }
   placeBanner();
   const names = fontNames(file, parsed.font);
   renderTitle(names);
@@ -432,9 +451,38 @@ function extractMarkers(name) {
   return cleaned ? { name: cleaned, markers: found } : { name, markers: [] };
 }
 
-/* Weight and width words that may be sitting on the end of a family name. */
+/* The name table is not a reliable source for weight. Manrope's files are all
+   called "Manrope ExtraLight" whatever they weigh, so the 400 reads as
+   ExtraLight and the 700 leaves "ExtraLight" stuck in the family. OS/2
+   usWeightClass is a number the renderer itself uses, and it is right. */
+const WEIGHT_NAMES = {
+  100: "Thin",
+  200: "ExtraLight",
+  300: "Light",
+  400: "Regular",
+  500: "Medium",
+  600: "SemiBold",
+  700: "Bold",
+  800: "ExtraBold",
+  900: "Black",
+};
+
+function weightName(value) {
+  if (!value) return null;
+  // Nearest standard step, ties going down: Manrope's 200 declares itself 250.
+  const steps = Object.keys(WEIGHT_NAMES).map(Number);
+  const nearest = steps.reduce((best, step) =>
+    Math.abs(step - value) < Math.abs(best - value) ? step : best
+  );
+  return WEIGHT_NAMES[nearest];
+}
+
+/* Weight words only. Width is deliberately absent: "Archivo Narrow" and
+   "Roboto Condensed" are family names in their own right, and stripping the
+   width would merge them into families they are not. A weight on the end of a
+   family name is nearly always an artefact of how the file was built. */
 const STYLE_WORDS =
-  /^(thin|hairline|extralight|ultralight|light|book|regular|normal|roman|medium|semibold|demibold|demi|bold|extrabold|ultrabold|black|heavy|fat|italic|oblique|condensed|compressed|narrow|extended|expanded|wide)$/i;
+  /^(thin|hairline|extralight|ultralight|light|book|regular|normal|roman|medium|semibold|demibold|demi|bold|extrabold|ultrabold|black|heavy|fat|italic|oblique)$/i;
 
 /* Splitting the name is the whole point of the hero: name ID 1 is only the
    plain family for four-style families. Anything larger pushes the weight into
@@ -465,7 +513,12 @@ function fontNames(file, font) {
   style = fromStyle.name;
   const markers = [...new Set([...fromFamily.markers, ...fromStyle.markers])];
 
-  if (!style || /^regular$/i.test(style)) {
+  /* Lift a trailing weight word off the family unconditionally. Neither ID1 nor
+     ID16 can be trusted here — Manrope calls itself "Manrope ExtraLight" in
+     both, at every weight — and the real weight comes from OS/2 below anyway.
+     More than one word must survive, so a family actually called "Black" keeps
+     its name. */
+  {
     const parts = family.split(/\s+/);
     const lifted = [];
     while (parts.length > 1 && STYLE_WORDS.test(parts[parts.length - 1])) {
@@ -477,16 +530,48 @@ function fontNames(file, font) {
     }
   }
 
-  const label = [style || "Regular", ...markers].join(" · ");
-  return { family, style: label, markers };
+  const declared = weightName(font.tables.os2 && font.tables.os2.usWeightClass);
+  const label = [declared || style || "Regular", ...markers].join(" · ");
+  return { family, style: label, markers, declared };
 }
 
 function renderTitle({ family, style }) {
   el.fontName.textContent = family;
-  el.fontStyle.textContent = style;
   el.headerFont.textContent = family;
+  renderStyle(style);
   sizeIntro();
   fitTitle();
+}
+
+/* The style line is a button when the family has other weights to show, and
+   plain text when it does not — a dropped file is one weight, and a control
+   that cannot do anything is worse than no control. */
+function renderStyle(style) {
+  const cycles = activeSample && activeSample.weights.length > 1;
+  // For a sample we know exactly which weight was requested, which beats
+  // anything the file says about itself.
+  const label = activeWeight ? weightName(activeWeight) : style;
+
+  if (!cycles) {
+    el.fontStyle.textContent = label;
+    return;
+  }
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "link-button weight-button";
+  // Labelled by the font itself, stepped by the family's weight list.
+  button.textContent = label;
+  button.title = `Weight ${activeWeight} — click for the next of ${activeSample.weights.length}`;
+  button.addEventListener("click", nextWeight);
+  el.fontStyle.replaceChildren(button);
+}
+
+function nextWeight() {
+  if (!activeSample) return;
+  const list = activeSample.weights;
+  const next = list[(list.indexOf(activeWeight) + 1) % list.length];
+  loadSample(activeSample, next);
 }
 
 /* The hero is set as large as it can be without wrapping, up to a ceiling.
@@ -930,6 +1015,8 @@ function resetSpecimen() {
   el.fontName.textContent = "";
   el.fontStyle.textContent = "";
   el.headerFont.textContent = "";
+  activeSample = null;
+  activeWeight = null;
   el.infoGrid.replaceChildren();
   el.waterfall.replaceChildren();
   el.paragraphs.replaceChildren();
@@ -992,7 +1079,7 @@ function previewFace(sample, index) {
     previewFaces.set(
       sample.name,
       (async () => {
-        const res = await fetch(SAMPLE_CDN + sample.path);
+        const res = await fetch(sampleUrl(sample, sample.weight));
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const face = new FontFace(family, await res.arrayBuffer());
         await face.load();
@@ -1112,13 +1199,14 @@ function placeBanner() {
   if (el.banner.parentElement !== target) target.append(el.banner);
 }
 
-async function loadSample(sample) {
+async function loadSample(sample, weight = sample.weight) {
   setStatus(`Fetching ${sample.name}…`);
   try {
-    const res = await fetch(SAMPLE_CDN + sample.path);
+    const res = await fetch(sampleUrl(sample, weight));
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const blob = await res.blob();
-    await handleFile(new File([blob], sample.file, { type: "font/woff2" }));
+    const file = new File([blob], sampleFile(sample, weight), { type: "font/woff2" });
+    await handleFile(file, { sample, weight });
   } catch (err) {
     setStatus(
       `Could not fetch ${sample.name} (${trimStop(err.message)}) — drop a font file instead`,
@@ -1267,12 +1355,16 @@ const COLOUR_PAIRS = [
   { fg: "#111111", bg: "#ffffff" }, // ink on paper
   { fg: "#ffffff", bg: "#4671c4" }, // paper on blue, a shade under the banner to clear 4.5:1
   { fg: "#d9f24a", bg: "#14140f" }, // lime on near-black
+  { fg: "#e8f2ea", bg: "#043d2d" }, // pale mint on racing green
   { fg: "#5c1a1a", bg: "#d9e0cf" }, // oxblood on sage
   { fg: "#f9e7ff", bg: "#5b1a8f" }, // lilac on raspberry purple
+  { fg: "#10243a", bg: "#cfe3f5" }, // ink blue on pale sky
   { fg: "#1c1a17", bg: "#f2ece1" }, // ink on cream
   { fg: "#12143a", bg: "#ffd400" }, // navy on vivid yellow
+  { fg: "#f4efe4", bg: "#0d1b3e" }, // cream on midnight navy
   { fg: "#0f3a3a", bg: "#e6b8a2" }, // deep teal on terracotta
   { fg: "#111111", bg: "#ff7a00" }, // ink on vibrant orange
+  { fg: "#3a2718", bg: "#f0dcc0" }, // bark on wheat
   { fg: "#2e1a3a", bg: "#e3e8b0" }, // aubergine on pale chartreuse
   { fg: "#fff1f2", bg: "#c1121f" }, // pale rose on cherry red
   { fg: "#3a63a8", bg: "#f0f0f0" }, // blue on grey
