@@ -53,6 +53,45 @@ const PHRASES = [
    than in any one element. */
 let testString = PHRASES[0];
 
+/* Paragraph specimens need running prose, not a label. These forms take two
+   phrases from the pool above, so the paragraphs keep the same old-world voice
+   as the waterfall rather than reading as lorem ipsum. */
+const SENTENCE_FORMS = [
+  "The steward promised {a}, and by Michaelmas the cellar held nothing but {b}.",
+  "No one at the long table spoke of {a}, least of all the man who had traded it for {b}.",
+  "They carried {a} over the frozen ford at dawn and left {b} for whoever came after.",
+  "It was written, in a hand nobody could read, that {a} must never be set beside {b}.",
+  "The abbot weighed {a} against {b} and found the scales no help at all.",
+  "Three hard winters of {a} taught the village more than any sermon on {b}.",
+  "Under the wet thatch they argued about {a} until somebody mentioned {b}.",
+  "Whatever the ledger claimed of {a}, the storeroom offered only {b}.",
+  "A boy was sent nine miles for {a} and came back at nightfall with {b}.",
+  "The miller would not say where {a} had gone, nor why {b} had taken its place.",
+];
+
+const PARAGRAPH_SENTENCES = 4;
+
+function shuffled(list) {
+  const copy = [...list];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function paragraphText() {
+  const forms = shuffled(SENTENCE_FORMS).slice(0, PARAGRAPH_SENTENCES);
+  const pool = shuffled(PHRASES);
+  return forms
+    .map((form, i) =>
+      form
+        .replace("{a}", pool[(i * 2) % pool.length].toLowerCase())
+        .replace("{b}", pool[(i * 2 + 1) % pool.length].toLowerCase())
+    )
+    .join(" ");
+}
+
 /* Never hand back the phrase already on screen — a shuffle that appears to do
    nothing reads as a broken button. */
 function randomPhrase() {
@@ -129,6 +168,11 @@ const el = {
   shuffle: document.getElementById("shuffle"),
   trackingScrub: document.getElementById("tracking-scrub"),
   trackingInput: document.getElementById("tracking-input"),
+  paragraphs: document.getElementById("paragraphs"),
+  paraTrackingScrub: document.getElementById("para-tracking-scrub"),
+  paraTrackingInput: document.getElementById("para-tracking-input"),
+  paraLeadingScrub: document.getElementById("para-leading-scrub"),
+  paraLeadingInput: document.getElementById("para-leading-input"),
   bannerBrowse: document.getElementById("banner-browse"),
   print: document.getElementById("print"),
 };
@@ -221,6 +265,7 @@ async function handleFile(file) {
   renderTitle(names);
   renderInfo(file, format, parsed, names);
   setPhrase(randomPhrase()); // a fresh phrase per font, and it renders the waterfall
+  renderParagraphs();
   renderGlyphs(parsed);
 
   setStatus(`Loaded ${file.name}`);
@@ -476,6 +521,37 @@ function renderWaterfall() {
 }
 
 /* -------------------------------------------------------------------------
+   Render: paragraphs
+   ---------------------------------------------------------------------- */
+/* Two sizes of the same text. The same words in both is deliberate: it isolates
+   the size as the only thing that changed, which is the point of setting them
+   side by side. */
+const PARAGRAPH_SIZES = [16, 28];
+
+function renderParagraphs() {
+  const text = paragraphText();
+
+  el.paragraphs.replaceChildren(
+    ...PARAGRAPH_SIZES.map((size) => {
+      const column = document.createElement("div");
+      column.className = "paragraph-column";
+
+      const label = document.createElement("div");
+      label.className = "paragraph-size";
+      label.textContent = `${size}`;
+
+      const body = document.createElement("p");
+      body.className = "paragraph specimen-type";
+      body.style.fontSize = `${size}px`;
+      body.textContent = text;
+
+      column.append(label, body);
+      return column;
+    })
+  );
+}
+
+/* -------------------------------------------------------------------------
    Render: glyph grid
    ---------------------------------------------------------------------- */
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -679,6 +755,7 @@ function resetSpecimen() {
   el.headerFont.textContent = "";
   el.infoGrid.replaceChildren();
   el.waterfall.replaceChildren();
+  el.paragraphs.replaceChildren();
   el.glyphGrid.replaceChildren();
   el.glyphCount.textContent = "";
   el.glyphNotice.hidden = true;
@@ -877,73 +954,98 @@ restPreview();
 placeBanner();
 
 /* -------------------------------------------------------------------------
-   Letter spacing
+   Scrub controls
    ---------------------------------------------------------------------- */
-/* Thousandths of an em, the unit type designers track in. Setting it in `em`
-   rather than px means it scales with each waterfall size, so the tracking
-   stays proportional down the whole ladder instead of swamping 12px while
-   barely touching 128px. */
-const TRACKING_LIMIT = 200;
-const TRACKING_DRAG_STEP = 5; // dragging lands on multiples of 5
-let tracking = 0;
+/* A label you drag and a field you type into. Three of these exist, so it is
+   worth one factory rather than three near-copies. */
+const CONTROL_DRAG_STEP = 5; // dragging lands on multiples of 5
 
-function setTracking(value) {
-  tracking = Math.max(-TRACKING_LIMIT, Math.min(TRACKING_LIMIT, Math.round(value) || 0));
-  // Set as a unitless custom property, not as `letter-spacing` on the container.
-  // An `em` length resolves against the element it is declared on and then
-  // inherits as a fixed px value — declared here it would resolve against the
-  // container's 10px UI size and hand every line the same -0.45px. The custom
-  // property inherits as a number instead, so each line's own rule multiplies
-  // it by that line's own em.
-  el.waterfall.style.setProperty("--tracking", String(tracking / 1000));
-  el.trackingScrub.setAttribute("aria-valuenow", String(tracking));
-  if (document.activeElement !== el.trackingInput) el.trackingInput.value = tracking;
-}
+function scrubControl({ scrub, input, min, max, initial, apply }) {
+  let value = initial;
+  let from = null;
 
-/* Drag the label to scrub: one unit per pixel, snapped to the nearest 5, so it
-   steps rather than creeping. Pointer capture keeps the drag alive when the
-   cursor leaves the label, which it will immediately. */
-let scrubFrom = null;
+  function set(next) {
+    value = Math.max(min, Math.min(max, Math.round(next) || 0));
+    scrub.setAttribute("aria-valuenow", String(value));
+    // Not while it is being typed into, or the caret jumps.
+    if (document.activeElement !== input) input.value = value;
+    apply(value);
+  }
 
-el.trackingScrub.addEventListener("pointerdown", (e) => {
-  scrubFrom = { x: e.clientX, value: tracking };
-  el.trackingScrub.setPointerCapture(e.pointerId);
-  e.preventDefault(); // or the drag selects the page text instead
-});
-
-el.trackingScrub.addEventListener("pointermove", (e) => {
-  if (!scrubFrom) return;
-  const raw = scrubFrom.value + (e.clientX - scrubFrom.x);
-  setTracking(Math.round(raw / TRACKING_DRAG_STEP) * TRACKING_DRAG_STEP);
-});
-
-for (const type of ["pointerup", "pointercancel"]) {
-  el.trackingScrub.addEventListener(type, (e) => {
-    scrubFrom = null;
-    if (el.trackingScrub.hasPointerCapture(e.pointerId)) {
-      el.trackingScrub.releasePointerCapture(e.pointerId);
-    }
+  /* Pointer capture keeps the drag alive once the cursor leaves the label,
+     which it does immediately. */
+  scrub.addEventListener("pointerdown", (e) => {
+    from = { x: e.clientX, value };
+    scrub.setPointerCapture(e.pointerId);
+    e.preventDefault(); // otherwise the drag selects page text
   });
+
+  scrub.addEventListener("pointermove", (e) => {
+    if (!from) return;
+    const raw = from.value + (e.clientX - from.x);
+    set(Math.round(raw / CONTROL_DRAG_STEP) * CONTROL_DRAG_STEP);
+  });
+
+  for (const type of ["pointerup", "pointercancel"]) {
+    scrub.addEventListener(type, (e) => {
+      from = null;
+      if (scrub.hasPointerCapture(e.pointerId)) scrub.releasePointerCapture(e.pointerId);
+    });
+  }
+
+  // Arrows stay fine-grained: the drag steps in fives, so this is how you land
+  // between them without typing.
+  scrub.addEventListener("keydown", (e) => {
+    const step = e.shiftKey ? 10 : 1;
+    if (e.key === "ArrowRight" || e.key === "ArrowUp") set(value + step);
+    else if (e.key === "ArrowLeft" || e.key === "ArrowDown") set(value - step);
+    else return;
+    e.preventDefault();
+  });
+
+  // An empty or half-typed field ("-") is left alone rather than rewritten.
+  input.addEventListener("input", () => {
+    const raw = input.value.trim();
+    if (raw === "" || raw === "-") return;
+    set(Number(raw));
+  });
+  input.addEventListener("blur", () => set(Number(input.value)));
+
+  set(initial);
+  return { set, get: () => value };
 }
 
-// Arrows stay fine-grained: the drag steps in fives, so this is the way to
-// land on a value between them without typing it.
-el.trackingScrub.addEventListener("keydown", (e) => {
-  const step = e.shiftKey ? 10 : 1;
-  if (e.key === "ArrowRight" || e.key === "ArrowUp") setTracking(tracking + step);
-  else if (e.key === "ArrowLeft" || e.key === "ArrowDown") setTracking(tracking - step);
-  else return;
-  e.preventDefault();
+/* Letter spacing travels as a unitless custom property, never as an `em`
+   length on the container. An `em` resolves against the element it is declared
+   on and inherits as fixed px, which would hand every line the container's
+   10px-derived value instead of scaling with each size. Line height is
+   unitless for the same reason, and gets it for free. */
+const waterfallTracking = scrubControl({
+  scrub: el.trackingScrub,
+  input: el.trackingInput,
+  min: -200,
+  max: 200,
+  initial: 0,
+  apply: (v) => el.waterfall.style.setProperty("--tracking", String(v / 1000)),
 });
 
-// Typed values are applied as they are entered, but an empty or half-typed
-// field ("-") is left alone rather than being rewritten under the caret.
-el.trackingInput.addEventListener("input", () => {
-  if (el.trackingInput.value.trim() === "" || el.trackingInput.value === "-") return;
-  setTracking(Number(el.trackingInput.value));
+const paragraphTracking = scrubControl({
+  scrub: el.paraTrackingScrub,
+  input: el.paraTrackingInput,
+  min: -100,
+  max: 100,
+  initial: 0,
+  apply: (v) => el.paragraphs.style.setProperty("--para-tracking", String(v / 1000)),
 });
 
-el.trackingInput.addEventListener("blur", () => setTracking(Number(el.trackingInput.value)));
+const paragraphLeading = scrubControl({
+  scrub: el.paraLeadingScrub,
+  input: el.paraLeadingInput,
+  min: 80,
+  max: 260,
+  initial: 150,
+  apply: (v) => el.paragraphs.style.setProperty("--para-leading", String(v / 100)),
+});
 
 /* -------------------------------------------------------------------------
    Events

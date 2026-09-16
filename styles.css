@@ -13,7 +13,7 @@
   --color-banner: #4c78cd;                 /* the empty state */
   --color-banner-quiet: rgba(0, 0, 0, 0.32); /* over a specimen */
   --color-pill-glass: rgba(255, 255, 255, 0.72); /* header pills */
-  --color-control: #2a2a2a;        /* the one dark control on the page */
+  --color-control: #3d3d3d;        /* the one dark control on the page */
   --color-control-field: #111111;  /* its inset field, a step darker still */
   --color-control-label: rgba(255, 255, 255, 0.55);
 
@@ -281,8 +281,8 @@ body.has-font .loader { display: none; }
 }
 .section-controls .hint { margin: 0; }
 
-/* Letter spacing: a label you drag and a field you type into, in one pill. */
-.tracking {
+/* A label you drag and a field you type into, in one dark pill. */
+.control {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
@@ -292,16 +292,16 @@ body.has-font .loader { display: none; }
   border-radius: var(--radius-pill);
 }
 
-.tracking-scrub {
+.control-scrub {
   color: var(--color-control-label);
   cursor: ew-resize;
   user-select: none;
   touch-action: none; /* let the pointer drag instead of scrolling the page */
 }
 /* The page's black focus ring would vanish on a dark control. */
-.tracking-scrub:focus-visible { outline: 2px solid var(--color-banner); outline-offset: 2px; }
+.control-scrub:focus-visible { outline: 2px solid var(--color-banner); outline-offset: 2px; }
 
-.tracking-input {
+.control-input {
   width: 46px;
   height: calc(var(--pill-height) - var(--space-1) * 2);
   border: 0;
@@ -312,13 +312,48 @@ body.has-font .loader { display: none; }
   text-align: center;
   appearance: textfield;
 }
-.tracking-input:focus-visible { outline: 2px solid var(--color-banner); outline-offset: 0; }
+.control-input:focus-visible { outline: 2px solid var(--color-banner); outline-offset: 0; }
 
 /* The spinners crowd a 46px field and the scrub replaces them. */
-.tracking-input::-webkit-outer-spin-button,
-.tracking-input::-webkit-inner-spin-button {
+.control-input::-webkit-outer-spin-button,
+.control-input::-webkit-inner-spin-button {
   appearance: none;
   margin: 0;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* ==========================================================================
+   Paragraphs
+   ========================================================================== */
+/* Two columns rather than three: a paragraph is only worth judging at a
+   readable measure, and a third column would drop the larger size to about
+   thirty characters a line. */
+.paragraphs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-16);
+}
+
+@media (max-width: 767px) {
+  .paragraphs { grid-template-columns: 1fr; gap: var(--space-12); }
+}
+
+.paragraph-size {
+  margin-bottom: var(--space-4);
+  color: var(--color-muted);
+}
+
+.paragraph {
+  margin: 0;
+  /* Both resolve per element: the custom property carries a bare number and
+     the `1em` is applied here, against this paragraph's own size. */
+  letter-spacing: calc(var(--para-tracking, 0) * 1em);
+  line-height: var(--para-leading, 1.5);
 }
 
 /* ==========================================================================

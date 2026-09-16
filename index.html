@@ -41,17 +41,48 @@
       <div class="section-controls no-print">
         <p class="hint">Click to edit or <button type="button" class="link-button" id="shuffle">shuffle</button></p>
 
-        <div class="tracking">
-          <span class="tracking-scrub" id="tracking-scrub" role="slider" tabindex="0"
+        <div class="control">
+          <span class="control-scrub" id="tracking-scrub" role="slider" tabindex="0"
                 aria-label="Letter spacing, thousandths of an em"
                 aria-valuemin="-200" aria-valuemax="200" aria-valuenow="0"
                 title="Drag left or right to change letter spacing">AV</span>
-          <input class="tracking-input" id="tracking-input" type="number"
+          <input class="control-input" id="tracking-input" type="number"
                  value="0" step="1" min="-200" max="200" aria-label="Letter spacing value">
         </div>
       </div>
 
       <div id="waterfall"></div>
+    </section>
+
+    <!-- Paragraphs: one text, two settings -->
+    <section class="specimen-section" id="paragraphs-section">
+      <h2 class="section-title">Paragraphs</h2>
+
+      <div class="section-controls no-print">
+        <p class="hint">One text at two sizes</p>
+
+        <div class="control-group">
+          <div class="control">
+            <span class="control-scrub" id="para-tracking-scrub" role="slider" tabindex="0"
+                  aria-label="Paragraph letter spacing, thousandths of an em"
+                  aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0"
+                  title="Drag left or right to change letter spacing">AV</span>
+            <input class="control-input" id="para-tracking-input" type="number"
+                   value="0" step="1" min="-100" max="100" aria-label="Paragraph letter spacing value">
+          </div>
+
+          <div class="control">
+            <span class="control-scrub" id="para-leading-scrub" role="slider" tabindex="0"
+                  aria-label="Line height, percent of font size"
+                  aria-valuemin="80" aria-valuemax="260" aria-valuenow="150"
+                  title="Drag left or right to change line height">LH</span>
+            <input class="control-input" id="para-leading-input" type="number"
+                   value="150" step="1" min="80" max="260" aria-label="Line height percent">
+          </div>
+        </div>
+      </div>
+
+      <div class="paragraphs" id="paragraphs"></div>
     </section>
 
     <!-- 3. Font info -->
