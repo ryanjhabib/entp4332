@@ -714,49 +714,6 @@ which is why it took a user to find it three times.
 
 ---
 
-## 21. A dip that transitions both ways is a dip that never happens
-
-**Symptom** After entry 20 fixed the pills and the menu, the home page's hover preview was
-still reported as static. It was the one element whose fade was driven from JavaScript
-rather than by `:hover`, so the backdrop-filter explanation did not cover it.
-
-**Cause** The fade was written to dip and return, with a transition on both halves:
-
-```js
-preview.style.opacity = "0.25";
-await new Promise(requestAnimationFrame);   // one frame
-preview.textContent = name; fitPreview();
-preview.style.opacity = "1";
-```
-
-The single frame was deliberate — a value set and unset inside one frame gives a transition
-nothing to run between — but one frame is enough to *start* the way down, not to finish it.
-At 200ms, 16ms of travel is 8%: the opacity got to about 0.94 and was told to come back.
-The comment in the code said the frame was there "to let the browser see the start value",
-which was true and beside the point. Nothing visible ever happened.
-
-**Fix** Only the return is transitioned. The drop kills the transition, sets 0.2 and commits
-it with a forced reflow; the swap happens at 0.2; then the transition is restored, committed
-again, and only then is the opacity set back to 1. The second commit matters as much as the
-first — restoring `transition` and changing `opacity` in one recalculation means the change
-is evaluated before the transition exists, and again nothing runs.
-
-**Verified** Reading opacity the instant `showPreview` resolves: `0.2`, with a 260ms opacity
-CSSTransition object live on the element, settling at `1`. Before the fix the same read gave
-`1` and no transition object at all.
-
-Also worth recording: the first attempt to verify this returned "no transition" for the
-right reason and the wrong one — the preview is `display: none` below 1200px, and the
-preview pane is about 490px wide, so the element under test was not rendered. A hidden
-element runs no transitions. The measurement had to move to an emulated 1280px viewport
-before it meant anything.
-
-**Worth remembering** Two transitions in opposite directions, separated by one frame, cancel
-to nothing. If a change has to happen *at* a particular value rather than on the way to one,
-that half cannot be animated — commit it, then animate the other half.
-
----
-
 ## Test matrix (all passing)
 
 | File | Format | Result |

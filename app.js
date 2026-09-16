@@ -1747,17 +1747,13 @@ function previewFace(sample, index) {
   return previewFaces.get(sample.name);
 }
 
-/* Drop, swap, fade back. The name, the face and the size all change together
-   and the size change reflows the block, so one animated property covers all
-   three.
-
-   The drop is deliberately not transitioned and the fade back is. Transitioning
-   both does not work: the way down is given one frame before the way up is
-   asked for, so at 200ms the opacity reaches about 0.94 and turns around, and
-   the whole thing is invisible. Killing the transition for the drop makes it
-   land at 0.2 immediately, and restoring it before the return gives the fade
-   its full length with something real to fade from. */
-const PREVIEW_DIP = "0.2";
+/* Dip, swap, come back. The name, the face and the size all change in one
+   frame and the size change reflows the block — fading across it covers all
+   three with a single animated property. It dips to 0.25 rather than 0 so
+   scanning down the list reads as a soft blink rather than a strobe, and the
+   frame it waits is the one that lets the browser see the start value: set and
+   unset in the same frame, a transition has nothing to run between. */
+const PREVIEW_DIP = "0.25";
 
 async function showPreview(sample, index) {
   hoveredSample = sample.name;
@@ -1773,25 +1769,17 @@ async function showPreview(sample, index) {
   // The pointer may have moved on while that was in flight.
   if (hoveredSample !== sample.name) return;
 
-  const preview = el.fontPreview;
+  el.fontPreview.style.opacity = PREVIEW_DIP;
+  await new Promise(requestAnimationFrame);
+  if (hoveredSample !== sample.name) return;
 
-  // Down with no transition, and committed before anything else changes.
-  preview.style.transition = "none";
-  preview.style.opacity = PREVIEW_DIP;
-  void preview.offsetWidth;
-
-  preview.textContent = sample.name;
+  el.fontPreview.textContent = sample.name;
   // `inherit` is not a valid entry inside a font list — it invalidates the whole
   // declaration, which silently leaves the UI stack in place.
-  preview.style.fontFamily = `"${family}", sans-serif`;
+  el.fontPreview.style.fontFamily = `"${family}", sans-serif`;
   previewFamily = family;
-  fitPreview(); // forces layout anyway, so the swap is committed at 0.2
-
-  // Back to the stylesheet's transition, committed, and only then the return —
-  // or the restore and the change land in one recalculation and nothing runs.
-  preview.style.transition = "";
-  void preview.offsetWidth;
-  preview.style.opacity = "1";
+  fitPreview();
+  el.fontPreview.style.opacity = "1";
 }
 
 /* As large as it fits in the space above the pills, capped at 300px.
@@ -1865,7 +1853,6 @@ function restPreview() {
   el.fontPreview.textContent = PREVIEW_RESTING;
   el.fontPreview.style.fontFamily = "";
   el.fontPreview.style.fontSize = "";
-  el.fontPreview.style.transition = "";
   el.fontPreview.style.opacity = "1"; // whatever happened, it comes back lit
 }
 
