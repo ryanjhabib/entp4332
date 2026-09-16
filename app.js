@@ -403,6 +403,7 @@ async function handleFile(file, source = null) {
   setPhrase(randomPhrase()); // a fresh phrase per font, and it renders the waterfall
   renderParagraphs();
   renderPage();
+  randomColourPair();
   renderGlyphs(parsed);
   sectionWeights.clear();
   syncSectionWeights();
@@ -1553,6 +1554,14 @@ el.pageColors.addEventListener("click", () => {
   colourPair = (colourPair + 1) % COLOUR_PAIRS.length;
   applyColourPair();
 });
+
+/* Each font arrives on a ground it has not just been seen on. Never the pair
+   already showing, or loading a font would look like nothing happened. */
+function randomColourPair() {
+  const others = COLOUR_PAIRS.map((_, i) => i).filter((i) => i !== colourPair);
+  colourPair = others[Math.floor(Math.random() * others.length)];
+  applyColourPair();
+}
 
 applyColourPair();
 
