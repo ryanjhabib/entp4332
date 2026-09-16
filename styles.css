@@ -1056,19 +1056,33 @@ body.is-viewing { overflow: hidden; }
   }
 }
 
+/* The glyph is positioned rather than laid out, so its size cannot move
+   anything else. It used to be a grid item: at 100 it stood 100vh tall inside a
+   frame 128px shorter than that, overflowed, and the row grew — which slid both
+   arrows down 64px. Nothing but the glyph moves now, at any size. */
 .viewer-stage {
-  display: grid;
-  place-items: center;
+  position: relative;
+  align-self: stretch;
   min-width: 0;
 }
 
-/* The 70 is the default the scrub starts on; it is set as a plain number so the
-   same value can drive both axes. min() keeps a tall glyph off the top and
-   bottom and a wide one off the sides, whichever runs out first. */
+/* Measured against the frame rather than the screen: the viewer is inset by its
+   own padding, so 100 now means "fills what is actually there" instead of
+   "stands a screen tall inside something shorter".
+
+   The viewBox is square, so height settles width too — at 100 or below it is
+   guaranteed to fit both ways, and above 100 it overflows on purpose, which is
+   how you get in close on a letterform. */
 .viewer-stage svg {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   width: auto;
-  height: min(calc(var(--glyph-size, 70) * 1vh), calc(var(--glyph-size, 70) * 1vw));
-  max-width: 100%;
+  height: calc(
+    var(--glyph-size, 70) / 100 *
+      min(100vh - var(--space-16) * 2, 100vw - var(--gutter) * 2)
+  );
 }
 .viewer-stage svg path { fill: var(--viewer-fg, var(--color-text)); }
 
