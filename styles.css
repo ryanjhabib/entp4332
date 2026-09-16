@@ -31,17 +31,20 @@
   --space-12: 48px;
   --space-16: 64px;
   --space-24: 96px;
+  --space-32: 128px;
+  --space-48: 192px;
 
   /* Layout — content runs edge to edge inside a gutter, no centered column. */
   --gutter: 24px;          /* phone            */
+  --section-gap: 96px;     /* space, not rules, separates the sections */
   --radius: 2px;
   --border: 1px solid var(--color-rule);
   --border-soft: 1px solid var(--color-border);
   --glyph-min: 96px;
 }
 
-@media (min-width: 768px)  { :root { --gutter: 48px; } }   /* tablet  */
-@media (min-width: 1200px) { :root { --gutter: 100px; } }  /* desktop */
+@media (min-width: 768px)  { :root { --gutter: 48px;  --section-gap: 144px; } }  /* tablet  */
+@media (min-width: 1200px) { :root { --gutter: 100px; --section-gap: 192px; } }  /* desktop */
 
 /* ==========================================================================
    Base
@@ -134,21 +137,12 @@ body.has-font .lede { display: none; }
 /* ==========================================================================
    Specimen sections
    ========================================================================== */
-.specimen-section {
-  margin-top: var(--space-24);
-  padding-top: var(--space-6);
-  border-top: var(--border);
-}
-
-/* The leading section needs no rule above it — the page edge is the boundary. */
-.specimen-section:first-child {
-  margin-top: var(--space-8);
-  padding-top: 0;
-  border-top: 0;
-}
+/* Sections are separated by space alone. The only rules left on the page are
+   the ones inside the waterfall, where they belong to the specimen itself. */
+.specimen-section { margin-top: var(--section-gap); }
 
 .section-title {
-  margin: 0 0 var(--space-6);
+  margin: 0 0 var(--space-12);
   font-size: var(--size-ui);
   font-weight: var(--weight-ui);
   color: var(--color-muted);
@@ -161,7 +155,7 @@ body.has-font .lede { display: none; }
 
 /* The intro: the family name, set as large as the viewport allows. */
 .font-name {
-  margin: var(--space-8) 0 var(--space-24);
+  margin: var(--space-8) 0 0;
   font-size: clamp(48px, 11vw, 180px);
   font-weight: normal;
   line-height: 1.05;
@@ -274,9 +268,7 @@ body.has-font .lede { display: none; }
 .site-footer {
   display: flex;
   gap: var(--space-2);
-  margin-top: var(--space-12);
-  padding-top: var(--space-6);
-  border-top: var(--border);
+  margin-top: var(--section-gap);
 }
 
 /* ==========================================================================
@@ -290,9 +282,9 @@ body.has-font .lede { display: none; }
   .no-print { display: none !important; }
 
   /* Keep a section and its heading together; never split a row. */
+  /* Paper is finite: the on-screen 192px gap would cost most of a page. */
   .specimen-section {
-    margin-top: var(--space-8);
-    padding-top: var(--space-4);
+    margin-top: var(--space-16);
     break-inside: auto;
   }
   .section-title { break-after: avoid; }
