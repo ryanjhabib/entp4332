@@ -225,15 +225,13 @@ body.has-font .loader { display: none; }
     padding: var(--space-6);
   }
 
-  .sample-list,
   .banner-slot {
     position: static;
     transform: none;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
   }
+
+  /* Half a phone screen is not a usable measure. */
+  .sample-list { max-width: 100%; }
 }
 .status.is-error { color: var(--color-error); }
 
@@ -241,18 +239,14 @@ body.has-font .loader { display: none; }
    offset is the banner's own half-height plus a gap, so the two stay related
    if the banner's geometry changes. width: max-content keeps the row only as
    wide as its pills; max-width lets it wrap rather than run off the screen. */
+/* Left-aligned and capped at half the measure, so it wraps into a block rather
+   than running the full width of the page. Same treatment in both states. */
 .sample-list {
-  position: absolute;
-  left: 50%;
-  top: calc(50% + var(--banner-height) / 2 + var(--space-6));
-  transform: translateX(-50%);
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   align-items: center;
   gap: var(--space-2);
-  width: max-content;
-  max-width: calc(100% - var(--space-12));
+  max-width: 50%;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -569,14 +563,28 @@ body.is-viewing { overflow: hidden; }
 .viewer-arrow:hover { color: var(--color-text); }
 
 /* Footer */
-/* Nothing to print until something is loaded. */
-.site-footer { display: none; }
-
-body.has-font .site-footer {
+/* On a specimen the footer is the last thing on the page: the print action,
+   then the sample fonts as the final block of content. */
+.site-footer {
   display: flex;
-  gap: var(--space-2);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-8);
   margin-top: var(--section-gap);
 }
+
+/* On the empty state it sits at the foot of the viewport instead, left-aligned
+   against the gutter, with nothing to print yet. */
+body:not(.has-font) .site-footer {
+  position: fixed;
+  left: var(--gutter);
+  right: var(--gutter);
+  bottom: var(--banner-inset);
+  z-index: 15;
+  margin-top: 0;
+}
+
+body:not(.has-font) #print { display: none; }
 
 /* ==========================================================================
    Print — a clean specimen sheet, no UI
