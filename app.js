@@ -308,9 +308,11 @@ function detectFormat(buffer) {
 /* -------------------------------------------------------------------------
    Load pipeline
    ---------------------------------------------------------------------- */
+/* Nothing on screen is disturbed until the new font is known to be good. Every
+   check below returns before anything is torn down, so dropping a .mov onto a
+   specimen you are reading leaves that specimen exactly where it was and says
+   so in the corner. */
 async function handleFile(file, source = null) {
-  resetSpecimen();
-
   let buffer;
   try {
     buffer = await file.arrayBuffer();
@@ -327,21 +329,25 @@ async function handleFile(file, source = null) {
     return notify("Only .ttf, .otf, .woff and .woff2 files");
   }
 
-  // Step 1: render it. The FontFace API handles every format the browser
-  // supports, including woff2 and variable fonts (default instance).
+  /* Loaded before the old face is touched. `new FontFace()` does not register
+     anything, so until it resolves the page is still rendering the font that
+     was already there — and if it throws, it still is. */
+  let face;
   try {
-    if (loadedFace) document.fonts.delete(loadedFace);
-    loadedFace = new FontFace(FAMILY, buffer);
-    await loadedFace.load();
-    document.fonts.add(loadedFace);
-    await document.fonts.ready; // canvas cannot measure the face until it is live
+    face = new FontFace(FAMILY, buffer);
+    await face.load();
   } catch (err) {
-    loadedFace = null;
     return notify("That font could not be rendered");
   }
 
-  // Step 2: parse it for metadata and outlines. This can fail independently of
-  // rendering — we still show the specimen if it does.
+  // Past this point the new font is good, so the old one can go.
+  resetSpecimen();
+  if (loadedFace) document.fonts.delete(loadedFace);
+  loadedFace = face;
+  document.fonts.add(face);
+  await document.fonts.ready; // canvas cannot measure the face until it is live
+
+  // Parsing can fail independently of rendering — the specimen still shows.
   const parsed = await parseFont(buffer, format);
 
   el.specimen.hidden = false;

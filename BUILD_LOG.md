@@ -334,6 +334,47 @@ actually renders from.
 
 ---
 
+## 12. A bad file threw away the specimen you were reading
+
+**Symptom** Drop a `.mov` onto a specimen and the specimen vanished. You were returned to
+the empty state and told the file was wrong, having lost the font you were looking at —
+which you then had to load again to get back to where you were.
+
+**Cause** Order of operations, in two places.
+
+`handleFile()` opened with `resetSpecimen()`, before a single check had run. Everything
+after it was a validation that could only ever return, so by the time the page knew the
+file was unusable it had already cleared itself.
+
+The second one was subtler and would have survived a naive fix. The render step read:
+
+```js
+if (loadedFace) document.fonts.delete(loadedFace);   // old face gone
+loadedFace = new FontFace(FAMILY, buffer);
+await loadedFace.load();                             // and this may throw
+```
+
+The old face was unregistered *before* the new one was known to load. So a file that got
+past the signature check and failed at `FontFace` — a truncated but correctly-stamped
+`.ttf` — left the page with no font registered at all, even if nothing else had been reset.
+
+**Fix** Nothing is torn down until the new font is proved good. Every check returns before
+any teardown, and the new face is constructed and `await`ed *first*; only once it resolves
+is the old one deleted and the new one registered. `new FontFace()` registers nothing on
+its own, so until that await returns the page is still rendering what it was already
+rendering — and if it throws, it still is.
+
+**Verified** With Playfair Display on screen, three bad files in turn — a `.mov`, an empty
+`.ttf`, and a correctly-stamped but truncated `.ttf` — each raise a notice and leave the
+specimen byte-for-byte unchanged, including the rendered width of the hero, which would
+have moved had the face fallen back. A good font still replaces it.
+
+**Worth remembering** "Validate, then act" is easy to state and easy to violate twice in
+one function. The giveaway is any teardown that happens before the last thing that can
+fail.
+
+---
+
 ## Test matrix (all passing)
 
 | File | Format | Result |
