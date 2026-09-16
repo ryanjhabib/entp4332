@@ -1,6 +1,88 @@
 /* Font Specimen — everything runs client-side. No font data leaves the page. */
 
-const WATERFALL_SIZES = [128, 96, 72, 48, 36, 24, 16, 12];
+/* The ladder is a modular scale, not a hand-picked list: one ratio, one top
+   size per breakpoint, and every step below falls out of it. The perfect
+   fourth is the interval most of the old list already used — it just drifted
+   to a fifth in four places, which is why 72 was followed by 48.
+
+   Each breakpoint gets its own top because the ladder has to fit the screen it
+   is on. 128px of a wide face does not get a long word onto one line of a
+   phone, and a word broken in half is the one thing a size specimen must not
+   show. Fewer steps on a phone too: the bottom of a long ladder is unreadable
+   before it is informative. */
+const SIZE_RATIO = 4 / 3;
+
+const SIZE_SCALE = {
+  phone: { top: 64, steps: 6, paragraphs: [3, 5] },
+  tablet: { top: 96, steps: 7, paragraphs: [4, 6] },
+  desktop: { top: 128, steps: 8, paragraphs: [5, 7] },
+};
+
+/* Rounded to whole pixels, because the label reports the size actually set and
+   a specimen that says 40.5 is reporting arithmetic rather than type. */
+function scaleSizes({ top, steps }) {
+  return Array.from({ length: steps }, (_, i) => Math.round(top / SIZE_RATIO ** i));
+}
+
+function breakpoint() {
+  if (window.matchMedia("(min-width: 1200px)").matches) return "desktop";
+  if (window.matchMedia("(min-width: 768px)").matches) return "tablet";
+  return "phone";
+}
+
+let currentBreakpoint = breakpoint();
+
+/* How far the ladder may start below its nominal top. Three steps of a perfect
+   fourth is a factor of 2.4; past that the face is simply too wide for the
+   screen and shrinking further stops producing a size specimen. */
+const MAX_LADDER_DROP = 3;
+
+/* Same ratio, same number of steps, entered a step or two down when the top
+   will not fit. Michroma cannot get a long word onto one line of a phone at
+   64px, and the alternative to shifting the ladder is a word broken in half.
+   Whole steps only, so every size shown is still a real step of the scale and
+   the label still reports what was actually set.
+
+   Measured against the phrase pool rather than the line currently on screen,
+   so the ladder is a property of the face and the viewport and does not jump
+   about from one shuffle to the next. */
+function ladderDrop() {
+  const gutter = parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue("--waterfall-gutter")
+  ) || 0;
+  const available = el.waterfall.clientWidth - (currentBreakpoint === "phone" ? 0 : gutter);
+  if (!available || !baseFamily) return 0;
+
+  titleCtx.font = `100px "${baseFamily}"`;
+  const widest = PHRASES.reduce(
+    (max, phrase) =>
+      phrase.split(/\s+/).reduce((m, word) => Math.max(m, titleCtx.measureText(word).width), max),
+    0
+  );
+  if (!widest) return 0;
+
+  const ceiling = (available / widest) * 100;
+  const { top } = SIZE_SCALE[currentBreakpoint];
+
+  let drop = 0;
+  while (drop < MAX_LADDER_DROP && top / SIZE_RATIO ** drop > ceiling) drop++;
+  return drop;
+}
+
+function waterfallSizes() {
+  const { top, steps } = SIZE_SCALE[currentBreakpoint];
+  const drop = ladderDrop();
+  return Array.from({ length: steps }, (_, i) => Math.round(top / SIZE_RATIO ** (i + drop)));
+}
+
+/* The two columns are two steps of the same scale rather than a separate pair
+   of numbers, so the paragraph sizes and the waterfall sizes are the same
+   system read at different points. */
+function paragraphSizes() {
+  const scale = SIZE_SCALE[currentBreakpoint];
+  const sizes = scaleSizes({ top: scale.top, steps: scale.steps });
+  return scale.paragraphs.map((i) => sizes[Math.min(i, sizes.length - 1)]).sort((a, b) => a - b);
+}
 
 // Rendering every glyph of a large CJK font locks the page up. Cap it and say so.
 const GLYPH_LIMIT = 1500;
@@ -1020,8 +1102,27 @@ window.addEventListener("resize", () => {
   sizeIntro();
   fitTitle();
   clampPageSize(); // a narrower viewport can turn a fitted size into a broken word
+  resizeScale();
   if (hoveredSample) fitPreview(); // the ceiling moves with the viewport
 });
+
+/* Only when the breakpoint actually changes, not on every pixel of a drag: the
+   ladder is the same within a breakpoint, and re-rendering it on each resize
+   event would throw away the caret in a line being edited for no reason.
+
+   The paragraphs re-render with the copy they already had. Crossing a
+   breakpoint changed the sizes; it did not ask for different prose. */
+function resizeScale() {
+  const next = breakpoint();
+  if (next === currentBreakpoint) return;
+
+  currentBreakpoint = next;
+  if (!document.body.classList.contains("has-font")) return;
+
+  renderWaterfall();
+  renderParagraphs(paragraphCopy);
+  syncSectionWeights();
+}
 
 function renderInfo(file, format, { font }, names) {
   const rows = [
@@ -1060,7 +1161,7 @@ function sampleText() {
 function renderWaterfall() {
   const text = sampleText();
   el.waterfall.replaceChildren(
-    ...WATERFALL_SIZES.map((size) => {
+    ...waterfallSizes().map((size) => {
       const row = document.createElement("div");
       row.className = "waterfall-row";
 
@@ -1090,13 +1191,16 @@ function renderWaterfall() {
 /* Two sizes of the same text. The same words in both is deliberate: it isolates
    the size as the only thing that changed, which is the point of setting them
    side by side. */
-const PARAGRAPH_SIZES = [16, 28];
 
-function renderParagraphs() {
-  const text = paragraphText();
+/* Held so a breakpoint change can re-render at new sizes without handing back
+   different prose — the sizes changed, not the specimen. */
+let paragraphCopy = "";
+
+function renderParagraphs(text = paragraphText()) {
+  paragraphCopy = text;
 
   el.paragraphs.replaceChildren(
-    ...PARAGRAPH_SIZES.map((size) => {
+    ...paragraphSizes().map((size) => {
       const column = document.createElement("div");
       column.className = "paragraph-column";
 

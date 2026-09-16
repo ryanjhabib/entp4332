@@ -572,6 +572,54 @@ first. Only a grep for the old pattern answers the second, and it costs a few se
 
 ---
 
+## 18. One ladder for every screen, and it did not fit any of them well
+
+**Symptom** The waterfall broke words on a phone — 3 shuffles in 20 with Pinyon Script,
+13 lines in 90 with Michroma. Reported as a known defect rather than found by a test: the
+page had a measured fitter, the waterfall had none.
+
+**Cause** The ladder was one hard-coded list, `[128, 96, 72, 48, 36, 24, 16, 12]`, used at
+every width. 128px of a wide face cannot get a long word onto one line of a 372px column,
+so the word broke. The list was also not a scale: 128/96, 96/72 and 48/36 are a perfect
+fourth, but 72/48, 36/24 and 24/16 are a fifth. It looked like a system and behaved like a
+hand-picked list.
+
+**Fix** One ratio — the perfect fourth, the interval most of the old list already used —
+and one top size per breakpoint, with the steps falling out of it:
+
+```
+phone     64  48  36  27  20  15        paragraphs 15 / 27
+tablet    96  72  54  41  30  23  17    paragraphs 17 / 30
+desktop  128  96  72  54  41  30  23 17 paragraphs 17 / 30
+```
+
+Fewer steps on a phone, because the bottom of a long ladder is unreadable before it is
+informative. The paragraph columns are two steps of the same scale rather than a separate
+pair of numbers, so both sections read the same system at different points. Every label
+reports the size actually set — the sizes are rounded to whole pixels for that reason, since
+a specimen that says 40.5 is reporting arithmetic rather than type.
+
+A breakpoint still cannot hold every face. Michroma is wide enough that even 64px breaks on
+a phone, so the ladder may start up to three whole steps below its nominal top when the top
+will not fit — same ratio, same number of steps, entered lower down. It is measured against
+the phrase pool rather than the line currently on screen, so the ladder is a property of the
+face and the viewport and does not jump about between shuffles.
+
+The trade is deliberate and worth stating: sizing for the widest word that *could* appear
+means a face like Instrument Sans starts at 48 rather than 64 on a phone, slightly smaller
+than most phrases need. Guaranteeing no broken word costs that.
+
+**Verified** At 420px across Michroma, Pinyon Script and Instrument Sans, 12 shuffles each,
+72 lines each: zero broken words, and exactly one ladder per face across all 12 — no jitter.
+At 1280px: normal faces keep the full 128 ladder, Michroma drops one step to 96, zero broken
+words. Crossing a breakpoint re-renders at the new sizes and keeps the prose it already had.
+
+**Worth remembering** A list of numbers that mostly follows a rule is worse than either a
+rule or an honest list, because it invites you to trust a system that is not there. And a
+fixed ladder is a claim that every screen is the same screen.
+
+---
+
 ## Test matrix (all passing)
 
 | File | Format | Result |
