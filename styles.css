@@ -8,13 +8,15 @@
   --color-text: #111111;
   --color-muted: #6b6b6b;
   --color-rule: #111111;   /* the waterfall rules — the only strokes on the page */
-  --color-field: #f0f0f0;        /* light ground that replaces every border */
-  --color-field-strong: #e4e4e4; /* the same ground, on hover */
+  --color-field: #f5f5f5;        /* light ground that replaces every border */
+  --color-field-strong: #ebebeb; /* the same ground, on hover */
   --color-banner: #4c78cd;
 
-  /* The banner's geometry, shared so the hero can line up with it. */
+  /* One height for every pill on the page, the banner included, so nothing
+     towers over anything else. The hero lines up with it too. */
+  --pill-height: 24px;
   --banner-inset: 24px;
-  --banner-height: 30px;
+  --banner-height: var(--pill-height);
   --color-accent: #111111;
   --color-error: #a11;
 
@@ -130,8 +132,12 @@ button:hover { background: var(--color-field-strong); }
 
 /* Inline actions read as a quiet pill rather than an underline. */
 .link-button {
+  display: inline-flex;
+  align-items: center;
+  height: var(--pill-height);
+  vertical-align: middle; /* it sits inside running text in the hints */
   border: 0;
-  padding: 2px var(--space-2);
+  padding: 0 var(--space-3);
   background: var(--color-field);
   border-radius: var(--radius-pill);
   text-decoration: none;
@@ -446,13 +452,16 @@ body.has-font .drop-banner {
    so it never comes between the cursor and the page. */
 .banner-button {
   pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  height: calc(var(--pill-height) - var(--space-2));
   font: inherit;
   line-height: 1;
   color: #ffffff;
   background: rgba(255, 255, 255, 0.22);
   border: 0;
   border-radius: var(--radius-pill);
-  padding: 2px var(--space-2);
+  padding: 0 var(--space-2);
   cursor: pointer;
 }
 .banner-button:hover { background: rgba(255, 255, 255, 0.34); }
