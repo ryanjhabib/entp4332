@@ -422,10 +422,10 @@ body.has-font .loader { display: none; }
   list-style: none;
 }
 
-/* Capped at half the measure so the library wraps into a block rather than
-   running the full width of a wide page. The menu sets its own width. */
+/* Capped at two thirds of the measure so the library wraps into a block rather
+   than running the full width of a wide page. The menu sets its own width. */
 @media (min-width: 1200px) {
-  .site-footer .sample-list { max-width: 50%; }
+  .site-footer .sample-list { max-width: calc(200% / 3); }
 }
 
 /* Sits directly above the glyph grid, so it keeps the grid's own gap beneath
