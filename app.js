@@ -127,6 +127,8 @@ const el = {
   viewerNext: document.getElementById("viewer-next"),
   viewerClose: document.getElementById("viewer-close"),
   shuffle: document.getElementById("shuffle"),
+  trackingScrub: document.getElementById("tracking-scrub"),
+  trackingInput: document.getElementById("tracking-input"),
   bannerBrowse: document.getElementById("banner-browse"),
   print: document.getElementById("print"),
 };
@@ -873,6 +875,69 @@ async function loadSample(sample) {
 renderSamples();
 restPreview();
 placeBanner();
+
+/* -------------------------------------------------------------------------
+   Letter spacing
+   ---------------------------------------------------------------------- */
+/* Thousandths of an em, the unit type designers track in. Setting it in `em`
+   rather than px means it scales with each waterfall size, so the tracking
+   stays proportional down the whole ladder instead of swamping 12px while
+   barely touching 128px. */
+const TRACKING_LIMIT = 200;
+let tracking = 0;
+
+function setTracking(value) {
+  tracking = Math.max(-TRACKING_LIMIT, Math.min(TRACKING_LIMIT, Math.round(value) || 0));
+  // Set as a unitless custom property, not as `letter-spacing` on the container.
+  // An `em` length resolves against the element it is declared on and then
+  // inherits as a fixed px value — declared here it would resolve against the
+  // container's 10px UI size and hand every line the same -0.45px. The custom
+  // property inherits as a number instead, so each line's own rule multiplies
+  // it by that line's own em.
+  el.waterfall.style.setProperty("--tracking", String(tracking / 1000));
+  el.trackingScrub.setAttribute("aria-valuenow", String(tracking));
+  if (document.activeElement !== el.trackingInput) el.trackingInput.value = tracking;
+}
+
+/* Drag the label to scrub, one unit per pixel. Pointer capture keeps the drag
+   alive when the cursor leaves the label, which it will immediately. */
+let scrubFrom = null;
+
+el.trackingScrub.addEventListener("pointerdown", (e) => {
+  scrubFrom = { x: e.clientX, value: tracking };
+  el.trackingScrub.setPointerCapture(e.pointerId);
+  e.preventDefault(); // or the drag selects the page text instead
+});
+
+el.trackingScrub.addEventListener("pointermove", (e) => {
+  if (scrubFrom) setTracking(scrubFrom.value + (e.clientX - scrubFrom.x));
+});
+
+for (const type of ["pointerup", "pointercancel"]) {
+  el.trackingScrub.addEventListener(type, (e) => {
+    scrubFrom = null;
+    if (el.trackingScrub.hasPointerCapture(e.pointerId)) {
+      el.trackingScrub.releasePointerCapture(e.pointerId);
+    }
+  });
+}
+
+el.trackingScrub.addEventListener("keydown", (e) => {
+  const step = e.shiftKey ? 10 : 1;
+  if (e.key === "ArrowRight" || e.key === "ArrowUp") setTracking(tracking + step);
+  else if (e.key === "ArrowLeft" || e.key === "ArrowDown") setTracking(tracking - step);
+  else return;
+  e.preventDefault();
+});
+
+// Typed values are applied as they are entered, but an empty or half-typed
+// field ("-") is left alone rather than being rewritten under the caret.
+el.trackingInput.addEventListener("input", () => {
+  if (el.trackingInput.value.trim() === "" || el.trackingInput.value === "-") return;
+  setTracking(Number(el.trackingInput.value));
+});
+
+el.trackingInput.addEventListener("blur", () => setTracking(Number(el.trackingInput.value)));
 
 /* -------------------------------------------------------------------------
    Events

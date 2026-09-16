@@ -38,7 +38,18 @@
          control, so editing happens next to what it changes. -->
     <section class="specimen-section" id="waterfall-section">
       <h2 class="section-title">Waterfall</h2>
-      <p class="hint no-print">Click any line below to edit it, or <button type="button" class="link-button" id="shuffle">shuffle</button></p>
+      <div class="section-controls no-print">
+        <p class="hint">Click any line below to edit it, or <button type="button" class="link-button" id="shuffle">shuffle</button></p>
+
+        <div class="tracking">
+          <span class="tracking-scrub" id="tracking-scrub" role="slider" tabindex="0"
+                aria-label="Letter spacing, thousandths of an em"
+                aria-valuemin="-200" aria-valuemax="200" aria-valuenow="0"
+                title="Drag left or right to change letter spacing">AV</span>
+          <input class="tracking-input" id="tracking-input" type="number"
+                 value="0" step="1" min="-200" max="200" aria-label="Letter spacing value">
+        </div>
+      </div>
 
       <div id="waterfall"></div>
     </section>

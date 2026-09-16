@@ -268,6 +268,55 @@ body.has-font .loader { display: none; }
   font-size: var(--size-ui);
 }
 
+/* The hint and any controls for a section share one row, hint left. */
+.section-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin: calc(var(--space-8) * -1) 0 var(--space-12);
+}
+.section-controls .hint { margin: 0; }
+
+/* Letter spacing: a label you drag and a field you type into, in one pill. */
+.tracking {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--pill-height);
+  padding: 0 var(--space-1) 0 var(--space-3);
+  background: var(--color-field);
+  border-radius: var(--radius-pill);
+}
+
+.tracking-scrub {
+  color: var(--color-muted);
+  cursor: ew-resize;
+  user-select: none;
+  touch-action: none; /* let the pointer drag instead of scrolling the page */
+}
+.tracking-scrub:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+.tracking-input {
+  width: 46px;
+  height: calc(var(--pill-height) - var(--space-1) * 2);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-field-strong);
+  font: inherit;
+  color: var(--color-text);
+  text-align: center;
+  appearance: textfield;
+}
+.tracking-input:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 0; }
+
+/* The spinners crowd a 46px field and the scrub replaces them. */
+.tracking-input::-webkit-outer-spin-button,
+.tracking-input::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
 /* ==========================================================================
    Specimen sections
    ========================================================================== */
@@ -388,6 +437,9 @@ html { scroll-padding-top: var(--space-16); }
    96px and above. Lines wrap instead of truncating, and the line-height leaves
    room for fonts whose ink exceeds their em box. */
 .waterfall-line {
+  /* Resolves against this line's font size, so tracking stays proportional all
+     the way down the ladder. */
+  letter-spacing: calc(var(--tracking, 0) * 1em);
   line-height: 1.15;
   min-height: 1em; /* an emptied line must stay tall enough to click back into */
   cursor: text;

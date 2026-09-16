@@ -251,6 +251,45 @@ agreeing is what settles it — not the screenshot, and not the first number eit
 
 ---
 
+## 10. Letter spacing did not scale with the waterfall
+
+**Symptom** The tracking control worked — dragging changed the number and the type
+moved — but the effect was almost invisible at 128px and heavy-handed at 12px. It was not
+tracking proportionally at all.
+
+**Cause** The value was applied to the waterfall *container*:
+
+```js
+el.waterfall.style.letterSpacing = `${tracking / 1000}em`;   // wrong
+```
+
+An `em` length resolves against the font size of **the element it is declared on**, and
+what inherits down the tree is the resulting *fixed px value*. The container inherits the
+10px UI size, so `-0.045em` resolved to **-0.45px** there and every line — 12px through
+128px — inherited that same -0.45px. The 128px line should have had -5.76px.
+
+**Fix** Set a unitless custom property on the container and multiply it out on each line:
+
+```js
+el.waterfall.style.setProperty("--tracking", String(tracking / 1000));
+```
+```css
+.waterfall-line { letter-spacing: calc(var(--tracking, 0) * 1em); }
+```
+
+A custom property inherits as an unparsed number, so the `1em` resolves separately against
+each line's own font size.
+
+**Verified** At -45 every line holds a letter-spacing to font-size ratio of exactly
+-0.045: 128px gets -5.76px, 96px gets -4.32px, down to 12px at -0.54px.
+
+**Worth remembering** `em` in an inherited property is a trap. It is resolved once, where
+it is written, and inherited as an absolute length. If a value needs to mean something
+different at each level of the tree, it has to travel as a unitless custom property and be
+given its unit at the point of use.
+
+---
+
 ## Test matrix (all passing)
 
 | File | Format | Result |
