@@ -94,7 +94,9 @@ const FAMILY = "SpecimenFont";
 const faces = new Map(); // key -> { family, face, buffer, format }
 
 function faceFamily(key) {
-  return `${FAMILY}_${key}`;
+  // Cut keys are numeric weights for the library and style names for dropped
+  // families, and a style name has spaces in it.
+  return `${FAMILY}_${String(key).replace(/\W+/g, "_")}`;
 }
 
 async function registerFace(key, buffer, format) {
@@ -598,7 +600,7 @@ let droppedSeq = 0;
    are one entry with two weights — keying on the family alone and storing a
    single buffer meant the second drop replaced the first, so two weights went
    in and one pill with one weight came out. */
-function rememberDropped(name, weight, buffer, format) {
+function rememberDropped(name, cut, buffer, format) {
   let entry = droppedFonts.find((d) => d.name === name);
 
   if (entry) {
@@ -609,9 +611,9 @@ function rememberDropped(name, weight, buffer, format) {
 
   // Whether this exact cut is new, so a re-drop can say so rather than looking
   // like nothing happened.
-  const added = !entry.cuts.has(weight);
+  const added = !entry.cuts.has(cut);
 
-  entry.cuts.set(weight, { buffer, format });
+  entry.cuts.set(cut, { buffer, format });
   droppedFonts.unshift(entry);
   droppedFonts.splice(DROPPED_LIMIT);
   renderSamples();
@@ -621,19 +623,30 @@ function rememberDropped(name, weight, buffer, format) {
 /* The shape the weight machinery expects, so a dropped family can use it
    unchanged: a sorted list of the weights actually held, and which one is
    showing. */
-function droppedSample(entry, weight) {
+function droppedSample(entry, cut) {
   return {
     name: entry.name,
     uid: entry.uid,
     dropped: true,
-    weights: [...entry.cuts.keys()].sort((a, b) => a - b),
-    weight,
+    weights: [...entry.cuts.keys()].sort(cutOrder),
+    weight: cut,
   };
 }
 
-function droppedWeightOf(font) {
+/* What distinguishes one file of a family from another. The style name, because
+   it is the only field that actually varies — it carries the weight, the slant
+   and whatever axis the foundry has added, where usWeightClass carries at best
+   the first of those. Falls back to the weight when a font declares no style
+   name at all. */
+function droppedCutOf(font) {
+  const style =
+    font &&
+    font.names &&
+    (pickName(font.names.preferredSubfamily) || pickName(font.names.fontSubfamily));
+  if (style) return style.trim();
+
   const declared = font && font.tables && font.tables.os2 && font.tables.os2.usWeightClass;
-  return Number.isFinite(declared) && declared > 0 ? declared : 400;
+  return weightName(Number.isFinite(declared) && declared > 0 ? declared : 400);
 }
 
 const hasLocalFonts = typeof window.queryLocalFonts === "function";
@@ -942,7 +955,7 @@ async function handleFiles(list) {
     const parsed = await parseFont(buffer, format);
     filed.push({
       family: fontNames(file, parsed.font).family,
-      weight: droppedWeightOf(parsed.font),
+      cut: droppedCutOf(parsed.font),
       buffer,
       format,
     });
@@ -954,7 +967,7 @@ async function handleFiles(list) {
 
   let repeats = 0;
   for (const cut of filed) {
-    const { added } = rememberDropped(cut.family, cut.weight, cut.buffer, cut.format);
+    const { added } = rememberDropped(cut.family, cut.cut, cut.buffer, cut.format);
     if (!added) repeats++;
   }
 
@@ -963,8 +976,8 @@ async function handleFiles(list) {
      on something predictable rather than on whichever file the OS listed last. */
   const first = filed[0].family;
   const opening = filed
-    .filter((cut) => cut.family === first)
-    .sort((a, b) => a.weight - b.weight)[0];
+    .filter((held) => held.family === first)
+    .sort((a, b) => cutOrder(a.cut, b.cut))[0];
 
   await handleFile(new File([opening.buffer], `${first}.ttf`));
 
@@ -1035,15 +1048,15 @@ async function handleFile(file, source = null, { remember = true } = {}) {
 
        Dropping a second cut of a family already held makes it a two-weight
        family, and it then drives the weight toggles like any other sample. */
-    const weight = droppedWeightOf(parsed.font);
+    const cut = droppedCutOf(parsed.font);
     const { entry, added } = rememberDropped(
       fontNames(file, parsed.font).family,
-      weight,
+      cut,
       buffer,
       format
     );
-    activeSample = entry.cuts.size > 1 ? droppedSample(entry, weight) : null;
-    activeWeight = activeSample ? weight : null;
+    activeSample = entry.cuts.size > 1 ? droppedSample(entry, cut) : null;
+    activeWeight = activeSample ? cut : null;
 
     /* It still opens — you asked to look at it and there it is — but say so, or
        dropping the same file twice looks like the second one did nothing.
@@ -1051,7 +1064,7 @@ async function handleFile(file, source = null, { remember = true } = {}) {
        And a drop that did add something clears whatever was showing, so a
        notice about the last font is not still on screen describing this one. */
     if (added) notify("");
-    else notify(`${entry.name} ${weightName(weight)} was already added`);
+    else notify(`${entry.name} ${cutLabel(cut)} was already added`);
   }
   // Decided here, not per render: renderPage runs before renderGlyphs sets
   // currentFont, so it cannot ask the parsed font itself.
@@ -1184,6 +1197,21 @@ const WEIGHT_NAMES = {
   900: "Black",
 };
 
+/* A cut is identified by a number for the library, whose weights come from the
+   CDN as numbers, and by its own style name for a dropped family, where the
+   number is useless: Proximity Dot ships eighteen styles and declares
+   usWeightClass 400 for every one that is not Light, so keying on the weight
+   collapsed Bold Italic 100 and Regular 25 onto the same slot and kept
+   whichever landed last. */
+function cutLabel(key) {
+  return typeof key === "number" ? weightName(key) : key;
+}
+
+/* Natural order, so 25 sorts before 100 rather than after it. */
+function cutOrder(a, b) {
+  return String(a).localeCompare(String(b), undefined, { numeric: true });
+}
+
 function weightName(value) {
   if (!value) return null;
   // Nearest standard step, ties going down: Manrope's 200 declares itself 250.
@@ -1301,7 +1329,7 @@ function renderStyle(names) {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "link-button weight-button";
-  button.textContent = weightName(activeWeight);
+  button.textContent = cutLabel(activeWeight);
   button.title = `Weight ${activeWeight} — click for the next of ${activeSample.weights.length}`;
   button.addEventListener("click", nextWeight);
 
@@ -1404,7 +1432,7 @@ function syncSectionWeights() {
        written here — storing the hero's weight on the first sync would pin the
        section to it and it would never follow again. */
     const weight = sectionWeights.has(key) ? sectionWeights.get(key) : activeWeight;
-    el_.textContent = weightName(weight);
+    el_.textContent = cutLabel(weight);
     const entry = faces.get(weight);
     if (entry) useFace(section(), entry.family);
   }
@@ -1424,7 +1452,7 @@ async function nextSectionWeight(key) {
 
   sectionWeights.set(key, weight);
   useFace(entry_.section(), face.family);
-  entry_.button().textContent = weightName(weight);
+  entry_.button().textContent = cutLabel(weight);
 }
 
 /* The hero is set as large as it can be without wrapping, up to a ceiling.
@@ -1991,7 +2019,7 @@ function openViewer(i) {
 function paintFace() {
   if (!currentNames) return;
 
-  const weight = activeWeight ? weightName(activeWeight) : currentNames.style;
+  const weight = activeWeight ? cutLabel(activeWeight) : currentNames.style;
   el.viewerFace.replaceChildren(
     ...[currentNames.family, weight].filter(Boolean).map((text) => {
       const note = document.createElement("span");
@@ -2124,7 +2152,7 @@ function previewFace(sample) {
       (async () => {
         let buffer;
         if (sample.dropped) {
-          const lightest = [...sample.cuts.keys()].sort((a, b) => a - b)[0];
+          const lightest = [...sample.cuts.keys()].sort(cutOrder)[0];
           buffer = sample.cuts.get(lightest).buffer;
         } else if (sample.local) {
           buffer = localFontBuffer(sample);
@@ -2318,7 +2346,7 @@ function droppedItems() {
     button.textContent = entry.name;
     button.title = `${entry.name}, opened here earlier`;
     button.addEventListener("click", () => {
-      const lightest = [...entry.cuts.keys()].sort((a, b) => a - b)[0];
+      const lightest = [...entry.cuts.keys()].sort(cutOrder)[0];
       handleFile(new File([entry.cuts.get(lightest).buffer], `${entry.name}.ttf`));
     });
 
