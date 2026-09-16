@@ -1188,6 +1188,11 @@ function pageSample(shape) {
    and a shrunk line reads better than a word cut in half. */
 const PAGE_MIN_SIZE = 16;
 
+/* The ceiling on the size control, well above anything a shuffle will choose —
+   the largest preset is the 180px single word. This is headroom for setting a
+   size by hand, which is the only way to get near it. */
+const PAGE_MAX_SIZE = 600;
+
 function fitPageText(text, ceiling) {
   const width = el.pageText.clientWidth;
   if (!width) return ceiling;
@@ -1235,7 +1240,7 @@ function renderPage(from = PAGE_SHAPES) {
   pageLeading.set(style.leading);
   pageTracking.set(style.tracking);
   // Measured on the whole text either way; only the longest word matters.
-  pageSize.set(fitPageText(el.pageText.textContent, style.size));
+  pageSize.reset(fitPageText(el.pageText.textContent, style.size));
 
   // Measured again after layout. At render the box can still be zero-width —
   // a first paint, a hidden section — and fitPageText has nothing to divide by,
@@ -1250,6 +1255,11 @@ function renderPage(from = PAGE_SHAPES) {
 function clampPageSize() {
   const text = el.pageText.textContent;
   if (!text) return;
+
+  // A size someone set by hand stands. They can see the result and they asked
+  // for it; the clamp is there to stop the automatic fit from breaking words,
+  // not to overrule a decision.
+  if (pageSize.isByUser()) return;
 
   const current = pageSize.get();
   const fitted = fitPageText(text, current);
@@ -1709,6 +1719,11 @@ const CONTROL_DRAG_STEP = 5; // dragging lands on multiples of 5
 function scrubControl({ scrub, input, min, max, initial, apply }) {
   let value = initial;
   let from = null;
+  /* Whether the value on screen was chosen by a person or computed for them.
+     Anything that fits or clamps a value automatically needs to know, because
+     a number someone typed is an instruction and a number we worked out is
+     only a default. */
+  let byUser = false;
 
   function set(next) {
     value = Math.max(min, Math.min(max, Math.round(next) || 0));
@@ -1729,6 +1744,7 @@ function scrubControl({ scrub, input, min, max, initial, apply }) {
   scrub.addEventListener("pointermove", (e) => {
     if (!from) return;
     const raw = from.value + (e.clientX - from.x);
+    byUser = true;
     set(Math.round(raw / CONTROL_DRAG_STEP) * CONTROL_DRAG_STEP);
   });
 
@@ -1743,8 +1759,8 @@ function scrubControl({ scrub, input, min, max, initial, apply }) {
   // between them without typing.
   scrub.addEventListener("keydown", (e) => {
     const step = e.shiftKey ? 10 : 1;
-    if (e.key === "ArrowRight" || e.key === "ArrowUp") set(value + step);
-    else if (e.key === "ArrowLeft" || e.key === "ArrowDown") set(value - step);
+    if (e.key === "ArrowRight" || e.key === "ArrowUp") byUser = true, set(value + step);
+    else if (e.key === "ArrowLeft" || e.key === "ArrowDown") byUser = true, set(value - step);
     else return;
     e.preventDefault();
   });
@@ -1753,12 +1769,22 @@ function scrubControl({ scrub, input, min, max, initial, apply }) {
   input.addEventListener("input", () => {
     const raw = input.value.trim();
     if (raw === "" || raw === "-") return;
+    byUser = true;
     set(Number(raw));
   });
-  input.addEventListener("blur", () => set(Number(input.value)));
+  input.addEventListener("blur", () => { byUser = true; set(Number(input.value)); });
 
   set(initial);
-  return { set, get: () => value };
+
+  /* `reset` is how a render says "this is a fresh default": it sets the value
+     and forgets that anyone had chosen one. `set` on its own leaves the flag
+     where it was. */
+  return {
+    set,
+    get: () => value,
+    isByUser: () => byUser,
+    reset: (next) => { byUser = false; set(next); },
+  };
 }
 
 /* Letter spacing travels as a unitless custom property, never as an `em`
@@ -1799,7 +1825,7 @@ const pageSize = scrubControl({
   scrub: el.pageSizeScrub,
   input: el.pageSizeInput,
   min: 12,
-  max: 240,
+  max: PAGE_MAX_SIZE,
   initial: 64,
   apply: (v) => el.page.style.setProperty("--page-size", `${v}px`),
 });
