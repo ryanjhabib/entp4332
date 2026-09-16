@@ -1754,6 +1754,10 @@ const COLOUR_PAIRS = [
   { fg: "#2e1a3a", bg: "#e3e8b0" }, // aubergine on pale chartreuse
   { fg: "#fff1f2", bg: "#c1121f" }, // pale rose on cherry red
   { fg: "#3a63a8", bg: "#f0f0f0" }, // blue on grey
+  // Muted: low chroma, close in value, still clear of 4.5:1.
+  { fg: "#4a3a30", bg: "#d8cabb" }, // cocoa on putty
+  { fg: "#cec5e4", bg: "#2b2733" }, // lavender on slate plum
+  { fg: "#4a2c34", bg: "#e0c9cc" }, // mulberry on dusty rose
 ];
 
 let colourPair = 0;
