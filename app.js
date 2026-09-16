@@ -853,6 +853,8 @@ const el = {
   pageColors: document.getElementById("page-colors"),
   viewerColors: document.getElementById("viewer-colors"),
   viewerFace: document.getElementById("viewer-face"),
+  viewerSizeScrub: document.getElementById("viewer-size-scrub"),
+  viewerSizeInput: document.getElementById("viewer-size-input"),
   localAccess: document.getElementById("local-access"),
   siteFooter: document.querySelector(".site-footer"),
   pageSizeScrub: document.getElementById("page-size-scrub"),
@@ -2714,6 +2716,18 @@ function applyViewerPair() {
   el.viewer.style.setProperty("--viewer-bg", bg);
   el.viewerColors.style.background = `linear-gradient(90deg, ${bg} 0 50%, ${fg} 50% 100%)`;
 }
+
+/* Never reset. Closing the viewer leaves it where it was, so coming back to
+   another glyph shows it at the size you had chosen — the same way the colour
+   pair survives. */
+const viewerSize = scrubControl({
+  scrub: el.viewerSizeScrub,
+  input: el.viewerSizeInput,
+  min: 20,
+  max: 100,
+  initial: 70,
+  apply: (v) => el.viewer.style.setProperty("--glyph-size", String(v)),
+});
 
 el.viewerColors.addEventListener("click", () => {
   viewerStep = (viewerStep + 1) % colourOrder.length;

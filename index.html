@@ -187,9 +187,19 @@
   <div class="viewer-stage" id="viewer-stage"></div>
   <button type="button" class="viewer-arrow" id="viewer-next" aria-label="Next glyph">&rarr;</button>
 
-  <div class="control control--swatch viewer-colors">
-    <button type="button" class="swatch" id="viewer-colors" aria-label="Next colour pair"
-            title="Cycle through colour pairs"></button>
+  <div class="viewer-controls">
+    <div class="control control--swatch">
+      <button type="button" class="swatch" id="viewer-colors" aria-label="Next colour pair"
+              title="Cycle through colour pairs"></button>
+    </div>
+
+    <div class="control">
+      <span class="control-scrub" id="viewer-size-scrub" role="slider" tabindex="0"
+            aria-label="Glyph size, percent of the screen" aria-valuemin="20" aria-valuemax="100"
+            aria-valuenow="70" title="Drag left or right to change the size">TT</span>
+      <input class="control-input" id="viewer-size-input" type="number"
+             value="70" step="1" min="20" max="100" aria-label="Glyph size percent">
+    </div>
   </div>
 </div>
 

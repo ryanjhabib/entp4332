@@ -1000,11 +1000,16 @@ body.is-viewing { overflow: hidden; }
 
 /* Centred on the bottom edge, on the viewer's own centre line rather than
    inside the grid, so it does not move with the glyph. */
-.viewer-colors {
+/* Centred on the bottom edge, on the viewer's own centre line rather than
+   inside the grid, so they do not move with the glyph. */
+.viewer-controls {
   position: absolute;
   left: 50%;
   bottom: var(--banner-inset);
   transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 /* What you are looking at on the left, the way out on the right. The glyph's
@@ -1057,9 +1062,12 @@ body.is-viewing { overflow: hidden; }
   min-width: 0;
 }
 
+/* The 70 is the default the scrub starts on; it is set as a plain number so the
+   same value can drive both axes. min() keeps a tall glyph off the top and
+   bottom and a wide one off the sides, whichever runs out first. */
 .viewer-stage svg {
   width: auto;
-  height: min(70vh, 70vw);
+  height: min(calc(var(--glyph-size, 70) * 1vh), calc(var(--glyph-size, 70) * 1vw));
   max-width: 100%;
 }
 .viewer-stage svg path { fill: var(--viewer-fg, var(--color-text)); }
