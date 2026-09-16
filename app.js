@@ -1225,18 +1225,22 @@ const pageTracking = scrubControl({
 /* Type behaves differently on a dark ground than a light one — the same weight
    reads heavier reversed out. Cycling pairs is the quickest way to see it. */
 /* Every pair clears 4.5:1, so the page stays readable at the paragraph preset's
-   24px and not only at display sizes. */
+   24px and not only at display sizes. The vivid ones are interleaved among the
+   quiet ones after the blue, rather than grouped, so cycling does not run
+   through all the loud ones at once. */
 const COLOUR_PAIRS = [
-  { fg: "#111111", bg: "#f0f0f0" },
-  { fg: "#ffffff", bg: "#111111" },
-  { fg: "#111111", bg: "#ffffff" },
-  { fg: "#ffffff", bg: "#4671c4" }, // a shade under the banner blue, to clear 4.5:1
-  { fg: "#1c1a17", bg: "#f2ece1" },
-  { fg: "#3a63a8", bg: "#f0f0f0" },
-  // Muted complements — opposite on the wheel, dulled enough to set type on.
+  { fg: "#111111", bg: "#f0f0f0" }, // ink on grey
+  { fg: "#ffffff", bg: "#111111" }, // paper on ink
+  { fg: "#111111", bg: "#ffffff" }, // ink on paper
+  { fg: "#ffffff", bg: "#4671c4" }, // paper on blue, a shade under the banner to clear 4.5:1
+  { fg: "#d9f24a", bg: "#14140f" }, // lime on near-black
   { fg: "#5c1a1a", bg: "#d9e0cf" }, // oxblood on sage
+  { fg: "#12143a", bg: "#ffd400" }, // navy on vivid yellow
+  { fg: "#1c1a17", bg: "#f2ece1" }, // ink on cream
+  { fg: "#111111", bg: "#ff5a3c" }, // ink on vermilion
   { fg: "#0f3a3a", bg: "#e6b8a2" }, // deep teal on terracotta
   { fg: "#2e1a3a", bg: "#e3e8b0" }, // aubergine on pale chartreuse
+  { fg: "#3a63a8", bg: "#f0f0f0" }, // blue on grey
 ];
 
 let colourPair = 0;
