@@ -1646,8 +1646,12 @@ function openViewer(i) {
   if (!shownGlyphs.length) return;
   lastFocused = document.activeElement;
   viewerIndex = i;
-  // Open on the page's ground, unless you have already picked one in here.
-  if (!viewerChosen) viewerStep = colourStep;
+  /* Opens on paper rather than on whatever the page is wearing. One glyph at
+     70vh is the one place in here you are looking at an outline rather than at
+     type in use, and an outline is easiest to read with nothing behind it —
+     the swatch is right there if you want a ground. A pair picked in here still
+     survives closing and reopening; loading a font puts it back to paper. */
+  if (!viewerChosen) viewerStep = paperStep();
   applyViewerPair();
   paintFace();
   paintViewer();
@@ -2200,6 +2204,17 @@ el.pageColors.addEventListener("click", () => {
    while looking at one letter should not quietly restyle the page you will be
    back on when you close it. It opens on whatever the page is showing, so the
    two are continuous without being coupled. */
+/* Ink on paper, found by value rather than by position so reordering the list
+   cannot quietly point this somewhere else. */
+const PAPER_PAIR = { fg: "#111111", bg: "#ffffff" };
+
+function paperStep() {
+  const index = COLOUR_PAIRS.findIndex(
+    (pair) => pair.fg === PAPER_PAIR.fg && pair.bg === PAPER_PAIR.bg
+  );
+  return index < 0 ? 0 : colourOrder.indexOf(index);
+}
+
 let viewerStep = 0;
 /* Whether the viewer's ground was chosen in the viewer. Until it is, the viewer
    follows the page so the two are continuous on the way in; once it is, that
