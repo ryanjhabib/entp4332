@@ -1163,10 +1163,16 @@ const TRIAL_WORDS =
 
 /* Pulls those markers out of a name, returning the cleaned name and what it
    found. Separators left stranded by the removal are tidied up. */
+/* Trial, Demo, Beta, Test and the rest all say the same thing — this is not a
+   licensed release — so they collapse to one label rather than reporting which
+   word the foundry happened to use. "Font" is on the end because "Trial" alone
+   beside a style name reads as part of the style. */
+const TRIAL_LABEL = "Trial Font";
+
 function extractMarkers(name) {
   const found = [];
-  const stripped = name.replace(TRIAL_WORDS, (word) => {
-    found.push(word[0].toUpperCase() + word.slice(1).toLowerCase());
+  const stripped = name.replace(TRIAL_WORDS, () => {
+    found.push(TRIAL_LABEL);
     return " ";
   });
   if (!found.length) return { name, markers: [] };
@@ -1266,7 +1272,16 @@ function fontNames(file, font) {
   const fromStyle = extractMarkers(style);
   family = fromFamily.name;
   style = fromStyle.name;
-  const markers = [...new Set([...fromFamily.markers, ...fromStyle.markers])];
+
+  /* The file name as well. Plenty of trials are marked only there — the name
+     table says "Proximity VLine" and the file says Prxm-VLine-Bold-25-Trial —
+     and a marking that only exists on disk is still a marking. Only its
+     markers are taken; the cleaned file name is not a font name. */
+  const fromFile = extractMarkers(file.name.replace(/\.[^.]+$/, ""));
+
+  const markers = [
+    ...new Set([...fromFamily.markers, ...fromStyle.markers, ...fromFile.markers]),
+  ];
 
   /* Lift a trailing weight word off the family unconditionally. Neither ID1 nor
      ID16 can be trusted here — Manrope calls itself "Manrope ExtraLight" in
@@ -1333,8 +1348,7 @@ function renderStyle(names) {
   button.title = `Weight ${activeWeight} — click for the next of ${activeSample.weights.length}`;
   button.addEventListener("click", nextWeight);
 
-  // Control first, label second: the thing you can act on leads the row.
-  el.fontStyle.replaceChildren(button, note);
+  el.fontStyle.replaceChildren(note, button);
 }
 
 /* Fetches a weight if it has not been seen, and hands back its registered
