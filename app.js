@@ -562,6 +562,13 @@ function sampleFile(sample, weight) {
    Single-face files only. A .ttc hands back the whole collection and neither
    FontFace nor opentype.js will take one. */
 const LOCAL_FONTS = [
+  // Dinamo's licence names "storing on publicly available servers" and
+  // "redistributing" among the things it excludes, so ABC Areal can only ever
+  // reach the page this way — off the reader's own disk, once they have
+  // installed it. Until then the pill says it is not installed.
+  { name: "ABC Areal", ps: "ABCAreal-Regular" },
+  { name: "ABC Areal Mono", ps: "ABCArealMono-Regular" },
+  { name: "ABC Areal Semi Mono", ps: "ABCArealSemiMono-Regular" },
   { name: "Andale Mono", ps: "AndaleMono" },
   { name: "Apple Chancery", ps: "Apple-Chancery" },
   { name: "Arial", ps: "ArialMT" },
