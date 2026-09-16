@@ -1509,13 +1509,27 @@ function outlineKey(glyph, font) {
   return `${glyph.getPath(0, 0, 1000).toPathData(1)}|${advance}`;
 }
 
+/* A glyph with no ink is a space of some width. There is nothing in it to look
+   at and nothing to compare it against, and in a grid it reads as a hole rather
+   than as a character. The outline key already collapsed them all to one cell;
+   this drops that one too. */
+function hasInk(glyph, font) {
+  const box = glyph.getPath(0, 0, font.unitsPerEm).getBoundingBox();
+  return box.x2 > box.x1 && box.y2 > box.y1;
+}
+
 function buildGlyphSets(font) {
   const seen = new Set();
   const all = [];
   const scanned = Math.min(font.numGlyphs, GLYPH_LIMIT);
+  let blank = 0;
 
   for (let i = 0; i < scanned; i++) {
     const glyph = font.glyphs.get(i);
+    if (!hasInk(glyph, font)) {
+      blank++;
+      continue;
+    }
     const key = outlineKey(glyph, font);
     if (seen.has(key)) continue;
     seen.add(key);
@@ -1525,7 +1539,9 @@ function buildGlyphSets(font) {
   const basic = all.filter(
     (g) => g.unicode >= BASIC_FIRST && g.unicode <= BASIC_LAST
   );
-  return { all, basic, scanned };
+  // Counted apart from the duplicates, or the notice would report blanks as
+  // repeated outlines and be wrong about both.
+  return { all, basic, scanned, blank };
 }
 
 function renderGlyphs({ font, note }) {
@@ -1541,13 +1557,13 @@ function renderGlyphs({ font, note }) {
     return;
   }
 
-  const { all, basic, scanned } = buildGlyphSets(font);
+  const { all, basic, scanned, blank } = buildGlyphSets(font);
   allGlyphs = all;
   basicGlyphs = basic.length ? basic : all;
   showingAll = false;
   paintGlyphs();
 
-  const duplicates = scanned - all.length;
+  const duplicates = scanned - all.length - blank;
   const parts = [];
   if (duplicates > 0) {
     parts.push(`${duplicates} glyph${duplicates === 1 ? "" : "s"} repeated an outline already shown and ${duplicates === 1 ? "was" : "were"} collapsed`);
