@@ -2063,6 +2063,15 @@ const COLOUR_PAIRS = [
   { fg: "#2b2117", bg: "#f0b478" }, // bark on apricot
   { fg: "#fdf6e3", bg: "#7a3b2e" }, // cream on brick
   { fg: "#2a2e45", bg: "#c9c4b4" }, // slate on warm stone
+  /* Standing in for the two that came out, tamed rather than repeated, and
+     each in a hue the set had nothing in. Petrol is the cyan taken down to a
+     dark ground; ochre is the orange pulled yellow, desaturated and darkened,
+     so it reads gold rather than traffic cone. Periwinkle is new outright —
+     there was a pale sky at 208 degrees and a slate plum at 260, and nothing
+     between them. */
+  { fg: "#e8ddc8", bg: "#1d3f44" }, // warm cream on petrol
+  { fg: "#3b2d12", bg: "#d2a94f" }, // olive brown on ochre
+  { fg: "#23255c", bg: "#c3c7f0" }, // indigo on periwinkle
 ];
 
 let colourPair = 0;
