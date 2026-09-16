@@ -488,11 +488,21 @@ body.has-font .loader { display: none; }
    the ones inside the waterfall, where they belong to the specimen itself. */
 .specimen-section { margin-top: var(--section-gap); }
 
-.section-title {
+/* The count reads as a fact, not a heading, so it takes the same pill as the
+   hero's style note and sits on the row with the control it describes. Still an
+   h2 — it is the section's heading whatever it looks like. */
+.glyph-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
   margin: 0 0 var(--space-12);
+}
+
+.glyph-bar h2 {
+  margin: 0;
   font-size: var(--size-ui);
   font-weight: var(--weight-ui);
-  color: var(--color-muted);
 }
 
 /* Any element rendered in the user's font */
@@ -996,7 +1006,7 @@ body:not(.has-font) #print { display: none; }
     margin-top: var(--space-16);
     break-inside: auto;
   }
-  .section-title { break-after: avoid; }
+  .glyph-bar { break-after: avoid; }
 
 
   /* Lines already wrap on screen, so nothing extra is needed to keep the
