@@ -5,8 +5,39 @@ const WATERFALL_SIZES = [128, 96, 72, 48, 36, 24, 16, 12];
 // Rendering every glyph of a large CJK font locks the page up. Cap it and say so.
 const GLYPH_LIMIT = 1500;
 
-// The family name we register every loaded font under, so the CSS never changes.
+/* Each weight is registered as its own family, so several can be live at once
+   and a section can point at whichever it likes. The CSS never names one
+   directly — it reads --face, which is set here. */
 const FAMILY = "SpecimenFont";
+const faces = new Map(); // key -> { family, face, buffer, format }
+
+function faceFamily(key) {
+  return `${FAMILY}_${key}`;
+}
+
+async function registerFace(key, buffer, format) {
+  if (faces.has(key)) return faces.get(key);
+
+  const family = faceFamily(key);
+  const face = new FontFace(family, buffer);
+  await face.load(); // registers nothing until it resolves
+  document.fonts.add(face);
+
+  const entry = { family, face, buffer, format };
+  faces.set(key, entry);
+  return entry;
+}
+
+function clearFaces() {
+  for (const { face } of faces.values()) document.fonts.delete(face);
+  faces.clear();
+}
+
+/* Which face each surface is set in. Sections inherit the base until they are
+   given one of their own. */
+function useFace(target, family) {
+  target.style.setProperty("--face", `"${family}"`);
+}
 
 /* Test strings. Deliberately short — at 128px a line much past ~16 characters
    wraps on a normal desktop, which spoils the largest step. Between them they
@@ -241,6 +272,12 @@ const el = {
   paraLeadingScrub: document.getElementById("para-leading-scrub"),
   paraLeadingInput: document.getElementById("para-leading-input"),
   paraShuffle: document.getElementById("para-shuffle"),
+  waterfallSection: document.getElementById("waterfall-section"),
+  paragraphsSection: document.getElementById("paragraphs-section"),
+  pageSection: document.getElementById("page-section"),
+  wfWeight: document.getElementById("wf-weight"),
+  paraWeight: document.getElementById("para-weight"),
+  pageWeight: document.getElementById("page-weight"),
   page: document.getElementById("page"),
   pageText: document.getElementById("page-text"),
   pageShuffle: document.getElementById("page-shuffle"),
@@ -255,7 +292,7 @@ const el = {
   print: document.getElementById("print"),
 };
 
-let loadedFace = null; // the FontFace currently registered, so we can swap it out
+let baseFamily = null; // the face the hero, information and glyphs are set in
 
 /* -------------------------------------------------------------------------
    Status messages
@@ -332,20 +369,23 @@ async function handleFile(file, source = null) {
   /* Loaded before the old face is touched. `new FontFace()` does not register
      anything, so until it resolves the page is still rendering the font that
      was already there — and if it throws, it still is. */
-  let face;
+  const key = source ? source.weight : "file";
+  let probe;
   try {
-    face = new FontFace(FAMILY, buffer);
-    await face.load();
+    probe = new FontFace(faceFamily(key), buffer);
+    await probe.load();
   } catch (err) {
     return notify("That font could not be rendered");
   }
 
-  // Past this point the new font is good, so the old one can go.
+  // Past this point the new font is good, so the old ones can go.
   resetSpecimen();
-  if (loadedFace) document.fonts.delete(loadedFace);
-  loadedFace = face;
-  document.fonts.add(face);
+  clearFaces();
+  faces.set(key, { family: faceFamily(key), face: probe, buffer, format });
+  document.fonts.add(probe);
   await document.fonts.ready; // canvas cannot measure the face until it is live
+  baseFamily = faceFamily(key);
+  useFace(el.specimen, baseFamily);
 
   // Parsing can fail independently of rendering — the specimen still shows.
   const parsed = await parseFont(buffer, format);
@@ -364,7 +404,8 @@ async function handleFile(file, source = null) {
   renderParagraphs();
   renderPage();
   renderGlyphs(parsed);
-
+  sectionWeights.clear();
+  syncSectionWeights();
 }
 
 /* opentype.js cannot read woff2's Brotli-compressed tables. We decompress to
@@ -560,32 +601,123 @@ function renderTitle({ family, style }) {
 /* The style line is a button when the family has other weights to show, and
    plain text when it does not — a dropped file is one weight, and a control
    that cannot do anything is worse than no control. */
+/* Two pills. The first states what the file says about itself — style, and any
+   trial marking — and does nothing. The second is the weight control, and only
+   appears when there is another weight to go to. */
 function renderStyle(style) {
-  const cycles = activeSample && activeSample.weights.length > 1;
-  // For a sample we know exactly which weight was requested, which beats
-  // anything the file says about itself.
-  const label = activeWeight ? weightName(activeWeight) : style;
+  const note = document.createElement("span");
+  note.className = "style-note";
+  note.textContent = style;
 
-  if (!cycles) {
-    el.fontStyle.textContent = label;
+  if (!activeSample || activeSample.weights.length < 2) {
+    el.fontStyle.replaceChildren(note);
     return;
   }
 
   const button = document.createElement("button");
   button.type = "button";
   button.className = "link-button weight-button";
-  // Labelled by the font itself, stepped by the family's weight list.
-  button.textContent = label;
+  button.textContent = weightName(activeWeight);
   button.title = `Weight ${activeWeight} — click for the next of ${activeSample.weights.length}`;
   button.addEventListener("click", nextWeight);
-  el.fontStyle.replaceChildren(button);
+
+  el.fontStyle.replaceChildren(note, button);
 }
 
-function nextWeight() {
+/* Fetches a weight if it has not been seen, and hands back its registered
+   face. Everything after the first visit to a weight is instant. */
+async function faceFor(sample, weight) {
+  if (faces.has(weight)) return faces.get(weight);
+
+  const res = await fetch(sampleUrl(sample, weight));
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const buffer = await res.arrayBuffer();
+  return registerFace(weight, buffer, detectFormat(buffer));
+}
+
+function stepWeight(list, from) {
+  return list[(list.indexOf(from) + 1) % list.length];
+}
+
+/* Changing the hero weight swaps the face and redraws only what depends on the
+   outlines — the name, the information and the glyphs. It does not reset the
+   specimen, so the phrase you chose, the settings you dialled in and where you
+   had scrolled to all survive. */
+async function nextWeight() {
   if (!activeSample) return;
-  const list = activeSample.weights;
-  const next = list[(list.indexOf(activeWeight) + 1) % list.length];
-  loadSample(activeSample, next);
+  const weight = stepWeight(activeSample.weights, activeWeight);
+
+  let entry;
+  try {
+    entry = await faceFor(activeSample, weight);
+  } catch {
+    return notify(`Could not fetch ${activeSample.name}`);
+  }
+
+  activeWeight = weight;
+  baseFamily = entry.family;
+  useFace(el.specimen, baseFamily);
+
+  const parsed = await parseFont(entry.buffer, entry.format);
+  const shim = { name: sampleFile(activeSample, weight), size: entry.buffer.byteLength };
+  const names = fontNames(shim, parsed.font);
+
+  renderTitle(names);
+  renderInfo(shim, entry.format, parsed, names);
+  renderGlyphs(parsed);
+  syncSectionWeights();
+}
+
+/* -------------------------------------------------------------------------
+   Per-section weights
+   ---------------------------------------------------------------------- */
+/* A section can be set in a different weight from the hero. Only --face
+   changes, so nothing re-renders and nothing moves. */
+const WEIGHT_SECTIONS = [
+  { key: "waterfall", section: () => el.waterfallSection, button: () => el.wfWeight },
+  { key: "paragraphs", section: () => el.paragraphsSection, button: () => el.paraWeight },
+  { key: "page", section: () => el.pageSection, button: () => el.pageWeight },
+];
+
+const sectionWeights = new Map();
+
+function syncSectionWeights() {
+  const list = activeSample ? activeSample.weights : [];
+  const offer = list.length > 1;
+
+  for (const { key, section, button } of WEIGHT_SECTIONS) {
+    const el_ = button();
+    el_.hidden = !offer;
+    if (!offer) {
+      sectionWeights.delete(key);
+      section().style.removeProperty("--face");
+      continue;
+    }
+    /* A section follows the hero until it is set otherwise, so nothing is
+       written here — storing the hero's weight on the first sync would pin the
+       section to it and it would never follow again. */
+    const weight = sectionWeights.has(key) ? sectionWeights.get(key) : activeWeight;
+    el_.textContent = weightName(weight);
+    const entry = faces.get(weight);
+    if (entry) useFace(section(), entry.family);
+  }
+}
+
+async function nextSectionWeight(key) {
+  if (!activeSample) return;
+  const entry_ = WEIGHT_SECTIONS.find((s) => s.key === key);
+  const weight = stepWeight(activeSample.weights, sectionWeights.get(key) ?? activeWeight);
+
+  let face;
+  try {
+    face = await faceFor(activeSample, weight);
+  } catch {
+    return notify(`Could not fetch ${activeSample.name}`);
+  }
+
+  sectionWeights.set(key, weight);
+  useFace(entry_.section(), face.family);
+  entry_.button().textContent = weightName(weight);
 }
 
 /* The hero is set as large as it can be without wrapping, up to a ceiling.
@@ -600,7 +732,7 @@ function fitTitle() {
   const available = el.fontName.clientWidth; // block element: independent of its own font-size
   if (!text || !available) return;
 
-  titleCtx.font = `100px "${FAMILY}"`;
+  titleCtx.font = `100px ${baseFamily ? `"${baseFamily}"` : `"${FAMILY}"`}`;
   const widthAt100 = titleCtx.measureText(text).width;
   if (!widthAt100) return;
 
@@ -784,7 +916,7 @@ function fitPageText(text, ceiling) {
   const width = el.pageText.clientWidth;
   if (!width) return ceiling;
 
-  titleCtx.font = `100px "${FAMILY}"`;
+  titleCtx.font = `100px ${baseFamily ? `"${baseFamily}"` : `"${FAMILY}"`}`;
   const longest = text
     .split(/\s+/)
     .reduce((a, b) => (b.length > a.length ? b : a), "");
@@ -1481,6 +1613,10 @@ el.waterfall.addEventListener("paste", (e) => {
 });
 
 el.shuffle.addEventListener("click", () => setPhrase(randomPhrase()));
+
+for (const { key, button } of WEIGHT_SECTIONS) {
+  button().addEventListener("click", () => nextSectionWeight(key));
+}
 
 /* Both columns carry the same words, so editing one retypes the other. The
    edited element is left alone, or the caret collapses on every keystroke. */

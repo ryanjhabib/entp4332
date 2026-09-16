@@ -342,6 +342,17 @@ body.has-font .loader { display: none; }
   margin: 0;
 }
 
+/* A section's own weight, in the same dark pill as the settings beside it. */
+.control-weight {
+  height: var(--pill-height);
+  padding: 0 var(--space-3);
+  background: var(--color-control);
+  color: #ffffff;
+  border-radius: var(--radius-pill);
+}
+.control-weight:hover { background: var(--color-control); opacity: 0.85; }
+.control-weight:focus-visible { outline: 2px solid var(--color-banner); outline-offset: 2px; }
+
 .control-group {
   display: flex;
   align-items: center;
@@ -403,7 +414,9 @@ body.has-font .loader { display: none; }
 }
 
 /* Any element rendered in the user's font */
-.specimen-type { font-family: "SpecimenFont", var(--font-ui); }
+/* Never names a family directly: --face is set per surface, which is what lets
+   a section be set in a different weight from the hero. */
+.specimen-type { font-family: var(--face, "SpecimenFont"), var(--font-ui); }
 
 /* The intro: family name as the hero, style as quiet subtext beneath it. */
 .specimen-intro { margin-top: var(--section-gap); }
@@ -428,9 +441,24 @@ body.has-font .loader { display: none; }
 html { scroll-padding-top: var(--space-16); }
 
 .font-style {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   margin: var(--space-4) 0 0;
   color: var(--color-muted);
   font-size: var(--size-ui);
+}
+
+/* States what the file says. Not a control, and shaped so it does not look
+   like one. */
+.style-note {
+  display: inline-flex;
+  align-items: center;
+  height: var(--pill-height);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--color-field);
+  color: var(--color-muted);
 }
 
 /* Reads as the style line until you notice it is a control. */

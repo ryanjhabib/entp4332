@@ -39,13 +39,18 @@
       <div class="section-controls no-print">
         <p class="hint"><button type="button" class="link-button" id="shuffle">Shuffle</button></p>
 
-        <div class="control">
-          <span class="control-scrub" id="tracking-scrub" role="slider" tabindex="0"
-                aria-label="Letter spacing, thousandths of an em"
-                aria-valuemin="-200" aria-valuemax="200" aria-valuenow="0"
-                title="Drag left or right to change letter spacing">AV</span>
-          <input class="control-input" id="tracking-input" type="number"
-                 value="0" step="1" min="-200" max="200" aria-label="Letter spacing value">
+        <div class="control-group">
+          <button type="button" class="control control-weight" id="wf-weight" hidden
+                  title="Weight for this section"></button>
+
+          <div class="control">
+            <span class="control-scrub" id="tracking-scrub" role="slider" tabindex="0"
+                  aria-label="Letter spacing, thousandths of an em"
+                  aria-valuemin="-200" aria-valuemax="200" aria-valuenow="0"
+                  title="Drag left or right to change letter spacing">AV</span>
+            <input class="control-input" id="tracking-input" type="number"
+                   value="0" step="1" min="-200" max="200" aria-label="Letter spacing value">
+          </div>
         </div>
       </div>
 
@@ -59,6 +64,9 @@
         <p class="hint"><button type="button" class="link-button" id="para-shuffle">Shuffle</button></p>
 
         <div class="control-group">
+          <button type="button" class="control control-weight" id="para-weight" hidden
+                  title="Weight for this section"></button>
+
           <div class="control">
             <span class="control-scrub" id="para-tracking-scrub" role="slider" tabindex="0"
                   aria-label="Paragraph letter spacing, thousandths of an em"
@@ -89,6 +97,9 @@
         <p class="hint"><button type="button" class="link-button" id="page-shuffle">Shuffle</button></p>
 
         <div class="control-group">
+          <button type="button" class="control control-weight" id="page-weight" hidden
+                  title="Weight for this section"></button>
+
           <div class="control control--swatch">
             <button type="button" class="swatch" id="page-colors" aria-label="Next colour pair"
                     title="Cycle through colour pairs"></button>
