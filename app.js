@@ -73,6 +73,7 @@ const el = {
   status: document.getElementById("status"),
   specimen: document.getElementById("specimen"),
   fontName: document.getElementById("font-name"),
+  fontStyle: document.getElementById("font-style"),
   infoGrid: document.getElementById("info-grid"),
   waterfall: document.getElementById("waterfall"),
   glyphGrid: document.getElementById("glyph-grid"),
@@ -144,6 +145,7 @@ async function handleFile(file) {
     loadedFace = new FontFace(FAMILY, buffer);
     await loadedFace.load();
     document.fonts.add(loadedFace);
+    await document.fonts.ready; // canvas cannot measure the face until it is live
   } catch (err) {
     loadedFace = null;
     return setStatus(
@@ -159,8 +161,9 @@ async function handleFile(file) {
   el.specimen.hidden = false;
   el.loader.classList.add("is-loaded");
   document.body.classList.add("has-font");
-  renderTitle(file, parsed);
-  renderInfo(file, format, parsed);
+  const names = fontNames(file, parsed.font);
+  renderTitle(names);
+  renderInfo(file, format, parsed, names);
   setPhrase(randomPhrase()); // a fresh phrase per font, and it renders the waterfall
   renderGlyphs(parsed);
 
@@ -240,18 +243,70 @@ function pickName(nameRecord) {
   return nameRecord.en || Object.values(nameRecord)[0] || null;
 }
 
-/* The family name is the typeface's own name, so it is what the specimen is
-   titled with. Files we could not parse fall back to the filename. */
-function renderTitle(file, { font }) {
-  const family = font && pickName(font.names.fontFamily);
-  el.fontName.textContent = family || file.name.replace(/\.(ttf|otf|woff2?|ttc)$/i, "");
+/* Weight and width words that may be sitting on the end of a family name. */
+const STYLE_WORDS =
+  /^(thin|hairline|extralight|ultralight|light|book|regular|normal|roman|medium|semibold|demibold|demi|bold|extrabold|ultrabold|black|heavy|fat|italic|oblique|condensed|compressed|narrow|extended|expanded|wide)$/i;
+
+/* Splitting the name is the whole point of the hero: name ID 1 is only the
+   plain family for four-style families. Anything larger pushes the weight into
+   it ("Inter SemiBold" with a subfamily of "Regular"), which is what made the
+   hero so long. Name IDs 16/17 carry the true family and style when present,
+   and when they do not we lift trailing style words off the family ourselves. */
+function fontNames(file, font) {
+  const fallback = file.name.replace(/\.(ttf|otf|woff2?|ttc)$/i, "");
+  if (!font) return { family: fallback, style: "" };
+
+  const names = font.names;
+  let family = pickName(names.preferredFamily) || pickName(names.fontFamily) || fallback;
+  let style = pickName(names.preferredSubfamily) || pickName(names.fontSubfamily) || "";
+
+  if (!style || /^regular$/i.test(style)) {
+    const parts = family.split(/\s+/);
+    const lifted = [];
+    while (parts.length > 1 && STYLE_WORDS.test(parts[parts.length - 1])) {
+      lifted.unshift(parts.pop());
+    }
+    if (lifted.length) {
+      family = parts.join(" ");
+      style = lifted.join(" ");
+    }
+  }
+
+  return { family, style: style || "Regular" };
 }
 
-function renderInfo(file, format, { font }) {
-  const names = font ? font.names : null;
+function renderTitle({ family, style }) {
+  el.fontName.textContent = family;
+  el.fontStyle.textContent = style;
+  fitTitle();
+}
+
+/* The hero is set as large as it can be without wrapping, up to a ceiling.
+   A fixed size cannot do this: "Inter" and "Libre Baskerville Condensed" need
+   very different sizes to occupy the same measure. */
+const TITLE_MAX = 240;
+const TITLE_MIN = 48;
+const titleCtx = document.createElement("canvas").getContext("2d");
+
+function fitTitle() {
+  const text = el.fontName.textContent;
+  const available = el.fontName.clientWidth; // block element: independent of its own font-size
+  if (!text || !available) return;
+
+  titleCtx.font = `100px "${FAMILY}"`;
+  const widthAt100 = titleCtx.measureText(text).width;
+  if (!widthAt100) return;
+
+  const ideal = Math.floor((available / widthAt100) * 100);
+  el.fontName.style.fontSize = `${Math.max(TITLE_MIN, Math.min(TITLE_MAX, ideal))}px`;
+}
+
+window.addEventListener("resize", fitTitle);
+
+function renderInfo(file, format, { font }, names) {
   const rows = [
-    ["Family", pickName(names && names.fontFamily) || "—"],
-    ["Style", pickName(names && names.fontSubfamily) || "—"],
+    ["Family", names.family || "—"],
+    ["Style", font ? names.style : "—"],
     ["Glyphs", font ? String(font.numGlyphs) : "—"],
     ["Format", format.label],
     ["Units per em", font ? String(font.unitsPerEm) : "—"],
@@ -389,6 +444,7 @@ function resetSpecimen() {
   el.loader.classList.remove("is-loaded");
   document.body.classList.remove("has-font");
   el.fontName.textContent = "";
+  el.fontStyle.textContent = "";
   el.infoGrid.replaceChildren();
   el.waterfall.replaceChildren();
   el.glyphGrid.replaceChildren();

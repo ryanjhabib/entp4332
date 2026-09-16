@@ -124,6 +124,43 @@ Confirmed at a real 375px viewport: `scrollWidth === innerWidth`, no sideways sc
 
 ---
 
+## 7. The hero name came out absurdly long
+
+**Symptom** The big name at the top of the specimen read "Inter SemiBold" rather than
+"Inter". Longer families were worse, wrapping to two or three lines at the hero size and
+forcing the type size down to compensate.
+
+**Cause** Not a bug in our code — a property of the OpenType name table. Name ID 1
+(`fontFamily`) is only the plain family for families of **four styles or fewer**. Anything
+larger cannot express itself in the classic four-style model, so the weight gets pushed
+into name ID 1 and the subfamily degrades to "Regular":
+
+| Name ID | Inter SemiBold reports |
+|---|---|
+| 1 `fontFamily` | `Inter SemiBold` |
+| 2 `fontSubfamily` | `Regular` |
+| 16 `preferredFamily` | `Inter` |
+| 17 `preferredSubfamily` | `SemiBold` |
+
+We were reading ID 1, so the weight was baked into the hero.
+
+**Fix** Read IDs **16/17** first and fall back to 1/2. Not every font ships 16/17, so when
+the subfamily still reads "Regular" we lift trailing style words off the family ourselves
+against a list (thin, light, medium, semibold, bold, black, italic, condensed, expanded…).
+The lift requires more than one word to remain, so a family genuinely *named* "Black" keeps
+its name instead of being stripped to nothing.
+
+**Also fixed here** The hero is now sized by measurement rather than by a fixed value.
+Canvas `measureText` at a 100px reference gives the ratio, and the size is set so the name
+fills the measure exactly, clamped to 48–240px. "Inter" lands on the 240px ceiling;
+"Libre Baskerville" fits itself at 139px; both occupy the same width and neither wraps.
+Re-runs on window resize.
+
+**Worth remembering** `document.fonts.ready` must be awaited after `document.fonts.add()`
+or canvas measures the *fallback* font and the fitted size is wrong.
+
+---
+
 ## Test matrix (all passing)
 
 | File | Format | Result |
