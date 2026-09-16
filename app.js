@@ -884,6 +884,7 @@ placeBanner();
    stays proportional down the whole ladder instead of swamping 12px while
    barely touching 128px. */
 const TRACKING_LIMIT = 200;
+const TRACKING_DRAG_STEP = 5; // dragging lands on multiples of 5
 let tracking = 0;
 
 function setTracking(value) {
@@ -899,8 +900,9 @@ function setTracking(value) {
   if (document.activeElement !== el.trackingInput) el.trackingInput.value = tracking;
 }
 
-/* Drag the label to scrub, one unit per pixel. Pointer capture keeps the drag
-   alive when the cursor leaves the label, which it will immediately. */
+/* Drag the label to scrub: one unit per pixel, snapped to the nearest 5, so it
+   steps rather than creeping. Pointer capture keeps the drag alive when the
+   cursor leaves the label, which it will immediately. */
 let scrubFrom = null;
 
 el.trackingScrub.addEventListener("pointerdown", (e) => {
@@ -910,7 +912,9 @@ el.trackingScrub.addEventListener("pointerdown", (e) => {
 });
 
 el.trackingScrub.addEventListener("pointermove", (e) => {
-  if (scrubFrom) setTracking(scrubFrom.value + (e.clientX - scrubFrom.x));
+  if (!scrubFrom) return;
+  const raw = scrubFrom.value + (e.clientX - scrubFrom.x);
+  setTracking(Math.round(raw / TRACKING_DRAG_STEP) * TRACKING_DRAG_STEP);
 });
 
 for (const type of ["pointerup", "pointercancel"]) {
@@ -922,6 +926,8 @@ for (const type of ["pointerup", "pointercancel"]) {
   });
 }
 
+// Arrows stay fine-grained: the drag steps in fives, so this is the way to
+// land on a value between them without typing it.
 el.trackingScrub.addEventListener("keydown", (e) => {
   const step = e.shiftKey ? 10 : 1;
   if (e.key === "ArrowRight" || e.key === "ArrowUp") setTracking(tracking + step);

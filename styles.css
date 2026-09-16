@@ -13,6 +13,9 @@
   --color-banner: #4c78cd;                 /* the empty state */
   --color-banner-quiet: rgba(0, 0, 0, 0.32); /* over a specimen */
   --color-pill-glass: rgba(255, 255, 255, 0.72); /* header pills */
+  --color-control: #2a2a2a;        /* the one dark control on the page */
+  --color-control-field: #111111;  /* its inset field, a step darker still */
+  --color-control-label: rgba(255, 255, 255, 0.55);
 
   /* One height for every pill on the page, the banner included, so nothing
      towers over anything else. The hero lines up with it too. */
@@ -285,30 +288,31 @@ body.has-font .loader { display: none; }
   gap: var(--space-2);
   height: var(--pill-height);
   padding: 0 var(--space-1) 0 var(--space-3);
-  background: var(--color-field);
+  background: var(--color-control);
   border-radius: var(--radius-pill);
 }
 
 .tracking-scrub {
-  color: var(--color-muted);
+  color: var(--color-control-label);
   cursor: ew-resize;
   user-select: none;
   touch-action: none; /* let the pointer drag instead of scrolling the page */
 }
-.tracking-scrub:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+/* The page's black focus ring would vanish on a dark control. */
+.tracking-scrub:focus-visible { outline: 2px solid var(--color-banner); outline-offset: 2px; }
 
 .tracking-input {
   width: 46px;
   height: calc(var(--pill-height) - var(--space-1) * 2);
   border: 0;
   border-radius: var(--radius-pill);
-  background: var(--color-field-strong);
+  background: var(--color-control-field);
   font: inherit;
-  color: var(--color-text);
+  color: #ffffff;
   text-align: center;
   appearance: textfield;
 }
-.tracking-input:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 0; }
+.tracking-input:focus-visible { outline: 2px solid var(--color-banner); outline-offset: 0; }
 
 /* The spinners crowd a 46px field and the scrub replaces them. */
 .tracking-input::-webkit-outer-spin-button,
