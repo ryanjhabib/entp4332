@@ -759,9 +759,24 @@ is safe to pass to `addEventListener` directly whether or not anyone remembers t
 thing in a notions slot. 160 shuffles across both generators: no `[object`, no `undefined`,
 no unfilled `{a}` or `{b}`.
 
+**And a third pass, from the same report.** Splitting by kind fixed the mismatches and left
+a different sentence still wrong: "every spring the river took naked knight". Correct kind,
+correct part of speech, and no article. A bare singular count noun reads as a caption, not
+as prose — and the slot pool was reusing the display phrases verbatim, where "Naked Knight"
+is a label and labels do not carry articles.
+
+So the slot pools are now written out in the form they are dropped in: lower case, an
+article wherever the noun needs one, and "and" rather than an ampersand, which is a label's
+punctuation too. They no longer match the display pool word for word, and should not —
+showing a phrase and saying it inside a sentence are different jobs, which is the same
+lesson as entry 17 arriving for the third time in a row.
+
+Measured before: 80 article failures in 200 passages. After: 0 in 300.
+
 **Worth remembering** Two lessons, and the second is the expensive one. A categorisation is
 only as good as the question you asked of each item, and "is it a noun phrase" was a
-coarser question than the forms actually needed.
+coarser question than the forms actually needed — twice over, since "does it have an
+article" was a third question nobody had asked either.
 
 But the bug I had not been told about was found by *printing the output and reading it*,
 after four rounds of tests that checked the output against a list and passed every time. A

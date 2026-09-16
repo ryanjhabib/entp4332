@@ -327,54 +327,63 @@ const LINES = [
 let testString = sentenceCase(PHRASES[0]);
 
 /* The two slots in the forms below are grammatical holes: "the steward promised
-   ___". Only a noun phrase can fill one — and not any noun phrase, because the
-   holes are not all the same shape. "The bridge toll was ___" wants something
-   you could put on a cart. "Grief taught him ___" wants something you could
-   learn. Pour either list into the other's forms and you get "Mercy, arriving
-   late, taught him vexed knights".
+   ___". Filling one well takes three things, and each was learned the hard way.
 
-   So the phrases are split by what kind of noun they are and every form below
-   says which kind it takes. The waterfall and the page go on drawing from
-   everything; only the slots care. */
+   It has to be a noun phrase, not a clause — "a song about mercy stays warm".
+   It has to be the right *kind* of noun: "the bridge toll was ___" wants
+   something you could put on a cart, "grief taught him ___" something you could
+   learn, so the pool is split and every form declares which half it takes.
+
+   And it has to be written as prose rather than as a label. The pools used to
+   reuse the display phrases verbatim, which is how "the river took naked
+   knight" happened: a bare singular count noun with no article reads as a
+   caption, not a sentence. So these are written out in the form they are
+   dropped in — lower case, an article where the noun needs one, "and" rather
+   than an ampersand, which is a label's punctuation.
+
+   That means they no longer match the display pool word for word, and should
+   not. Showing a phrase and saying it inside a sentence are different jobs. */
 
 /* Things: you could point at it, carry it, trade it, or find it on a map. */
 const SLOT_THINGS = [
-  "Eggs & Potatoes", "Quills & Ink", "Mead & Vespers", "Ye Olde Fox",
-  "Baron's Turnips", "Vexed Knights", "Blacksmith's Jig", "Hogs & Vellum",
-  "Plump Pheasants", "A Wretched Feast", "Crypts & Quails", "Frogs in the Moat",
-  "Quigley's Zephyr", "Brazen Squid", "The Alchemist", "Minstrels & Mud",
-  "Bewitched Turnip", "Plums for Abbot", "Gravy & Woe", "Pickled Herring",
-  "Wizard's Laundry", "Oxen & Quiet", "Bread & Cheese", "A Jug of Mead",
-  "Cobbler's Lament", "Squires & Omens", "Buzzards Aloft", "Velvet & Mud",
-  "Quartz & Flax", "Knaves at Dusk", "Pottage & Grumbles", "Wolves & Orchard",
-  "Moonlit Ruin", "Ashen Spire", "Shivering Vale", "Glass Daggers",
-  "Wyrmtongue", "Gilded Wyrm", "Salt & Sorcery", "Runes of Vaal",
-  "The Black Gate", "Hollow Crown", "Summoner's Rest", "Starmetal Shard",
-  "Lichgate", "Velvet Grimoire", "Arcane Bazaar", "Duskwarden",
-  "Cinder & Psalm", "Ghostlight Ford", "Glimmerwood", "Wraithcandle",
-  "Vault of Echoes", "Riftglass", "Bone & Beacon", "Silver Ley Line",
-  "The Dying Flame", "The Waning Kings", "Sundered Banner", "Hollow Bell",
-  "Godless Garden", "Cairn of Names", "Tomb of Verses", "Faithless Steel",
-  "Nightfall Keep", "The Reed's Complaint",
-  "solar flares", "naked knight", "blue fireworks", "swollen palms",
+  "eggs and potatoes", "quills and ink", "mead and vespers", "the ye olde fox",
+  "the baron's turnips", "vexed knights", "the blacksmith's jig",
+  "hogs and vellum", "plump pheasants", "a wretched feast",
+  "crypts and quails", "the frogs in the moat", "quigley's zephyr",
+  "a brazen squid", "the alchemist", "minstrels and mud", "a bewitched turnip",
+  "plums for the abbot", "gravy and woe", "pickled herring",
+  "the wizard's laundry", "oxen and quiet", "bread and cheese", "a jug of mead",
+  "the cobbler's lament", "squires and omens", "buzzards aloft",
+  "velvet and mud", "quartz and flax", "knaves at dusk", "pottage and grumbles",
+  "wolves in the orchard",
+  "a moonlit ruin", "the ashen spire", "the shivering vale", "glass daggers",
+  "wyrmtongue", "the gilded wyrm", "salt and sorcery", "the runes of vaal",
+  "the black gate", "the hollow crown", "summoner's rest", "a starmetal shard",
+  "lichgate", "the velvet grimoire", "the arcane bazaar", "the duskwarden",
+  "cinder and psalm", "ghostlight ford", "glimmerwood", "a wraithcandle",
+  "the vault of echoes", "riftglass", "bone and beacon", "a silver ley line",
+  "the dying flame", "the waning kings", "a sundered banner", "a hollow bell",
+  "the godless garden", "the cairn of names", "the tomb of verses",
+  "faithless steel", "nightfall keep", "the reed's complaint",
+  "solar flares", "a naked knight", "blue fireworks", "swollen palms",
   "burnt sienna", "mother and father", "brother and sister",
-  "Oxygen", "Eggnog", "Oatmeal", "Sweden",
+  "oxygen", "eggnog", "oatmeal", "sweden",
 ];
 
 /* Notions: a state, a quality, an hour, an event — something you could be
    taught, could seek, or could be given instead of what you asked for. */
 const SLOT_NOTIONS = [
-  "Jousting at Dawn", "Crystal Vigil", "The Sundering", "Emberfall",
-  "Aether Drift", "Obsidian Oath", "Oath of Ash", "The Pale Wyrd",
-  "Ash & Covenant", "Forsaken Vigil", "The Gilded Rot", "The Slow Ruin",
-  "Ember & Elegy", "Ruinlight", "The Second Dawn", "Weight of Crowns",
-  "The Unnamed Hour",
-  "A Heart Polished", "The Longing Itself", "The Thirsty Return",
-  "The Lamp Within", "Silence After Prayer", "A Love Without Why",
-  "Poverty Before God", "Remembrance & Rain",
+  "jousting at dawn", "the crystal vigil", "the sundering", "emberfall",
+  "aether drift", "an obsidian oath", "an oath of ash", "the pale wyrd",
+  "ash and covenant", "a forsaken vigil", "the gilded rot", "the slow ruin",
+  "ember and elegy", "ruinlight", "the second dawn", "the weight of crowns",
+  "the unnamed hour",
+  "a heart polished", "the longing itself", "the thirsty return",
+  "the lamp within", "silence after prayer", "a love without why",
+  "poverty before god", "remembrance and rain",
   "a thousand tears", "benevolence", "finality",
-  "Everything", "Longing", "Daybreak", "Nights end", "Half-light",
-  "Swimming in Ikea",
+  "everything", "longing", "daybreak", "nights end", "half-light",
+  "swimming in ikea",
 ];
 
 /* Paragraph specimens need running prose, not a label. These forms take two
@@ -475,9 +484,7 @@ function slotDrawer() {
 }
 
 function fillSlots(form, draw) {
-  return form.text
-    .replace("{a}", draw(form.slots).toLowerCase())
-    .replace("{b}", draw(form.slots).toLowerCase());
+  return form.text.replace("{a}", draw(form.slots)).replace("{b}", draw(form.slots));
 }
 
 function paragraphText(sentences = PARAGRAPH_SENTENCES) {
