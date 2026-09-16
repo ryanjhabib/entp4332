@@ -891,10 +891,25 @@ function pageParagraphs() {
    rhythm, a paragraph shows colour — three different questions about the same
    face, so each arrives set the way it wants to be read. The controls follow,
    so the preset is a starting point rather than a lock. */
+/* Recommended settings by the role the type is playing, in one place so the
+   presets are a stated rule rather than scattered numbers.
+
+   The rule is the one type designers already work to. Letterfit is drawn to
+   look right at reading sizes, so the larger you set a face the looser that
+   fit appears and the more it wants pulling in; the smaller you set it the
+   more it wants opening up. Leading runs the other way: display is comfortable
+   under a single line's height, body wants half as much again. */
+const TEXT_ROLES = {
+  display: { tracking: -30, leading: 95 },  // 100px and up
+  heading: { tracking: -20, leading: 105 }, // roughly 40 to 100px
+  body: { tracking: 0, leading: 150 },      // 14 to 28px, the size it was drawn for
+  caption: { tracking: 10, leading: 150 },  // under 14px
+};
+
 const PAGE_STYLES = {
-  word: { size: 180, leading: 95, tracking: -30, centred: true },
-  phrase: { size: 96, leading: 105, tracking: -20, centred: false },
-  paragraph: { size: 24, leading: 150, tracking: 0, centred: false },
+  word: { size: 180, centred: true, ...TEXT_ROLES.display },
+  phrase: { size: 96, centred: false, ...TEXT_ROLES.heading },
+  paragraph: { size: 24, centred: false, ...TEXT_ROLES.body },
 };
 
 const PAGE_SHAPES = Object.keys(PAGE_STYLES);
@@ -1443,7 +1458,9 @@ const waterfallTracking = scrubControl({
   input: el.trackingInput,
   min: -200,
   max: 200,
-  initial: 0,
+  // The ladder spans 12px to 128px, so it starts where the face was drawn and
+  // leaves the tightening to you.
+  initial: TEXT_ROLES.body.tracking,
   apply: (v) => el.waterfall.style.setProperty("--tracking", String(v / 1000)),
 });
 
@@ -1452,7 +1469,7 @@ const paragraphTracking = scrubControl({
   input: el.paraTrackingInput,
   min: -100,
   max: 100,
-  initial: 0,
+  initial: TEXT_ROLES.body.tracking,
   apply: (v) => el.paragraphs.style.setProperty("--para-tracking", String(v / 1000)),
 });
 
@@ -1461,7 +1478,7 @@ const paragraphLeading = scrubControl({
   input: el.paraLeadingInput,
   min: 80,
   max: 260,
-  initial: 150,
+  initial: TEXT_ROLES.body.leading,
   apply: (v) => el.paragraphs.style.setProperty("--para-leading", String(v / 100)),
 });
 
@@ -1479,7 +1496,7 @@ const pageLeading = scrubControl({
   input: el.pageLeadingInput,
   min: 80,
   max: 260,
-  initial: 120,
+  initial: TEXT_ROLES.heading.leading,
   apply: (v) => el.page.style.setProperty("--page-leading", String(v / 100)),
 });
 
@@ -1488,7 +1505,7 @@ const pageTracking = scrubControl({
   input: el.pageTrackingInput,
   min: -100,
   max: 100,
-  initial: 0,
+  initial: TEXT_ROLES.body.tracking,
   apply: (v) => el.page.style.setProperty("--page-tracking", String(v / 1000)),
 });
 
