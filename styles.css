@@ -237,8 +237,18 @@ body:not(.has-font) .site-header { display: none; }
   transition: opacity 550ms ease;
 }
 
-/* The footer's half-measure cap is meaningless inside a panel. */
+/* The footer's cap is meaningless inside a panel — the panel sets the width. */
 .font-menu .sample-list { max-width: none; }
+
+/* Above 1200px the panel takes the same two thirds of the measure the footer
+   library does, so the same set of pills wraps the same way in both places.
+   Below that it keeps its own cap: two thirds of a phone is a column too narrow
+   to wrap fifty-odd names into. */
+@media (min-width: 1200px) {
+  .font-menu {
+    max-width: calc((100vw - var(--gutter) * 2) * 2 / 3);
+  }
+}
 
 
 /* Every button is a pill on the one height. The glyph cells are buttons too but
