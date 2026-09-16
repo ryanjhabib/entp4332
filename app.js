@@ -571,8 +571,34 @@ function renderParagraphs() {
    run off the bottom of the section. */
 const PAGE_SENTENCES = 2;
 
+/* Shuffling the page moves between three lengths rather than always handing
+   back prose. A single word shows the letterforms, a phrase shows fit and
+   rhythm, a paragraph shows colour — and at one size they are three different
+   questions about the same face. */
+const PAGE_SHAPES = ["word", "phrase", "paragraph"];
+let lastPageShape = null;
+
+function pick(list) {
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+function pageSample() {
+  // Never the same shape twice running, or shuffle looks like it did nothing.
+  const shape = pick(PAGE_SHAPES.filter((s) => s !== lastPageShape));
+  lastPageShape = shape;
+
+  if (shape === "paragraph") return paragraphText(PAGE_SENTENCES);
+  if (shape === "phrase") return pick(PHRASES);
+
+  // A single word, long enough to be worth looking at and never an ampersand.
+  const words = PHRASES.join(" ")
+    .split(/\s+/)
+    .filter((w) => /[A-Za-z]{4,}/.test(w));
+  return pick(words);
+}
+
 function renderPage() {
-  el.pageText.textContent = paragraphText(PAGE_SENTENCES);
+  el.pageText.textContent = pageSample();
 }
 
 /* -------------------------------------------------------------------------
