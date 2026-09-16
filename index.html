@@ -33,8 +33,56 @@
       <p class="font-style" id="font-style"></p>
     </header>
 
-    <!-- 5 + 4. Waterfall leads the page. The test string sits with it as a
-         control, so editing happens next to what it changes. -->
+    <!-- A page to set type on, with its own colour pairs -->
+    <section class="specimen-section" id="page-section">
+
+      <div class="section-controls no-print">
+        <p class="hint"><button type="button" class="link-button" id="page-shuffle">Shuffle</button></p>
+
+        <div class="control-group">
+          <button type="button" class="control control-weight" id="page-weight" hidden
+                  title="Weight for this section"></button>
+
+          <div class="control control--swatch">
+            <button type="button" class="swatch" id="page-colors" aria-label="Next colour pair"
+                    title="Cycle through colour pairs"></button>
+          </div>
+
+          <div class="control">
+            <span class="control-scrub" id="page-size-scrub" role="slider" tabindex="0"
+                  aria-label="Text size in pixels" aria-valuemin="12" aria-valuemax="240" aria-valuenow="64"
+                  title="Drag left or right to change size">TT</span>
+            <input class="control-input" id="page-size-input" type="number"
+                   value="64" step="1" min="12" max="240" aria-label="Text size">
+          </div>
+
+          <div class="control">
+            <span class="control-scrub" id="page-leading-scrub" role="slider" tabindex="0"
+                  aria-label="Line height, percent of font size" aria-valuemin="80" aria-valuemax="260" aria-valuenow="120"
+                  title="Drag left or right to change line height">LH</span>
+            <input class="control-input" id="page-leading-input" type="number"
+                   value="120" step="1" min="80" max="260" aria-label="Line height percent">
+          </div>
+
+          <div class="control">
+            <span class="control-scrub" id="page-tracking-scrub" role="slider" tabindex="0"
+                  aria-label="Letter spacing, thousandths of an em" aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0"
+                  title="Drag left or right to change letter spacing">AV</span>
+            <input class="control-input" id="page-tracking-input" type="number"
+                   value="0" step="1" min="-100" max="100" aria-label="Letter spacing value">
+          </div>
+
+        </div>
+      </div>
+
+      <div class="page" id="page">
+        <div class="page-text specimen-type" id="page-text" contenteditable="true" spellcheck="false"
+             role="textbox" aria-multiline="true" aria-label="Page text"></div>
+      </div>
+    </section>
+
+    <!-- The waterfall. Its test string sits with it as a control, so editing
+         happens next to what it changes. -->
     <section class="specimen-section" id="waterfall-section">
       <div class="section-controls no-print">
         <p class="hint"><button type="button" class="link-button" id="shuffle">Shuffle</button></p>
@@ -88,54 +136,6 @@
       </div>
 
       <div class="paragraphs" id="paragraphs"></div>
-    </section>
-
-    <!-- A page to set type on, with its own colour pairs -->
-    <section class="specimen-section" id="page-section">
-
-      <div class="section-controls no-print">
-        <p class="hint"><button type="button" class="link-button" id="page-shuffle">Shuffle</button></p>
-
-        <div class="control-group">
-          <button type="button" class="control control-weight" id="page-weight" hidden
-                  title="Weight for this section"></button>
-
-          <div class="control control--swatch">
-            <button type="button" class="swatch" id="page-colors" aria-label="Next colour pair"
-                    title="Cycle through colour pairs"></button>
-          </div>
-
-          <div class="control">
-            <span class="control-scrub" id="page-size-scrub" role="slider" tabindex="0"
-                  aria-label="Text size in pixels" aria-valuemin="12" aria-valuemax="240" aria-valuenow="64"
-                  title="Drag left or right to change size">TT</span>
-            <input class="control-input" id="page-size-input" type="number"
-                   value="64" step="1" min="12" max="240" aria-label="Text size">
-          </div>
-
-          <div class="control">
-            <span class="control-scrub" id="page-leading-scrub" role="slider" tabindex="0"
-                  aria-label="Line height, percent of font size" aria-valuemin="80" aria-valuemax="260" aria-valuenow="120"
-                  title="Drag left or right to change line height">LH</span>
-            <input class="control-input" id="page-leading-input" type="number"
-                   value="120" step="1" min="80" max="260" aria-label="Line height percent">
-          </div>
-
-          <div class="control">
-            <span class="control-scrub" id="page-tracking-scrub" role="slider" tabindex="0"
-                  aria-label="Letter spacing, thousandths of an em" aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0"
-                  title="Drag left or right to change letter spacing">AV</span>
-            <input class="control-input" id="page-tracking-input" type="number"
-                   value="0" step="1" min="-100" max="100" aria-label="Letter spacing value">
-          </div>
-
-        </div>
-      </div>
-
-      <div class="page" id="page">
-        <div class="page-text specimen-type" id="page-text" contenteditable="true" spellcheck="false"
-             role="textbox" aria-multiline="true" aria-label="Page text"></div>
-      </div>
     </section>
 
     <!-- 3. Font info -->
