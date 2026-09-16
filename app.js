@@ -573,20 +573,23 @@ const PAGE_SENTENCES = 2;
 
 /* Shuffling the page moves between three lengths rather than always handing
    back prose. A single word shows the letterforms, a phrase shows fit and
-   rhythm, a paragraph shows colour — and at one size they are three different
-   questions about the same face. */
-const PAGE_SHAPES = ["word", "phrase", "paragraph"];
+   rhythm, a paragraph shows colour — three different questions about the same
+   face, so each arrives set the way it wants to be read. The controls follow,
+   so the preset is a starting point rather than a lock. */
+const PAGE_STYLES = {
+  word: { size: 180, leading: 95, tracking: -30, centred: true },
+  phrase: { size: 96, leading: 105, tracking: -20, centred: false },
+  paragraph: { size: 24, leading: 150, tracking: 0, centred: false },
+};
+
+const PAGE_SHAPES = Object.keys(PAGE_STYLES);
 let lastPageShape = null;
 
 function pick(list) {
   return list[Math.floor(Math.random() * list.length)];
 }
 
-function pageSample() {
-  // Never the same shape twice running, or shuffle looks like it did nothing.
-  const shape = pick(PAGE_SHAPES.filter((s) => s !== lastPageShape));
-  lastPageShape = shape;
-
+function pageSample(shape) {
   if (shape === "paragraph") return paragraphText(PAGE_SENTENCES);
   if (shape === "phrase") return pick(PHRASES);
 
@@ -597,8 +600,36 @@ function pageSample() {
   return pick(words);
 }
 
+/* One word set huge can outrun the page. Measured rather than guessed, the
+   same way the hover preview is, so it never breaks mid-word. */
+function fitPageText(text, ceiling) {
+  const width = el.pageText.clientWidth;
+  if (!width) return ceiling;
+
+  titleCtx.font = `100px "${FAMILY}"`;
+  const longest = text
+    .split(/\s+/)
+    .reduce((a, b) => (b.length > a.length ? b : a), "");
+  const widthAt100 = titleCtx.measureText(longest).width;
+  if (!widthAt100) return ceiling;
+
+  return Math.max(24, Math.min(ceiling, Math.floor((width / widthAt100) * 100)));
+}
+
 function renderPage() {
-  el.pageText.textContent = pageSample();
+  // Never the same shape twice running, or shuffle looks like it did nothing.
+  const shape = pick(PAGE_SHAPES.filter((s) => s !== lastPageShape));
+  lastPageShape = shape;
+
+  const style = PAGE_STYLES[shape];
+  const text = pageSample(shape);
+
+  el.pageText.textContent = text;
+  el.page.classList.toggle("is-centred", style.centred);
+
+  pageLeading.set(style.leading);
+  pageTracking.set(style.tracking);
+  pageSize.set(fitPageText(text, style.size));
 }
 
 /* -------------------------------------------------------------------------
@@ -1102,7 +1133,7 @@ const paragraphLeading = scrubControl({
   apply: (v) => el.paragraphs.style.setProperty("--para-leading", String(v / 100)),
 });
 
-scrubControl({
+const pageSize = scrubControl({
   scrub: el.pageSizeScrub,
   input: el.pageSizeInput,
   min: 12,
@@ -1111,7 +1142,7 @@ scrubControl({
   apply: (v) => el.page.style.setProperty("--page-size", `${v}px`),
 });
 
-scrubControl({
+const pageLeading = scrubControl({
   scrub: el.pageLeadingScrub,
   input: el.pageLeadingInput,
   min: 80,
@@ -1120,7 +1151,7 @@ scrubControl({
   apply: (v) => el.page.style.setProperty("--page-leading", String(v / 100)),
 });
 
-scrubControl({
+const pageTracking = scrubControl({
   scrub: el.pageTrackingScrub,
   input: el.pageTrackingInput,
   min: -100,
@@ -1134,13 +1165,19 @@ scrubControl({
    ---------------------------------------------------------------------- */
 /* Type behaves differently on a dark ground than a light one — the same weight
    reads heavier reversed out. Cycling pairs is the quickest way to see it. */
+/* Every pair clears 4.5:1, so the page stays readable at the paragraph preset's
+   24px and not only at display sizes. */
 const COLOUR_PAIRS = [
   { fg: "#111111", bg: "#f0f0f0" },
   { fg: "#ffffff", bg: "#111111" },
   { fg: "#111111", bg: "#ffffff" },
-  { fg: "#ffffff", bg: "#4c78cd" },
+  { fg: "#ffffff", bg: "#4671c4" }, // a shade under the banner blue, to clear 4.5:1
   { fg: "#1c1a17", bg: "#f2ece1" },
-  { fg: "#4c78cd", bg: "#f0f0f0" },
+  { fg: "#3a63a8", bg: "#f0f0f0" },
+  // Muted complements — opposite on the wheel, dulled enough to set type on.
+  { fg: "#5c1a1a", bg: "#d9e0cf" }, // oxblood on sage
+  { fg: "#0f3a3a", bg: "#e6b8a2" }, // deep teal on terracotta
+  { fg: "#2e1a3a", bg: "#e3e8b0" }, // aubergine on pale chartreuse
 ];
 
 let colourPair = 0;

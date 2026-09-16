@@ -613,6 +613,8 @@ body.is-viewing .drop-banner { display: none; }
 .page {
   --page-fg: #111111;
   --page-bg: #f0f0f0;
+  display: grid;
+  align-content: start;
   min-height: 70vh;
   padding: var(--space-12);
   border-radius: 24px;
@@ -620,7 +622,13 @@ body.is-viewing .drop-banner { display: none; }
   color: var(--page-fg);
 }
 
+/* A single word sits in the middle of the sheet; running text starts at the
+   top, where you would begin reading it. */
+.page.is-centred { align-content: center; }
+.page.is-centred .page-text { text-align: center; }
+
 .page-text {
+  width: 100%;
   margin: 0;
   outline: none;
   cursor: text;
