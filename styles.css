@@ -213,6 +213,22 @@ body.has-font .lede { display: none; }
 /* The intro: family name as the hero, style as quiet subtext beneath it. */
 .specimen-intro { margin-top: var(--section-gap); }
 
+/* The first screen is the typeface name and nothing else. The intro fills the
+   viewport below the header and pushes its contents to the bottom, so the space
+   lands above the name and the waterfall starts below the fold.
+   --intro-offset is measured in JS: it is how far down the page the intro
+   starts, which depends on the header, and CSS cannot know it. */
+@media (min-width: 768px) {
+  .specimen-intro {
+    margin-top: 0;
+    min-height: calc(100svh - var(--intro-offset, 140px));
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-bottom: var(--space-16);
+  }
+}
+
 /* The sticky bar would otherwise sit on top of the first line scrolled to. */
 html { scroll-padding-top: var(--space-16); }
 

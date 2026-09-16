@@ -72,6 +72,7 @@ const el = {
   browse: document.getElementById("browse"),
   status: document.getElementById("status"),
   specimen: document.getElementById("specimen"),
+  intro: document.querySelector(".specimen-intro"),
   fontName: document.getElementById("font-name"),
   fontStyle: document.getElementById("font-style"),
   headerFont: document.getElementById("header-font"),
@@ -313,6 +314,7 @@ function renderTitle({ family, style }) {
   el.fontName.textContent = family;
   el.fontStyle.textContent = style;
   el.headerFont.textContent = family;
+  sizeIntro();
   fitTitle();
 }
 
@@ -336,7 +338,17 @@ function fitTitle() {
   el.fontName.style.fontSize = `${Math.max(TITLE_MIN, Math.min(TITLE_MAX, ideal))}px`;
 }
 
-window.addEventListener("resize", fitTitle);
+/* How far down the page the intro begins. The viewport half of the sum stays in
+   CSS (100svh) so it tracks window height on its own. */
+function sizeIntro() {
+  const top = el.intro.getBoundingClientRect().top + window.scrollY;
+  document.documentElement.style.setProperty("--intro-offset", `${Math.round(top)}px`);
+}
+
+window.addEventListener("resize", () => {
+  sizeIntro();
+  fitTitle();
+});
 
 function renderInfo(file, format, { font }, names) {
   const rows = [
