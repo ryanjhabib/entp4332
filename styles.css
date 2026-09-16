@@ -882,9 +882,23 @@ body.is-viewing { overflow: hidden; }
 }
 .viewer-stage svg path { fill: var(--viewer-fg, var(--color-text)); }
 
+/* Solid, not glass. Everywhere else a pill sits over type that scrolls beneath
+   it and the blur is doing real work; here it sits on one flat block of colour,
+   where the same treatment only pulls the ground up through the pill and turns
+   it murky over the saturated pairs. */
+.glyph-viewer .style-note,
+.glyph-viewer .link-button,
+.viewer-arrow {
+  background: var(--color-field);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.glyph-viewer .link-button:hover,
+.viewer-arrow:hover { background: var(--color-field-strong); }
+
 /* Pills like everything else, rather than two bare characters floating on the
-   ground. Glass, so they read the same on all thirty-five colour pairs instead
-   of needing a colour of their own. */
+   ground. */
 .viewer-arrow {
   position: relative;
   display: inline-flex;
@@ -894,16 +908,11 @@ body.is-viewing { overflow: hidden; }
   padding: 0 var(--space-3);
   border: 0;
   border-radius: var(--radius-pill);
-  background: var(--color-field-glass);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
   color: var(--color-text);
   font-size: var(--size-ui);
   line-height: 1;
   cursor: pointer;
 }
-
-.viewer-arrow:hover { background: var(--color-field-glass-strong); }
 
 /* The pill is 24px like every other control here, which is small for a thumb.
    The target is not: this reaches past the pill on every side without changing
