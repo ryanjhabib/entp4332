@@ -149,7 +149,10 @@ body:not(.has-font) .site-header { display: none; }
   color: var(--color-muted);
   cursor: pointer;
 }
-.header-font:hover { color: var(--color-text); }
+/* Held in its hover state for as long as the menu it opened is showing. Keyed
+   off aria-expanded, which is already the source of truth for open. */
+.header-font:hover,
+.header-font[aria-expanded="true"] { color: var(--color-text); }
 
 .font-picker {
   position: relative;

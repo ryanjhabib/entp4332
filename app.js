@@ -1380,9 +1380,10 @@ function renderSamples() {
 /* Opened from the name in the header. It closes when the pointer leaves the
    picker rather than the menu alone, so crossing the gap between the button
    and the panel does not dismiss it. */
-/* A moment's grace before closing, cancelled if the pointer comes back. Without
-   it, clipping a corner of the menu on the way to a pill dismisses it. */
-const MENU_GRACE_MS = 160;
+/* The menu waits after the pointer leaves rather than closing under it, and the
+   wait is cancelled if you come back. Long enough to read as deliberate, and to
+   cover leaving the picker on the way to somewhere else in it. */
+const MENU_GRACE_MS = 3000;
 let menuCloseTimer = null;
 
 function openFontMenu() {
