@@ -54,7 +54,7 @@
 }
 
 @media (min-width: 768px)  { :root { --gutter: 48px;  --section-gap: 144px; } }  /* tablet  */
-@media (min-width: 1200px) { :root { --gutter: 100px; --section-gap: 192px; } }  /* desktop */
+@media (min-width: 1200px) { :root { --gutter: 60px;  --section-gap: 192px; } }  /* desktop */
 
 /* ==========================================================================
    Base
