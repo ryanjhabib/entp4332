@@ -7,7 +7,8 @@
   --color-bg: #ffffff;
   --color-text: #111111;
   --color-muted: #6b6b6b;
-  --color-rule: #e0e0e0;
+  --color-rule: #111111;   /* structural hairlines: section + waterfall rules */
+  --color-border: #d8d8d8; /* component outlines: fields, glyph cells */
   --color-field: #f6f6f6;
   --color-accent: #111111;
   --color-error: #a11;
@@ -30,11 +31,13 @@
   --space-8: 32px;
   --space-12: 48px;
   --space-16: 64px;
+  --space-24: 96px;
 
   /* Layout — content runs edge to edge inside a gutter, no centered column. */
   --gutter: 24px;          /* phone            */
   --radius: 2px;
   --border: 1px solid var(--color-rule);
+  --border-soft: 1px solid var(--color-border);
   --glyph-min: 96px;
 }
 
@@ -71,7 +74,7 @@ button {
   font: inherit;
   color: var(--color-text);
   background: var(--color-bg);
-  border: var(--border);
+  border: var(--border-soft);
   border-radius: var(--radius);
   padding: var(--space-2) var(--space-4);
   cursor: pointer;
@@ -90,7 +93,7 @@ button:hover { border-color: var(--color-accent); }
    Loader
    ========================================================================== */
 .dropzone {
-  border: 1px dashed var(--color-rule);
+  border: 1px dashed var(--color-border);
   border-radius: var(--radius);
   padding: var(--space-12) var(--space-6);
   text-align: center;
@@ -118,7 +121,7 @@ button:hover { border-color: var(--color-accent); }
 .notice {
   margin: 0 0 var(--space-4);
   padding: var(--space-3) var(--space-4);
-  border: var(--border);
+  border: var(--border-soft);
   border-radius: var(--radius);
   background: var(--color-field);
   color: var(--color-muted);
@@ -131,7 +134,7 @@ button:hover { border-color: var(--color-accent); }
    Specimen sections
    ========================================================================== */
 .specimen-section {
-  margin-top: var(--space-16);
+  margin-top: var(--space-24);
   padding-top: var(--space-6);
   border-top: var(--border);
 }
@@ -172,7 +175,7 @@ button:hover { border-color: var(--color-accent); }
   font-size: 24px;
   line-height: 1.3;
   padding: var(--space-2) var(--space-3);
-  border: var(--border);
+  border: var(--border-soft);
   border-radius: var(--radius);
   background: var(--color-bg);
   word-break: break-word;
@@ -186,9 +189,19 @@ button:hover { border-color: var(--color-accent); }
   display: grid;
   grid-template-columns: 56px 1fr;
   align-items: baseline;
-  gap: var(--space-6);
-  padding: var(--space-4) 0;
+  gap: var(--space-8);
+  padding: var(--space-8) 0;
   border-bottom: var(--border);
+}
+
+/* On phones the size label sits above the line so the type gets full width —
+   128px in a 250px column would wrap to two characters per line. */
+@media (max-width: 767px) {
+  .waterfall-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+    padding: var(--space-6) 0;
+  }
 }
 
 .waterfall-size {
@@ -197,11 +210,17 @@ button:hover { border-color: var(--color-accent); }
   font-family: var(--font-mono);
 }
 
+/* No overflow clipping here. `overflow: hidden` crops the line box on BOTH
+   axes, so tall ascenders and deep descenders were being sliced off — worst at
+   96px and above. Lines wrap instead of truncating, and the line-height leaves
+   room for fonts whose ink exceeds their em box. */
 .waterfall-line {
-  line-height: 1.1;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  line-height: 1.3;
+  padding-bottom: 0.08em; /* clears descenders on fonts with deep tails */
+  /* A single long word at 128px is wider than a phone screen and has no space
+     to break at, so allow a mid-word break rather than let the page scroll
+     sideways. Only ever kicks in when the word genuinely cannot fit. */
+  overflow-wrap: anywhere;
 }
 
 /* Glyphs */
@@ -218,7 +237,7 @@ button:hover { border-color: var(--color-accent); }
   justify-content: center;
   gap: var(--space-2);
   aspect-ratio: 1;
-  border: var(--border);
+  border: var(--border-soft);
   border-radius: var(--radius);
   overflow: hidden;
 }
@@ -268,10 +287,9 @@ button:hover { border-color: var(--color-accent); }
   .section-title { break-after: avoid; }
 
 
-  /* The waterfall is the one thing that can overflow the page width.
-     Wrapping instead of clipping keeps every size fully visible in print. */
+  /* Lines already wrap on screen, so nothing extra is needed to keep the
+     waterfall inside the page width — just stop rows splitting across pages. */
   .waterfall-row { break-inside: avoid; }
-  .waterfall-line { white-space: normal; overflow: visible; text-overflow: clip; }
 
   .glyph-cell { break-inside: avoid; }
   .glyph-grid { gap: 2px; }

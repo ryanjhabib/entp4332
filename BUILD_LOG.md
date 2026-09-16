@@ -76,6 +76,54 @@ readable, the specimen stays hidden, and nothing is left half-rendered.
 
 ---
 
+## 5. Ascenders and descenders sliced off in the waterfall
+
+**Symptom** At the larger sizes the type looked cropped — the tops of capitals and
+the tails of `g`, `p`, `y` and `Q` were shaved flat against the rules. Worst at 96px
+and above. Separately, long test strings ended in an ellipsis: `Handgloves & Quartz Sp…`
+
+**Cause** Self-inflicted, and the two symptoms share one line of CSS. To truncate long
+lines I had used the standard ellipsis recipe:
+
+```css
+overflow: hidden;
+white-space: nowrap;
+text-overflow: ellipsis;
+```
+
+`overflow: hidden` does not clip only horizontally — it clips the box on **both axes**.
+Combined with `line-height: 1.1`, the line box was shorter than the glyphs' actual ink,
+so anything outside it was cut away. The taller the size, the more absolute overflow,
+which is why it looked fine at 12px and broken at 128px.
+
+**Fix** Removed the truncation entirely. Lines wrap instead, `line-height` went to
+`1.3`, plus `padding-bottom: 0.08em` for fonts with unusually deep tails. Verified by
+measuring, not by eye: for every size, canvas `TextMetrics.actualBoundingBoxAscent +
+actualBoundingBoxDescent` is now smaller than the rendered line box.
+
+**Worth remembering** `overflow: hidden` is a two-axis operation. There is no way to
+clip one axis only — setting `overflow-x: hidden` forces `overflow-y` to compute to
+`auto`, never `visible`. Ellipsis truncation and full glyph display are mutually
+exclusive on the same element.
+
+---
+
+## 6. 128px type pushed the page sideways on a phone
+
+**Symptom** After adding the 128px step, a one-word test string ("Handgloves")
+rendered 666px wide. On a 375px phone that is roughly twice the viewport, with no
+space character to wrap at, so the whole page scrolled horizontally.
+
+**Cause** `overflow-wrap` defaults to `normal`, which only breaks at existing break
+opportunities. A single long word has none, so it overflows its container instead.
+
+**Fix** `overflow-wrap: anywhere` on the waterfall lines — it only engages when a word
+genuinely cannot fit, so desktop is unaffected. Below 768px the size label also moves
+above its line instead of sitting in a 56px column, giving the type the full width.
+Confirmed at a real 375px viewport: `scrollWidth === innerWidth`, no sideways scroll.
+
+---
+
 ## Test matrix (all passing)
 
 | File | Format | Result |
