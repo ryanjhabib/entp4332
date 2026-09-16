@@ -853,6 +853,7 @@ const el = {
   pageColors: document.getElementById("page-colors"),
   viewerColors: document.getElementById("viewer-colors"),
   viewerFace: document.getElementById("viewer-face"),
+  viewerWeight: document.getElementById("viewer-weight"),
   viewerSizeRange: document.getElementById("viewer-size-range"),
   viewerSizeValue: document.getElementById("viewer-size-value"),
   localAccess: document.getElementById("local-access"),
@@ -2022,6 +2023,7 @@ function openViewer(i) {
      survives closing and reopening; loading a font puts it back to paper. */
   if (!viewerChosen) viewerStep = paperStep();
   applyViewerPair();
+  syncViewerWeight();
   paintFace();
   paintViewer();
   el.viewer.hidden = false;
@@ -2044,6 +2046,38 @@ function paintFace() {
       return note;
     })
   );
+}
+
+/* Only offered when there is another cut to go to, and named with whatever the
+   cut is called — a number's name for the library, the style's own name for a
+   dropped family. */
+function syncViewerWeight() {
+  const many = Boolean(activeSample) && activeSample.weights.length > 1;
+  el.viewerWeight.hidden = !many;
+  if (many) el.viewerWeight.textContent = cutLabel(activeWeight);
+}
+
+/* Changing weight reloads and reparses the font, which rebuilds the glyph set
+   under the viewer. Hold the place in it: the same index, clamped in case the
+   new cut draws fewer glyphs, and the basic-or-all choice, which renderGlyphs
+   resets on the way through. */
+async function viewerNextWeight() {
+  if (!activeSample || activeSample.weights.length < 2) return;
+
+  const wasShowingAll = showingAll;
+  const index = viewerIndex;
+
+  await nextWeight();
+
+  if (wasShowingAll && !showingAll) {
+    showingAll = true;
+    paintGlyphs();
+  }
+
+  viewerIndex = Math.max(0, Math.min(index, shownGlyphs.length - 1));
+  syncViewerWeight();
+  paintFace();
+  paintViewer();
 }
 
 function paintViewer() {
@@ -2765,6 +2799,8 @@ const viewerSize = sliderControl({
   initial: 70,
   apply: (v) => el.viewer.style.setProperty("--glyph-size", String(v)),
 });
+
+el.viewerWeight.addEventListener("click", viewerNextWeight);
 
 el.viewerColors.addEventListener("click", () => {
   viewerStep = (viewerStep + 1) % colourOrder.length;
