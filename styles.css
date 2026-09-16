@@ -7,9 +7,10 @@
   --color-bg: #ffffff;
   --color-text: #111111;
   --color-muted: #6b6b6b;
-  --color-rule: #111111;   /* structural hairlines: section + waterfall rules */
-  --color-border: #d8d8d8; /* component outlines: fields, glyph cells */
-  --color-field: #f6f6f6;
+  --color-rule: #111111;   /* the waterfall rules — the only strokes on the page */
+  --color-field: #f4f4f4;        /* light ground that replaces every border */
+  --color-field-strong: #eaeaea; /* the same ground, on hover */
+  --color-scrim: rgba(0, 0, 0, 0.32);
   --color-accent: #111111;
   --color-error: #a11;
 
@@ -26,6 +27,7 @@
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
+  --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
   --space-12: 48px;
@@ -37,9 +39,9 @@
   /* Layout — content runs edge to edge inside a gutter, no centered column. */
   --gutter: 24px;          /* phone            */
   --section-gap: 96px;     /* space, not rules, separates the sections */
-  --radius: 0;
+  --radius: 8px;
+  --radius-pill: 999px;
   --border: 1px solid var(--color-rule);
-  --border-soft: 1px solid var(--color-border);
   --glyph-min: 96px;
 }
 
@@ -105,19 +107,21 @@ h1 {
 button {
   font: inherit;
   color: var(--color-text);
-  background: var(--color-bg);
-  border: var(--border-soft);
-  border-radius: var(--radius);
+  background: var(--color-field);
+  border: 0;
+  border-radius: var(--radius-pill);
   padding: var(--space-2) var(--space-4);
   cursor: pointer;
 }
-button:hover { border-color: var(--color-accent); }
+button:hover { background: var(--color-field-strong); }
 
+/* Inline actions read as a quiet pill rather than an underline. */
 .link-button {
   border: 0;
-  padding: 0;
-  background: none;
-  text-decoration: underline;
+  padding: 2px var(--space-2);
+  background: var(--color-field);
+  border-radius: var(--radius-pill);
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -125,7 +129,7 @@ button:hover { border-color: var(--color-accent); }
    Loader
    ========================================================================== */
 .dropzone {
-  border: 1px dashed var(--color-border);
+  border: 0;
   border-radius: var(--radius);
   padding: var(--space-12) var(--space-6);
   text-align: center;
@@ -192,7 +196,6 @@ body.has-font .samples { display: none; }
 .notice {
   margin: 0 0 var(--space-4);
   padding: var(--space-3) var(--space-4);
-  border: var(--border-soft);
   border-radius: var(--radius);
   background: var(--color-field);
   color: var(--color-muted);
@@ -269,6 +272,15 @@ html { scroll-padding-top: var(--space-16); }
   gap: var(--space-2) var(--space-6);
   margin: 0;
 }
+
+/* A fixed label column so the values land on one consistent line rather than
+   wherever the longest label happens to end. Phones keep the tighter pairing. */
+@media (min-width: 768px) {
+  .info-grid {
+    grid-template-columns: 144px 1fr;
+    column-gap: 0;
+  }
+}
 .info-grid dt { color: var(--color-muted); }
 .info-grid dd { margin: 0; font-size: var(--size-ui); }
 
@@ -332,7 +344,6 @@ html { scroll-padding-top: var(--space-16); }
   appearance: none;
   font: inherit;
   color: inherit;
-  background: var(--color-bg);
   cursor: pointer;
   padding: 0;
   display: flex;
@@ -341,12 +352,13 @@ html { scroll-padding-top: var(--space-16); }
   justify-content: center;
   gap: var(--space-2);
   aspect-ratio: 1;
-  border: var(--border-soft);
+  border: 0;
   border-radius: var(--radius);
+  background: var(--color-field);
   overflow: hidden;
 }
 
-.glyph-cell:hover { border-color: var(--color-rule); }
+.glyph-cell:hover { background: var(--color-field-strong); }
 .glyph-cell:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
 
 .glyph-mark { line-height: 1; }
@@ -364,6 +376,35 @@ html { scroll-padding-top: var(--space-16); }
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+
+/* ==========================================================================
+   Pinned banner
+   ========================================================================== */
+/* pointer-events: none is deliberate — a fixed bar across the bottom would
+   otherwise sit between the cursor and whatever is under it. */
+.drop-banner {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-6);
+  transform: translateX(-50%);
+  z-index: 15;
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-pill);
+  background: var(--color-scrim);
+  backdrop-filter: blur(38px);
+  -webkit-backdrop-filter: blur(38px);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* The full-page drop overlay says the same thing, louder. */
+body.is-dragging .drop-banner,
+body.is-viewing .drop-banner { display: none; }
 
 /* ==========================================================================
    Glyph viewer
