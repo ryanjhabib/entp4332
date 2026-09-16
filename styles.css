@@ -13,6 +13,12 @@
   --color-banner: #4c78cd;                 /* the empty state */
   --color-banner-quiet: rgba(0, 0, 0, 0.32); /* over a specimen */
   --color-pill-glass: rgba(255, 255, 255, 0.72); /* header pills */
+  /* The light pills as glass. 240 rather than 245 because 28% of white shows
+     through: over paper it lands back on #F4F4F4, so nothing looks different
+     until something passes underneath. */
+  --color-field-glass: rgba(240, 240, 240, 0.72);
+  --color-field-glass-strong: rgba(226, 226, 226, 0.8);
+  --blur: blur(38px);
   --color-control: #3d3d3d;        /* the one dark control on the page */
   --color-control-field: #111111;  /* its inset field, a step darker still */
   --color-control-label: rgba(255, 255, 255, 0.55);
@@ -125,8 +131,8 @@ body:not(.has-font) .site-header { display: none; }
   padding: 0 var(--space-3);
   border-radius: var(--radius-pill);
   background: var(--color-pill-glass);
-  backdrop-filter: blur(38px);
-  -webkit-backdrop-filter: blur(38px);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
 }
 
 .home-button { cursor: pointer; }
@@ -209,6 +215,16 @@ button {
 }
 button:hover { background: var(--color-field-strong); }
 
+/* The print button is glass, like every other light pill. Glyph cells are not:
+   there are hundreds of them, they never overlap anything, and blurring each
+   one would cost a great deal to show nothing. */
+.site-footer button {
+  background: var(--color-field-glass);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+}
+.site-footer button:hover { background: var(--color-field-glass-strong); }
+
 /* Inline actions read as a quiet pill rather than an underline. */
 .link-button {
   display: inline-flex;
@@ -217,11 +233,15 @@ button:hover { background: var(--color-field-strong); }
   vertical-align: middle; /* it sits inside running text in the hints */
   border: 0;
   padding: 0 var(--space-3);
-  background: var(--color-field);
+  background: var(--color-field-glass);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
   border-radius: var(--radius-pill);
   text-decoration: none;
   cursor: pointer;
 }
+
+.link-button:hover { background: var(--color-field-glass-strong); }
 
 /* ==========================================================================
    Loader
@@ -502,7 +522,9 @@ html { scroll-padding-top: var(--space-16); }
   height: var(--pill-height);
   padding: 0 var(--space-3);
   border-radius: var(--radius-pill);
-  background: var(--color-field);
+  background: var(--color-field-glass);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
   color: var(--color-muted);
 }
 
@@ -675,8 +697,8 @@ body.has-font .drop-banner {
   transform: translateX(-50%);
   z-index: 15;
   background: var(--color-banner-quiet);
-  backdrop-filter: blur(38px);
-  -webkit-backdrop-filter: blur(38px);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
 }
 
 /* Only the action takes the pointer — the bar itself stays transparent to it,
