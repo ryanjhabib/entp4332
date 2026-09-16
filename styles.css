@@ -13,7 +13,7 @@
   --color-muted-soft: #8c8c8c;
   --color-rule: #111111;   /* the waterfall rules — the only strokes on the page */
   --color-field: #f5f5f5;        /* light ground that replaces every border */
-  --color-field-strong: #ebebeb; /* the same ground, on hover */
+  --color-field-strong: #d9d9d9; /* the same ground, on hover */
   --color-banner: #4c78cd;                 /* the empty state */
   --color-banner-quiet: rgba(0, 0, 0, 0.32); /* over a specimen */
   --color-pill-glass: rgba(255, 255, 255, 0.72); /* header pills */
@@ -21,7 +21,12 @@
      through: over paper it lands back on #F4F4F4, so nothing looks different
      until something passes underneath. */
   --color-field-glass: rgba(240, 240, 240, 0.72);
-  --color-field-glass-strong: rgba(226, 226, 226, 0.8);
+  /* Deep enough to see. These were 12 steps of 255 away from the resting
+     ground, which is below the threshold where a transition has anything to
+     show — the hover read as static not because it was too fast but because
+     almost nothing was changing. Both land ~28 steps down now, matched so the
+     glass pills and the solid ones move by the same amount. */
+  --color-field-glass-strong: rgba(208, 208, 208, 0.84);
   --blur: blur(38px);
   --color-control: #3d3d3d;        /* the one dark control on the page */
   --color-control-field: #111111;  /* its inset field, a step darker still */
@@ -147,7 +152,7 @@ body:not(.has-font) .site-header { display: none; }
 }
 
 .home-button { cursor: pointer; }
-.home-button:hover { background: var(--color-pill-glass); color: var(--color-muted); }
+.home-button:hover { background: var(--color-field-glass-strong); }
 
 .header-bar {
   display: flex;
@@ -241,7 +246,7 @@ button,
 .home-button,
 .header-font,
 .font-preview {
-  transition: background-color 160ms ease, color 160ms ease, opacity 160ms ease;
+  transition: background-color 200ms ease, color 200ms ease, opacity 200ms ease;
 }
 
 @media (prefers-reduced-motion: reduce) {
