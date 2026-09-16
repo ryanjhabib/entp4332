@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Font Specimen</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header no-print">
+  <h1>Font Specimen</h1>
+  <p class="lede">Drop a font file to generate a specimen sheet. Files are read in your browser and never uploaded.</p>
+</header>
+
+<main>
+
+  <!-- 1. Drop zone + file picker -->
+  <section class="loader no-print" id="loader">
+    <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Drop a font file here or press Enter to browse">
+      <p class="dropzone-text">Drop a font file here</p>
+      <p class="dropzone-hint">or <button type="button" class="link-button" id="browse">choose a file</button> &middot; .ttf .otf .woff .woff2</p>
+      <input type="file" id="file-input" accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2" hidden>
+    </div>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+  </section>
+
+  <!-- Everything below is hidden until a font loads -->
+  <div id="specimen" hidden>
+
+    <!-- 3. Font info -->
+    <section class="specimen-section" id="info-section">
+      <h2 class="section-title">Information</h2>
+      <dl class="info-grid" id="info-grid"></dl>
+    </section>
+
+    <!-- 4. Editable test string -->
+    <section class="specimen-section" id="sample-section">
+      <h2 class="section-title">Sample</h2>
+      <p class="hint no-print">Click the line below to edit it. The waterfall updates as you type.</p>
+      <div class="sample specimen-type" id="sample" contenteditable="true" spellcheck="false">Handgloves &amp; Quartz Sphinx</div>
+    </section>
+
+    <!-- 5. Size waterfall -->
+    <section class="specimen-section" id="waterfall-section">
+      <h2 class="section-title">Waterfall</h2>
+      <div id="waterfall"></div>
+    </section>
+
+    <!-- 6. Glyph grid -->
+    <section class="specimen-section" id="glyphs-section">
+      <h2 class="section-title">Glyphs <span class="section-note" id="glyph-count"></span></h2>
+      <p class="notice" id="glyph-notice" hidden></p>
+      <div class="glyph-grid" id="glyph-grid"></div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="site-footer no-print">
+  <button type="button" id="print">Print / Save as PDF</button>
+  <button type="button" id="reset">Load another font</button>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
