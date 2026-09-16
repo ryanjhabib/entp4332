@@ -588,7 +588,33 @@ function renderParagraphs() {
 /* A page holds fewer sentences than the columns: at 64px four of them would
    run off the bottom of the section. */
 const PAGE_SENTENCES = 2;
-const PAGE_PARAGRAPH_RANGE = [2, 8];
+const PAGE_PARAGRAPH_BLOCKS = [1, 3];  // how many paragraphs a page runs to
+const PAGE_PARAGRAPH_RANGE = [2, 5];   // sentences in each of them
+
+function randInt([low, high]) {
+  return low + Math.floor(Math.random() * (high - low + 1));
+}
+
+/* Draws every form and phrase from one shuffled pool for the whole page, so a
+   page of three paragraphs does not repeat a sentence shape across them. */
+function pageParagraphs() {
+  const forms = shuffled(SENTENCE_FORMS);
+  const phrases = shuffled(PHRASES);
+  let form = 0;
+  let phrase = 0;
+
+  return Array.from({ length: randInt(PAGE_PARAGRAPH_BLOCKS) }, () => {
+    const sentences = [];
+    for (let i = 0; i < randInt(PAGE_PARAGRAPH_RANGE); i++) {
+      sentences.push(
+        forms[form++ % forms.length]
+          .replace("{a}", phrases[phrase++ % phrases.length].toLowerCase())
+          .replace("{b}", phrases[phrase++ % phrases.length].toLowerCase())
+      );
+    }
+    return sentences.join(" ");
+  });
+}
 
 /* Shuffling the page moves between three lengths rather than always handing
    back prose. A single word shows the letterforms, a phrase shows fit and
@@ -609,11 +635,8 @@ function pick(list) {
 }
 
 function pageSample(shape) {
-  // Length varies: sometimes a couple of lines, sometimes a full column of it.
-  if (shape === "paragraph") {
-    const [low, high] = PAGE_PARAGRAPH_RANGE;
-    return paragraphText(low + Math.floor(Math.random() * (high - low + 1)));
-  }
+  // Running text arrives as one to three paragraphs, each of varying length.
+  if (shape === "paragraph") return pageParagraphs();
   if (shape === "phrase") return pick(PHRASES);
 
   // A single word, long enough to be worth looking at and never an ampersand.
@@ -645,14 +668,27 @@ function renderPage() {
   lastPageShape = shape;
 
   const style = PAGE_STYLES[shape];
-  const text = pageSample(shape);
+  const sample = pageSample(shape);
 
-  el.pageText.textContent = text;
+  if (Array.isArray(sample)) {
+    // Real paragraph breaks, so the page is a page and not one long block.
+    el.pageText.replaceChildren(
+      ...sample.map((body) => {
+        const p = document.createElement("p");
+        p.textContent = body;
+        return p;
+      })
+    );
+  } else {
+    el.pageText.textContent = sample;
+  }
+
   el.page.classList.toggle("is-centred", style.centred);
 
   pageLeading.set(style.leading);
   pageTracking.set(style.tracking);
-  pageSize.set(fitPageText(text, style.size));
+  // Measured on the whole text either way; only the longest word matters.
+  pageSize.set(fitPageText(el.pageText.textContent, style.size));
 }
 
 /* -------------------------------------------------------------------------

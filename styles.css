@@ -627,6 +627,11 @@ body.is-viewing .drop-banner { display: none; }
 .page.is-centred { align-content: center; }
 .page.is-centred .page-text { text-align: center; }
 
+/* Paragraph spacing is set in em so it tracks the page size rather than
+   staying put while the type grows around it. */
+.page-text p { margin: 0 0 0.9em; }
+.page-text p:last-child { margin-bottom: 0; }
+
 .page-text {
   width: 100%;
   margin: 0;
