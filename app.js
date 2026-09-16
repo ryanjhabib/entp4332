@@ -83,8 +83,7 @@ const el = {
   loader: document.getElementById("loader"),
   fileInput: document.getElementById("file-input"),
   status: document.getElementById("status"),
-  sampleLeft: document.getElementById("sample-left"),
-  sampleRight: document.getElementById("sample-right"),
+  sampleList: document.getElementById("sample-list"),
   bannerSlot: document.getElementById("banner-slot"),
   banner: document.getElementById("drop-banner"),
   specimen: document.getElementById("specimen"),
@@ -650,11 +649,8 @@ function sampleItems(fonts) {
   });
 }
 
-/* Split either side of the banner, which sits in the middle of the row. */
 function renderSamples() {
-  const half = Math.ceil(SAMPLE_FONTS.length / 2);
-  el.sampleLeft.replaceChildren(...sampleItems(SAMPLE_FONTS.slice(0, half)));
-  el.sampleRight.replaceChildren(...sampleItems(SAMPLE_FONTS.slice(half)));
+  el.sampleList.replaceChildren(...sampleItems(SAMPLE_FONTS));
 }
 
 /* The banner is part of the centred row on the empty state and a pinned bar
