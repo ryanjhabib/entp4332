@@ -74,6 +74,7 @@ const el = {
   specimen: document.getElementById("specimen"),
   fontName: document.getElementById("font-name"),
   fontStyle: document.getElementById("font-style"),
+  headerFont: document.getElementById("header-font"),
   infoGrid: document.getElementById("info-grid"),
   waterfall: document.getElementById("waterfall"),
   glyphGrid: document.getElementById("glyph-grid"),
@@ -311,6 +312,7 @@ function fontNames(file, font) {
 function renderTitle({ family, style }) {
   el.fontName.textContent = family;
   el.fontStyle.textContent = style;
+  el.headerFont.textContent = family;
   fitTitle();
 }
 
@@ -478,6 +480,7 @@ function resetSpecimen() {
   document.body.classList.remove("has-font");
   el.fontName.textContent = "";
   el.fontStyle.textContent = "";
+  el.headerFont.textContent = "";
   el.infoGrid.replaceChildren();
   el.waterfall.replaceChildren();
   el.glyphGrid.replaceChildren();

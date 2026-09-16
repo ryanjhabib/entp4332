@@ -69,7 +69,33 @@ h1 {
   font-weight: var(--weight-ui);
 }
 
-.site-header { margin-bottom: var(--space-12); }
+/* Pinned to the top. The white ground is what lets the specimen scroll under
+   it; z-index keeps it above the page but below the drag overlay (z 10). */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--color-bg);
+  padding-block: var(--space-4);
+  margin-bottom: var(--space-12);
+}
+
+.header-bar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+/* min-width: 0 lets a flex item shrink below its content width, which is what
+   makes the ellipsis possible on a narrow screen. */
+.header-font {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-muted);
+}
 
 .lede { margin: 0; color: var(--color-muted); }
 
@@ -186,6 +212,9 @@ body.has-font .lede { display: none; }
 
 /* The intro: family name as the hero, style as quiet subtext beneath it. */
 .specimen-intro { margin-top: var(--section-gap); }
+
+/* The sticky bar would otherwise sit on top of the first line scrolled to. */
+html { scroll-padding-top: var(--space-16); }
 
 .font-style {
   margin: var(--space-4) 0 0;
