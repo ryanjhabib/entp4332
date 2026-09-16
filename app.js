@@ -1626,8 +1626,23 @@ function glyphSvg(glyph, font, box = 40, size = 28, centreInk = false) {
     }
   }
 
+  /* An SVG clips to its viewBox, and the square was fixed, so any glyph whose
+     ink is wider or taller than the square lost its edges — Michroma's percent
+     sign overran a 100-unit box by 13 units and was rendered with both ends
+     sliced off. Nothing in a specimen may be shown cut.
+
+     The square grows by whatever the ink overruns, on every side, so it stays
+     square and stays centred. A glyph that fits is unaffected and renders at
+     exactly the size it did before, which is what keeps a grid of them
+     comparable; only the ones that would have been clipped shrink, and they
+     shrink precisely enough to fit. Same principle as the waterfall ladder and
+     the page fitter: measure the ink, never crop it. */
+  const ink = drawn.getBoundingBox();
+  const spill = Math.max(0, -ink.x1, ink.x2 - box, -ink.y1, ink.y2 - box);
+  const view = spill > 0 ? { at: -spill, size: box + spill * 2 } : { at: 0, size: box };
+
   const svg = document.createElementNS(SVG_NS, "svg");
-  svg.setAttribute("viewBox", `0 0 ${box} ${box}`);
+  svg.setAttribute("viewBox", `${view.at} ${view.at} ${view.size} ${view.size}`);
   svg.setAttribute("aria-hidden", "true");
 
   const path = document.createElementNS(SVG_NS, "path");

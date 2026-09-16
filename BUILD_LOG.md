@@ -785,6 +785,44 @@ Look at the artefact.
 
 ---
 
+## 22. The glyph square was cropping the glyphs
+
+**Symptom** Noticed by the user in the viewer, from a screenshot of Michroma's OE ligature:
+"i wonder if theres a box thats cutting off characters". There was.
+
+**Cause** `glyphSvg` built a fixed square viewBox, `0 0 box box`, and an SVG clips to its
+viewBox. Every glyph was drawn at a size chosen relative to that square and centred in it —
+which is correct for a glyph whose ink fits, and silently destructive for one whose does
+not. Michroma's percent sign is 126 units of ink in a 100-unit box: it was centred, 13 units
+hung off each side, and both ends were sliced away. The shape still read as a percent sign,
+which is why it survived this long.
+
+Width is the common case but the bug is not about width. Any ink outside the square went,
+in any direction — a script's descending swash as readily as a wide capital.
+
+**Fix** Measure the ink after centring and grow the square by whatever it overruns, equally
+on all four sides so it stays square and stays centred. A glyph that fits is untouched and
+renders at exactly the size it did before, which is what keeps a grid of them comparable;
+only the ones that would have been cropped shrink, and they shrink by precisely enough to
+fit.
+
+The same rule as the waterfall ladder and the page fitter, arrived at for the third time:
+measure the ink and fit to it. Never crop.
+
+**Verified** Six faces, full glyph sets, 1,570 glyphs: nothing clipped. The counts show how
+much was being lost — Pinyon Script grew the square on 32 glyphs, Michroma on 22,
+UnifrakturMaguntia on 5. Playfair Display grew it on none, which is the control: a
+well-behaved face is completely unaffected. Michroma's percent now reports an ink box of
+125.8 inside a viewBox of 125.8, exactly contained.
+
+**Worth remembering** This one was invisible from the inside. Nothing threw, nothing
+measured wrong, and the output was a recognisable percent sign — it just was not the
+typeface's percent sign. A renderer that crops rather than fails produces output that passes
+every check you would think to write, and the only way to catch it is for someone to look at
+a letter they know the shape of and say that is not quite right.
+
+---
+
 ## Test matrix (all passing)
 
 | File | Format | Result |
