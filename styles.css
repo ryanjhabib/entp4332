@@ -340,9 +340,12 @@ body.has-font .loader { display: none; }
 /* Fixed to the page rather than to a section, so it appears in the same place
    whichever state you are in. pointer-events: none so a notice about a bad file
    never sits between you and the control you are reaching for. */
+/* Bottom left, on the same line as the rest of the pinned furniture — the file
+   picker, the banner, the local fonts offer. It used to sit at the top, where
+   it landed squarely on the library. */
 .toast {
   position: fixed;
-  top: var(--space-16);
+  bottom: var(--banner-inset);
   left: var(--gutter);
   z-index: 30;
   display: inline-flex;
@@ -360,6 +363,24 @@ body.has-font .loader { display: none; }
      out of the accessibility tree, rather than sitting there invisible. */
   visibility: hidden;
   transition: opacity 240ms ease, visibility 0s linear 240ms;
+}
+
+/* Two things already own the bottom left, so the toast steps over them rather
+   than landing on top. On the empty state above 768px that is the library,
+   whose height depends on how the pills wrap — measured in JS, since CSS cannot
+   know it. On a phone it is the file picker, which is one row tall. A specimen
+   leaves the corner free, and there the toast sits on the line with everything
+   else. */
+@media (min-width: 768px) {
+  body:not(.has-font) .toast {
+    bottom: calc(var(--banner-inset) + var(--footer-height, 0px) + var(--space-3));
+  }
+}
+
+@media (max-width: 767px) {
+  .toast {
+    bottom: calc(var(--banner-inset) + var(--pill-height) + var(--space-3));
+  }
 }
 
 .toast.is-visible {

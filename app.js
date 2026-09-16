@@ -837,6 +837,7 @@ const el = {
   viewerColors: document.getElementById("viewer-colors"),
   viewerFace: document.getElementById("viewer-face"),
   localAccess: document.getElementById("local-access"),
+  siteFooter: document.querySelector(".site-footer"),
   pageSizeScrub: document.getElementById("page-size-scrub"),
   pageSizeInput: document.getElementById("page-size-input"),
   pageLeadingScrub: document.getElementById("page-leading-scrub"),
@@ -1014,6 +1015,7 @@ async function handleFile(file, source = null, { remember = true } = {}) {
   // the pointer does not reliably fire mouseleave, so the state it was left in
   // would still be there the next time the slot is shown.
   restPreview();
+  sizeFooter();
   if (source) {
     activeSample = source.sample;
     activeWeight = source.weight;
@@ -1423,6 +1425,15 @@ function fitTitle() {
   el.fontName.style.fontSize = `${Math.max(TITLE_MIN, Math.min(TITLE_MAX, ideal))}px`;
 }
 
+/* How tall the pinned library is, so the toast can clear it. Only meaningful on
+   the empty state, where the footer is fixed to the bottom left; on a specimen
+   it is in normal flow at the end of the page and owns nothing. */
+function sizeFooter() {
+  const fixed = !document.body.classList.contains("has-font");
+  const height = fixed ? el.siteFooter.offsetHeight : 0;
+  document.documentElement.style.setProperty("--footer-height", `${Math.round(height)}px`);
+}
+
 /* How far down the page the intro begins. The viewport half of the sum stays in
    CSS (100svh) so it tracks window height on its own. */
 function sizeIntro() {
@@ -1432,6 +1443,7 @@ function sizeIntro() {
 
 window.addEventListener("resize", () => {
   sizeIntro();
+  sizeFooter(); // the pills rewrap, so the library changes height
   fitTitle();
   clampPageSize(); // a narrower viewport can turn a fitted size into a broken word
   resizeScale();
@@ -2006,6 +2018,7 @@ function resetSpecimen() {
   document.body.classList.remove("has-font");
   placeBanner();
   restPreview(); // never come back to the empty state holding the last hover
+  sizeFooter();
   el.fontName.textContent = "";
   el.fontStyle.textContent = "";
   el.headerFont.textContent = "";
@@ -2307,6 +2320,7 @@ function renderSamples() {
   // The same library again, behind the name in the header.
   el.menuList.replaceChildren(...libraryItems());
   syncLocalAccess();
+  sizeFooter(); // the library just changed height
 }
 
 /* -------------------------------------------------------------------------
