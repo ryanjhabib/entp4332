@@ -503,7 +503,8 @@ body.is-viewing { overflow: hidden; }
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: var(--space-4);
-  padding: var(--space-16) var(--gutter) var(--space-8);
+  /* Symmetric: an uneven top and bottom shifted the glyph off the centre line. */
+  padding: var(--space-16) var(--gutter);
   background: var(--color-bg);
 }
 

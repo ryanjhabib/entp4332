@@ -558,18 +558,36 @@ function glyphCell(glyph, font, i) {
   return cell;
 }
 
-function glyphSvg(glyph, font, box = 40, size = 28) {
+/* `centreInk` shifts the drawing so the glyph's own outline is centred rather
+   than its em box. The grid leaves it off, because a shared baseline is what
+   lets you compare glyphs across cells; the viewer turns it on, because a
+   single glyph on screen should sit in the middle of it. The size is unchanged
+   either way, so relative proportions still read — a lowercase o stays smaller
+   than a capital O. */
+function glyphSvg(glyph, font, box = 40, size = 28, centreInk = false) {
   const scale = size / font.unitsPerEm;
   const advance = (glyph.advanceWidth || font.unitsPerEm) * scale;
-  const x = (box - advance) / 2;
-  const baseline = box / 2 + size / 3;
+  let x = (box - advance) / 2;
+  let baseline = box / 2 + size / 3;
+
+  let drawn = glyph.getPath(x, baseline, size);
+
+  if (centreInk) {
+    const bounds = drawn.getBoundingBox();
+    // Blank glyphs (space) have no bounding box to centre on.
+    if (bounds.x2 > bounds.x1 && bounds.y2 > bounds.y1) {
+      x += box / 2 - (bounds.x1 + bounds.x2) / 2;
+      baseline += box / 2 - (bounds.y1 + bounds.y2) / 2;
+      drawn = glyph.getPath(x, baseline, size);
+    }
+  }
 
   const svg = document.createElementNS(SVG_NS, "svg");
   svg.setAttribute("viewBox", `0 0 ${box} ${box}`);
   svg.setAttribute("aria-hidden", "true");
 
   const path = document.createElementNS(SVG_NS, "path");
-  path.setAttribute("d", glyph.getPath(x, baseline, size).toPathData(2));
+  path.setAttribute("d", drawn.toPathData(2));
   svg.append(path);
   return svg;
 }
@@ -593,7 +611,7 @@ function openViewer(i) {
 function paintViewer() {
   const glyph = shownGlyphs[viewerIndex];
   if (!glyph) return;
-  el.viewerStage.replaceChildren(glyphSvg(glyph, currentFont, 100, 72));
+  el.viewerStage.replaceChildren(glyphSvg(glyph, currentFont, 100, 72, true));
   el.viewerMeta.textContent = [
     glyphLabel(glyph),
     glyph.name,

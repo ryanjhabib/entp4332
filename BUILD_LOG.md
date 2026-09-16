@@ -207,6 +207,43 @@ container, the notices, the file input) are unaffected, which is why only this o
 
 ---
 
+## 9. The glyph viewer was not actually centred
+
+**Symptom** Reported by eye — "is the slideshow really centered vertically? i reckon its
+not". It looked slightly low. Measuring the rendered outline against the viewport centre
+put it **46.6px below** on a 800px-tall window.
+
+**Cause** Two unrelated offsets that happened to stack in the same direction.
+
+1. **Asymmetric padding, 16px.** The overlay was `padding: var(--space-16) var(--gutter)
+   var(--space-8)` — 64px top against 32px bottom. Centred content in a box with uneven
+   padding is not centred in the box: it sits `(64 - 32) / 2` low.
+2. **Em box vs ink box, the remaining 30.6px.** The glyph was drawn with its baseline at
+   `box / 2 + size / 3`, which centres the *em square*, not the glyph's actual outline.
+   Every glyph has different ink extents, so each one was off by a different amount — a
+   comma badly, a capital E barely.
+
+**Fix** Symmetric padding, and a `centreInk` option that measures the drawn path's
+bounding box and shifts it so the outline's centre lands on the viewBox centre.
+
+**The deliberate part** `centreInk` is on in the viewer and *off* in the glyph grid. In
+the grid the cells share a baseline, which is what lets you compare glyphs to each other;
+a single glyph on screen has nothing to compare against and should just sit in the middle.
+Only the translation changes, never the size, so relative proportion still reads — a
+lowercase `o` measures 219px of ink against a capital `O` at 297px.
+
+**Verified** Eight glyphs chosen to stress it — `0 b p , E o O j`, covering round,
+ascender, descender, comma and cap — all land at **0.0px offset on both axes**.
+
+**A note on method** The screenshot after the fix still looked wrong, and I had already
+been burned once (entry 8) by dismissing a screenshot as rendering lag. So rather than
+assume either way, I re-measured from a second direction: the overlay's rect against the
+viewport, then the outline's rect against both. Viewer `0,0,1200x800`; ink spanning
+y 291–510, centre `(600, 400)`; viewport centre `(600, 400)`. Independent measures
+agreeing is what settles it — not the screenshot, and not the first number either.
+
+---
+
 ## Test matrix (all passing)
 
 | File | Format | Result |
