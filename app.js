@@ -1651,18 +1651,32 @@ for (const { key, button } of WEIGHT_SECTIONS) {
 }
 
 /* Both columns carry the same words, so editing one retypes the other. The
-   edited element is left alone, or the caret collapses on every keystroke. */
+   edited element is left alone, or the caret collapses on every keystroke.
+
+   Copied as cloned nodes rather than as textContent, which would flatten a
+   line break into a space and leave the mirror column a line short. Cloning
+   also avoids parsing markup back out of a string. */
+function syncParagraphs(edited) {
+  for (const other of el.paragraphs.querySelectorAll(".paragraph")) {
+    if (other === edited) continue;
+    other.replaceChildren(...[...edited.childNodes].map((node) => node.cloneNode(true)));
+  }
+}
+
 el.paragraphs.addEventListener("input", (e) => {
   const edited = e.target.closest(".paragraph");
-  if (!edited) return;
-  for (const other of el.paragraphs.querySelectorAll(".paragraph")) {
-    if (other !== edited) other.textContent = edited.textContent;
-  }
+  if (edited) syncParagraphs(edited);
 });
 
-// One block per column: a return would split it and desync the two.
+/* Return inserts a line break, explicitly. Left to itself a contenteditable
+   paragraph will split into blocks of its own making, which differ by browser
+   and would climb out of the element the columns are syncing. */
 el.paragraphs.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && e.target.closest(".paragraph")) e.preventDefault();
+  const edited = e.target.closest(".paragraph");
+  if (e.key !== "Enter" || !edited) return;
+  e.preventDefault();
+  document.execCommand("insertLineBreak");
+  syncParagraphs(edited); // execCommand does not always raise `input`
 });
 
 el.paraShuffle.addEventListener("click", renderParagraphs);
