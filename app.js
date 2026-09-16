@@ -2223,7 +2223,7 @@ function localItems() {
     const item = document.createElement("li");
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "link-button";
+    button.className = "link-button link-button--mine";
     button.textContent = entry.name;
     button.title = `${entry.name}, from this machine`;
     button.addEventListener("click", () => loadLocalFont(entry));
@@ -2279,7 +2279,7 @@ function droppedItems() {
     const item = document.createElement("li");
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "link-button";
+    button.className = "link-button link-button--mine";
     button.textContent = entry.name;
     button.title = `${entry.name}, opened here earlier`;
     button.addEventListener("click", () => {
