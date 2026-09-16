@@ -196,7 +196,7 @@ body.has-font .lede { display: none; }
 .font-name {
   margin: 0;
   /* Starting value only — JS fits the exact size to the measure. */
-  font-size: clamp(48px, 14vw, 240px);
+  font-size: clamp(48px, 16vw, 300px);
   font-weight: normal;
   line-height: 1.05;
   overflow-wrap: anywhere;

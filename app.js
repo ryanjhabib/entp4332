@@ -243,6 +243,31 @@ function pickName(nameRecord) {
   return nameRecord.en || Object.values(nameRecord)[0] || null;
 }
 
+/* Markers foundries stamp on unlicensed release builds. They turn up at the
+   start, middle or end of a family name and are not part of the name itself. */
+const TRIAL_WORDS =
+  /\b(trials?|test|testing|demo|beta|preview|evaluation|eval|sample|unlicensed|unregistered)\b/gi;
+
+/* Pulls those markers out of a name, returning the cleaned name and what it
+   found. Separators left stranded by the removal are tidied up. */
+function extractMarkers(name) {
+  const found = [];
+  const stripped = name.replace(TRIAL_WORDS, (word) => {
+    found.push(word[0].toUpperCase() + word.slice(1).toLowerCase());
+    return " ";
+  });
+  if (!found.length) return { name, markers: [] };
+
+  const cleaned = stripped
+    .replace(/[\s_]+/g, " ")
+    .replace(/\s*-\s*/g, "-")
+    .replace(/^[-\s]+|[-\s]+$/g, "")
+    .trim();
+
+  // A name that was nothing but a marker keeps what it had.
+  return cleaned ? { name: cleaned, markers: found } : { name, markers: [] };
+}
+
 /* Weight and width words that may be sitting on the end of a family name. */
 const STYLE_WORDS =
   /^(thin|hairline|extralight|ultralight|light|book|regular|normal|roman|medium|semibold|demibold|demi|bold|extrabold|ultrabold|black|heavy|fat|italic|oblique|condensed|compressed|narrow|extended|expanded|wide)$/i;
@@ -260,6 +285,13 @@ function fontNames(file, font) {
   let family = pickName(names.preferredFamily) || pickName(names.fontFamily) || fallback;
   let style = pickName(names.preferredSubfamily) || pickName(names.fontSubfamily) || "";
 
+  // "Trial" and friends belong in the subtext, not in the name.
+  const fromFamily = extractMarkers(family);
+  const fromStyle = extractMarkers(style);
+  family = fromFamily.name;
+  style = fromStyle.name;
+  const markers = [...new Set([...fromFamily.markers, ...fromStyle.markers])];
+
   if (!style || /^regular$/i.test(style)) {
     const parts = family.split(/\s+/);
     const lifted = [];
@@ -272,7 +304,8 @@ function fontNames(file, font) {
     }
   }
 
-  return { family, style: style || "Regular" };
+  const label = [style || "Regular", ...markers].join(" · ");
+  return { family, style: label, markers };
 }
 
 function renderTitle({ family, style }) {
@@ -284,7 +317,7 @@ function renderTitle({ family, style }) {
 /* The hero is set as large as it can be without wrapping, up to a ceiling.
    A fixed size cannot do this: "Inter" and "Libre Baskerville Condensed" need
    very different sizes to occupy the same measure. */
-const TITLE_MAX = 240;
+const TITLE_MAX = 300;
 const TITLE_MIN = 48;
 const titleCtx = document.createElement("canvas").getContext("2d");
 

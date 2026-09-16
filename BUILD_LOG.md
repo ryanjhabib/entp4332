@@ -159,6 +159,13 @@ Re-runs on window resize.
 **Worth remembering** `document.fonts.ready` must be awaited after `document.fonts.add()`
 or canvas measures the *fallback* font and the fitted size is wrong.
 
+**Follow-up** Trial and test builds carry the same problem from a different direction:
+foundries stamp "Trial", "Test" or "Demo" into the family name, and it appears at the start,
+middle or end depending on the foundry ("Söhne Test", "ABCDiatype-Trial", "Klim Trial Die
+Grotesk"). These are stripped wherever they sit and shown in the subtext instead, matched on
+word boundaries so a family like "Protest Riot" is not mangled. A name consisting only of a
+marker keeps what it had. Ceiling raised to 300px once names stopped carrying extra words.
+
 ---
 
 ## Test matrix (all passing)
