@@ -53,8 +53,6 @@
    ========================================================================== */
 *, *::before, *::after { box-sizing: border-box; }
 
-main { display: flex; flex-direction: column; }
-
 body {
   margin: 0;
   /* No top padding: the sticky header owns its own breathing room, so the page
@@ -83,6 +81,16 @@ h1 {
   padding-block: var(--space-4);
   margin-bottom: var(--space-12);
 }
+
+/* The wordmark is the way back to the empty state, so it is a control — but it
+   should read as the title it is, not as a button. */
+.home-button {
+  padding: 0;
+  background: none;
+  border-radius: 0;
+  cursor: pointer;
+}
+.home-button:hover { background: none; color: var(--color-muted); }
 
 .header-bar {
   display: flex;
@@ -160,22 +168,13 @@ body.is-dragging::after {
 .dropzone-text { margin: 0 0 var(--space-2); font-size: var(--size-ui); }
 .dropzone-hint { margin: 0; color: var(--color-muted); font-size: var(--size-ui); }
 
-/* Once a font is loaded the picker collapses to a slim bar AND moves to the
-   foot of the page (order: 1 puts it after the specimen), so the typeface
-   name is the first thing on the page rather than a file input. */
-body.has-font .loader {
-  order: 1;
-  margin-top: var(--section-gap);
-}
+/* Once a font is loaded the picker goes entirely: the pinned banner carries
+   both affordances, and the specimen names the font far better than a status
+   line does. Errors clear has-font, so it returns to report them. */
+body.has-font .loader { display: none; }
 
-.loader.is-loaded .dropzone {
-  padding: var(--space-3) var(--space-4);
-  text-align: left;
-}
-.loader.is-loaded .dropzone-text { display: none; }
 /* The blurb is empty-state copy — once a specimen is on screen it is noise. */
 body.has-font .lede { display: none; }
-.loader.is-loaded .status { margin-top: var(--space-2); }
 
 .status { margin: var(--space-4) 0 0; min-height: 1.5em; color: var(--color-muted); }
 .status.is-error { color: var(--color-error); }
@@ -388,7 +387,10 @@ html { scroll-padding-top: var(--space-16); }
   bottom: var(--space-6);
   transform: translateX(-50%);
   z-index: 15;
-  padding: var(--space-2) var(--space-5);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px var(--space-5);
   border-radius: var(--radius-pill);
   background: var(--color-scrim);
   backdrop-filter: blur(38px);
@@ -401,6 +403,21 @@ html { scroll-padding-top: var(--space-16); }
   white-space: nowrap;
   pointer-events: none;
 }
+
+/* Only the action takes the pointer — the bar itself stays transparent to it,
+   so it never comes between the cursor and the page. */
+.banner-button {
+  pointer-events: auto;
+  font: inherit;
+  line-height: 1;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.22);
+  border: 0;
+  border-radius: var(--radius-pill);
+  padding: 2px var(--space-2);
+  cursor: pointer;
+}
+.banner-button:hover { background: rgba(255, 255, 255, 0.34); }
 
 /* The full-page drop overlay says the same thing, louder. */
 body.is-dragging .drop-banner,
@@ -465,7 +482,10 @@ body.is-viewing { overflow: hidden; }
 .viewer-arrow:hover { color: var(--color-text); }
 
 /* Footer */
-.site-footer {
+/* Nothing to print until something is loaded. */
+.site-footer { display: none; }
+
+body.has-font .site-footer {
   display: flex;
   gap: var(--space-2);
   margin-top: var(--section-gap);

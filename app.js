@@ -91,6 +91,7 @@ const el = {
   fontName: document.getElementById("font-name"),
   fontStyle: document.getElementById("font-style"),
   headerFont: document.getElementById("header-font"),
+  home: document.getElementById("home"),
   infoGrid: document.getElementById("info-grid"),
   waterfall: document.getElementById("waterfall"),
   glyphGrid: document.getElementById("glyph-grid"),
@@ -104,6 +105,7 @@ const el = {
   viewerNext: document.getElementById("viewer-next"),
   viewerClose: document.getElementById("viewer-close"),
   shuffle: document.getElementById("shuffle"),
+  bannerBrowse: document.getElementById("banner-browse"),
   print: document.getElementById("print"),
 };
 
@@ -189,7 +191,6 @@ async function handleFile(file) {
   const parsed = await parseFont(buffer, format);
 
   el.specimen.hidden = false;
-  el.loader.classList.add("is-loaded");
   document.body.classList.add("has-font");
   const names = fontNames(file, parsed.font);
   renderTitle(names);
@@ -618,7 +619,6 @@ function closeViewer() {
    ---------------------------------------------------------------------- */
 function resetSpecimen() {
   el.specimen.hidden = true;
-  el.loader.classList.remove("is-loaded");
   document.body.classList.remove("has-font");
   el.fontName.textContent = "";
   el.fontStyle.textContent = "";
@@ -673,6 +673,14 @@ el.browse.addEventListener("click", (e) => {
   e.stopPropagation();
   el.fileInput.click();
 });
+
+el.home.addEventListener("click", () => {
+  resetSpecimen();
+  setStatus("");
+  window.scrollTo(0, 0);
+});
+
+el.bannerBrowse.addEventListener("click", () => el.fileInput.click());
 
 el.dropzone.addEventListener("click", () => el.fileInput.click());
 el.dropzone.addEventListener("keydown", (e) => {
