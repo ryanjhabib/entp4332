@@ -582,6 +582,27 @@ const LOCAL_FONTS = [
   { name: "Times New Roman", ps: "TimesNewRomanPSMT" },
 ].map((entry) => ({ ...entry, local: true }));
 
+/* Fonts dropped or picked in this session, kept as their own bytes so they can
+   be reopened without being dragged in again — going Home tears the specimen
+   down, and re-dragging the same file to get back to it is the annoyance.
+
+   Memory only. Nothing is written to disk and a reload clears the list, which
+   keeps the promise the whole tool is built on: the file never leaves the page.
+   Persisting them would mean keeping font bytes in browser storage, which is a
+   different decision and not one to make on somebody's behalf. */
+const DROPPED_LIMIT = 12;
+const droppedFonts = [];
+let droppedSeq = 0;
+
+function rememberDropped(name, buffer) {
+  const already = droppedFonts.findIndex((d) => d.name === name);
+  if (already >= 0) droppedFonts.splice(already, 1);
+
+  droppedFonts.unshift({ name, buffer, dropped: true, uid: `d${droppedSeq++}` });
+  droppedFonts.splice(DROPPED_LIMIT);
+  renderSamples();
+}
+
 const hasLocalFonts = typeof window.queryLocalFonts === "function";
 
 /* Whether the reader has already allowed font access. Hovering must never
@@ -892,6 +913,9 @@ async function handleFile(file, source = null) {
   renderGlyphs(parsed);
   sectionWeights.clear();
   syncSectionWeights();
+
+  // Only what came from this machine — the library reopens from its own URL.
+  if (!source) rememberDropped(names.family, buffer);
 }
 
 /* opentype.js cannot read woff2's Brotli-compressed tables. We decompress to
@@ -1874,8 +1898,8 @@ function sampleItems(fonts) {
     button.className = "link-button";
     button.textContent = sample.name;
     button.addEventListener("click", () => loadSample(sample));
-    button.addEventListener("mouseenter", () => showPreview(sample, i));
-    button.addEventListener("focus", () => showPreview(sample, i));
+    button.addEventListener("mouseenter", () => showPreview(sample));
+    button.addEventListener("focus", () => showPreview(sample));
     item.append(button);
     return item;
   });
@@ -1909,14 +1933,29 @@ const previewFaces = new Map();
 let hoveredSample = null;
 let previewFamily = null;
 
-function previewFace(sample, index) {
-  if (!previewFaces.has(sample.name)) {
-    const family = `Preview${index}`;
+/* Keyed by where the font came from, not by what it is called. Two pills can
+   share a name — the library has a Syne and you can drop your own — and keying
+   the cache on the name alone handed the second one the first one's face. The
+   family counter runs on its own so a family is never reused either. */
+let previewSeq = 0;
+
+function previewKey(sample) {
+  if (sample.dropped) return `drop:${sample.uid}`;
+  if (sample.local) return `local:${sample.ps}`;
+  return `lib:${sample.id}`;
+}
+
+function previewFace(sample) {
+  const key = previewKey(sample);
+  if (!previewFaces.has(key)) {
+    const family = `Preview${previewSeq++}`;
     previewFaces.set(
-      sample.name,
+      key,
       (async () => {
         let buffer;
-        if (sample.local) {
+        if (sample.dropped) {
+          buffer = sample.buffer;
+        } else if (sample.local) {
           buffer = await localFontBuffer(sample);
         } else {
           const res = await fetch(sampleUrl(sample, sample.weight));
@@ -1930,7 +1969,7 @@ function previewFace(sample, index) {
       })()
     );
   }
-  return previewFaces.get(sample.name);
+  return previewFaces.get(key);
 }
 
 /* Dip, swap, come back. The name, the face and the size all change in one
@@ -1941,23 +1980,24 @@ function previewFace(sample, index) {
    unset in the same frame, a transition has nothing to run between. */
 const PREVIEW_DIP = "0.25";
 
-async function showPreview(sample, index) {
-  hoveredSample = sample.name;
+async function showPreview(sample) {
+  const key = previewKey(sample);
+  hoveredSample = key;
 
   let family;
   try {
-    family = await previewFace(sample, index);
+    family = await previewFace(sample);
   } catch {
     restPreview(); // a face that will not load simply does not preview
     return;
   }
 
   // The pointer may have moved on while that was in flight.
-  if (hoveredSample !== sample.name) return;
+  if (hoveredSample !== key) return;
 
   el.fontPreview.style.opacity = PREVIEW_DIP;
   await new Promise(requestAnimationFrame);
-  if (hoveredSample !== sample.name) return;
+  if (hoveredSample !== key) return;
 
   el.fontPreview.textContent = sample.name;
   // `inherit` is not a valid entry inside a font list — it invalidates the whole
@@ -2052,12 +2092,10 @@ function localItems() {
     button.title = `${entry.name}, from this machine`;
     button.addEventListener("click", () => loadLocalFont(entry));
 
-    /* Offset past the library so two pills never share a preview family. Only
-       previews once access has been allowed — before that the call would throw
-       for want of a gesture, and the pill still works on click. */
-    const index = SAMPLE_FONTS.length + i;
+    /* Previews only once access has been allowed — before that the call would
+       throw for want of a gesture, and the pill still works on click. */
     const preview = () => {
-      if (localFontsAllowed) showPreview(entry, index);
+      if (localFontsAllowed) showPreview(entry);
     };
     button.addEventListener("mouseenter", preview);
     button.addEventListener("focus", preview);
@@ -2090,7 +2128,30 @@ async function requestLocalFonts() {
    in Safari not even that. */
 function libraryItems() {
   const items = sampleItems(SAMPLE_FONTS);
-  return hasLocalFonts && localFontsAllowed ? [...items, ...localItems()] : items;
+  if (hasLocalFonts && localFontsAllowed) items.push(...localItems());
+  items.push(...droppedItems());
+  return items;
+}
+
+function droppedItems() {
+  return droppedFonts.map((entry, i) => {
+    const item = document.createElement("li");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "link-button";
+    button.textContent = entry.name;
+    button.title = `${entry.name}, opened here earlier`;
+    button.addEventListener("click", () => {
+      handleFile(new File([entry.buffer], `${entry.name}.ttf`));
+    });
+
+    const preview = () => showPreview(entry);
+    button.addEventListener("mouseenter", preview);
+    button.addEventListener("focus", preview);
+
+    item.append(button);
+    return item;
+  });
 }
 
 /* The offer lives in the footer rather than in the list: it is a setting, not a
