@@ -904,6 +904,68 @@ function detectFormat(buffer) {
    check below returns before anything is torn down, so dropping a .mov onto a
    specimen you are reading leaves that specimen exactly where it was and says
    so in the corner. */
+/* Several files at once. Each is read and filed on its own, and only then is
+   one opened — rendering every file as it arrives would draw the whole specimen
+   N times to show the last one.
+
+   Cuts of a family land under a single pill because rememberDropped already
+   groups by the name table's family, so dropping Regular, Medium and Bold
+   together gives one pill with three weights rather than three pills. */
+async function handleFiles(list) {
+  const files = [...list];
+  if (files.length <= 1) return handleFile(files[0]);
+
+  const filed = [];
+  let unreadable = 0;
+
+  for (const file of files) {
+    let buffer;
+    try {
+      buffer = await file.arrayBuffer();
+    } catch {
+      unreadable++;
+      continue;
+    }
+
+    const format = buffer.byteLength >= 4 && detectFormat(buffer);
+    if (!format) {
+      unreadable++;
+      continue;
+    }
+
+    // Parsed for its family and weight only; nothing is rendered yet.
+    const parsed = await parseFont(buffer, format);
+    filed.push({
+      family: fontNames(file, parsed.font).family,
+      weight: droppedWeightOf(parsed.font),
+      buffer,
+      format,
+    });
+  }
+
+  if (!filed.length) {
+    return notify("Only .ttf, .otf, .woff and .woff2 files");
+  }
+
+  for (const cut of filed) rememberDropped(cut.family, cut.weight, cut.buffer, cut.format);
+
+  /* Open the lightest cut of the first family dropped, so a family arrives on
+     its lightest weight with the rest under the toggle, and a mixed drop opens
+     on something predictable rather than on whichever file the OS listed last. */
+  const first = filed[0].family;
+  const opening = filed
+    .filter((cut) => cut.family === first)
+    .sort((a, b) => a.weight - b.weight)[0];
+
+  await handleFile(new File([opening.buffer], `${first}.ttf`));
+
+  const families = new Set(filed.map((cut) => cut.family)).size;
+  const skipped = unreadable ? `, ${unreadable} skipped` : "";
+  notify(
+    `${filed.length} files in ${families} ${families === 1 ? "family" : "families"}${skipped}`
+  );
+}
+
 async function handleFile(file, source = null, { remember = true } = {}) {
   let buffer;
   try {
@@ -2621,8 +2683,7 @@ el.localAccess.addEventListener("click", requestLocalFonts);
 el.bannerBrowse.addEventListener("click", () => el.fileInput.click());
 
 el.fileInput.addEventListener("change", () => {
-  const file = el.fileInput.files[0];
-  if (file) handleFile(file);
+  if (el.fileInput.files.length) handleFiles(el.fileInput.files);
   el.fileInput.value = ""; // allow re-picking the same file
 });
 
@@ -2654,8 +2715,7 @@ window.addEventListener("dragleave", (e) => {
 window.addEventListener("drop", (e) => {
   e.preventDefault();
   endDrag();
-  const file = e.dataTransfer.files[0];
-  if (file) handleFile(file);
+  if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
 });
 
 // A drag that leaves the window entirely never fires dragleave on some
