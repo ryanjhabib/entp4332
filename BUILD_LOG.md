@@ -159,6 +159,13 @@ Re-runs on window resize.
 **Worth remembering** `document.fonts.ready` must be awaited after `document.fonts.add()`
 or canvas measures the *fallback* font and the fitted size is wrong.
 
+**A second follow-up, from the font's own data** Adding more sample faces surfaced
+"Newsreader 16pt 16pt" in the hero. That is not a parsing error — the font file genuinely
+reports that string, in name ID 1 *and* name ID 16, because the optical-size token got
+written twice when the family was built. Adjacent repeated words in a family name are now
+collapsed. Only *adjacent* ones, so a family legitimately called something like "New York
+New York" is left alone.
+
 **Follow-up** Trial and test builds carry the same problem from a different direction:
 foundries stamp "Trial", "Test" or "Demo" into the family name, and it appears at the start,
 middle or end depending on the foundry ("Söhne Test", "ABCDiatype-Trial", "Klim Trial Die

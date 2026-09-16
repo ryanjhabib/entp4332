@@ -12,6 +12,7 @@
   --color-field-strong: #ebebeb; /* the same ground, on hover */
   --color-banner: #4c78cd;                 /* the empty state */
   --color-banner-quiet: rgba(0, 0, 0, 0.32); /* over a specimen */
+  --color-pill-glass: rgba(255, 255, 255, 0.72); /* header pills */
 
   /* One height for every pill on the page, the banner included, so nothing
      towers over anything else. The hero lines up with it too. */
@@ -60,6 +61,18 @@
    ========================================================================== */
 *, *::before, *::after { box-sizing: border-box; }
 
+/* Dragging to highlight picks up the accent. Written as separate rules on
+   purpose: one unknown selector in a group invalidates the whole rule. */
+::selection {
+  background: var(--color-banner);
+  color: #ffffff;
+}
+
+::-moz-selection {
+  background: var(--color-banner);
+  color: #ffffff;
+}
+
 body {
   margin: 0;
   /* No top padding: the sticky header owns its own breathing room, so the page
@@ -75,7 +88,7 @@ body {
 }
 
 h1 {
-  margin: 0 0 var(--space-2);
+  margin: 0;
   font-size: var(--size-ui);
   font-weight: var(--weight-ui);
 }
@@ -85,29 +98,40 @@ h1 {
 /* Nothing to label and nowhere to go back to on the empty state. */
 body:not(.has-font) .site-header { display: none; }
 
+/* No ground on the bar itself: the two pills carry it, so the header is
+   invisible over empty page and only reads as frosted glass where the specimen
+   passes beneath it. pointer-events are off on the bare strip, or it would
+   swallow clicks on whatever has scrolled under it. */
 .site-header {
   position: sticky;
   top: 0;
   z-index: 5;
-  background: var(--color-bg);
+  background: transparent;
   padding-block: var(--space-4);
   margin-bottom: var(--space-12);
+  pointer-events: none;
 }
 
-/* The wordmark is the way back to the empty state, so it is a control — but it
-   should read as the title it is, not as a button. */
-.home-button {
-  height: auto;
-  padding: 0;
-  background: none;
-  border-radius: 0;
-  cursor: pointer;
+/* Both header items are the same pill as everything else on the page. */
+.home-button,
+.header-font {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  height: var(--pill-height);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--color-pill-glass);
+  backdrop-filter: blur(38px);
+  -webkit-backdrop-filter: blur(38px);
 }
-.home-button:hover { background: none; color: var(--color-muted); }
+
+.home-button { cursor: pointer; }
+.home-button:hover { background: var(--color-pill-glass); color: var(--color-muted); }
 
 .header-bar {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
 }

@@ -70,12 +70,25 @@ function setPhrase(text) {
 const SAMPLE_CDN = "https://cdn.jsdelivr.net/npm/";
 const SAMPLE_FONTS = [
   { name: "Inter", file: "Inter-Regular.woff2", path: "@fontsource/inter/files/inter-latin-400-normal.woff2" },
+  { name: "Geist", file: "Geist-Regular.woff2", path: "@fontsource/geist/files/geist-latin-400-normal.woff2" },
+  { name: "Work Sans", file: "WorkSans-Regular.woff2", path: "@fontsource/work-sans/files/work-sans-latin-400-normal.woff2" },
+  { name: "Poppins", file: "Poppins-Regular.woff2", path: "@fontsource/poppins/files/poppins-latin-400-normal.woff2" },
+  { name: "Oxygen", file: "Oxygen-Regular.woff2", path: "@fontsource/oxygen/files/oxygen-latin-400-normal.woff2" },
   { name: "Archivo", file: "Archivo-SemiBold.woff2", path: "@fontsource/archivo/files/archivo-latin-600-normal.woff2" },
   { name: "Space Grotesk", file: "SpaceGrotesk-Medium.woff2", path: "@fontsource/space-grotesk/files/space-grotesk-latin-500-normal.woff2" },
-  { name: "Playfair Display", file: "PlayfairDisplay-Regular.woff2", path: "@fontsource/playfair-display/files/playfair-display-latin-400-normal.woff2" },
+  { name: "Michroma", file: "Michroma-Regular.woff2", path: "@fontsource/michroma/files/michroma-latin-400-normal.woff2" },
+  { name: "League Gothic", file: "LeagueGothic-Regular.woff2", path: "@fontsource/league-gothic/files/league-gothic-latin-400-normal.woff2" },
+  { name: "Newsreader", file: "Newsreader-Regular.woff2", path: "@fontsource/newsreader/files/newsreader-latin-400-normal.woff2" },
+  { name: "Cormorant", file: "Cormorant-Regular.woff2", path: "@fontsource/cormorant/files/cormorant-latin-400-normal.woff2" },
   { name: "EB Garamond", file: "EBGaramond-Regular.woff2", path: "@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff2" },
   { name: "Libre Baskerville", file: "LibreBaskerville-Regular.woff2", path: "@fontsource/libre-baskerville/files/libre-baskerville-latin-400-normal.woff2" },
+  { name: "Goudy Bookletter 1911", file: "GoudyBookletter1911-Regular.woff2", path: "@fontsource/goudy-bookletter-1911/files/goudy-bookletter-1911-latin-400-normal.woff2" },
+  { name: "Playfair Display", file: "PlayfairDisplay-Regular.woff2", path: "@fontsource/playfair-display/files/playfair-display-latin-400-normal.woff2" },
   { name: "Bodoni Moda", file: "BodoniModa-Regular.woff2", path: "@fontsource/bodoni-moda/files/bodoni-moda-latin-400-normal.woff2" },
+  { name: "Jim Nightshade", file: "JimNightshade-Regular.woff2", path: "@fontsource/jim-nightshade/files/jim-nightshade-latin-400-normal.woff2" },
+  { name: "Kapakana", file: "Kapakana-Regular.woff2", path: "@fontsource/kapakana/files/kapakana-latin-400-normal.woff2" },
+  { name: "Manufacturing Consent", file: "ManufacturingConsent-Regular.woff2", path: "@fontsource/manufacturing-consent/files/manufacturing-consent-latin-400-normal.woff2" },
+  { name: "Micro 5", file: "Micro5-Regular.woff2", path: "@fontsource/micro-5/files/micro-5-latin-400-normal.woff2" },
   { name: "JetBrains Mono", file: "JetBrainsMono-Regular.woff2", path: "@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2" },
 ];
 
@@ -316,6 +329,15 @@ function fontNames(file, font) {
   const names = font.names;
   let family = pickName(names.preferredFamily) || pickName(names.fontFamily) || fallback;
   let style = pickName(names.preferredSubfamily) || pickName(names.fontSubfamily) || "";
+
+  /* Some builds repeat an optical-size token in the name table itself —
+     fontsource's Newsreader reports "Newsreader 16pt 16pt" in name IDs 1 and 16
+     alike. Only *adjacent* repeats are collapsed, so a family legitimately
+     called something like "New York New York" survives. */
+  family = family
+    .split(/\s+/)
+    .filter((word, i, all) => i === 0 || word.toLowerCase() !== all[i - 1].toLowerCase())
+    .join(" ");
 
   // "Trial" and friends belong in the subtext, not in the name.
   const fromFamily = extractMarkers(family);
