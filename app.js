@@ -856,6 +856,7 @@ const el = {
   viewerWeight: document.getElementById("viewer-weight"),
   viewerSizeRange: document.getElementById("viewer-size-range"),
   viewerSizeValue: document.getElementById("viewer-size-value"),
+  headerWeight: document.getElementById("header-weight"),
   localAccess: document.getElementById("local-access"),
   siteFooter: document.querySelector(".site-footer"),
   pageSizeRange: document.getElementById("page-size-range"),
@@ -1433,7 +1434,17 @@ const WEIGHT_SECTIONS = [
 
 const sectionWeights = new Map();
 
+/* The header carries the weight too, so it is reachable without scrolling back
+   to the hero. Same rule as everywhere else: shown only when the face has
+   another cut, named with whatever that cut is called. */
+function syncHeaderWeight() {
+  const many = Boolean(activeSample) && activeSample.weights.length > 1;
+  el.headerWeight.hidden = !many;
+  if (many) el.headerWeight.textContent = cutLabel(activeWeight);
+}
+
 function syncSectionWeights() {
+  syncHeaderWeight();
   const list = activeSample ? activeSample.weights : [];
   const offer = list.length > 1;
 
@@ -2132,6 +2143,7 @@ function resetSpecimen() {
   el.glyphCount.textContent = "";
   el.glyphNotice.hidden = true;
   el.glyphNotice.textContent = "";
+  el.headerWeight.hidden = true;
   scriptFace = false;
 }
 
@@ -2833,6 +2845,7 @@ el.home.addEventListener("click", () => {
 });
 
 el.headerFont.addEventListener("click", toggleFontMenu);
+el.headerWeight.addEventListener("click", nextWeight);
 el.fontPicker.addEventListener("mouseleave", () => {
   menuCloseTimer = setTimeout(closeFontMenu, MENU_GRACE_MS);
 });

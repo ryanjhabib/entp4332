@@ -164,9 +164,20 @@ body:not(.has-font) .site-header { display: none; }
   pointer-events: none;
 }
 
+/* The name and the weight travel together, and the pair keeps the left of the
+   bar while Home keeps the right. min-width: 0 so a long family name still
+   truncates rather than pushing the weight out of the bar. */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
 /* Both header items are the same pill as everything else on the page. */
 .home-button,
-.header-font {
+.header-font,
+.header-weight {
   pointer-events: auto;
   display: inline-flex;
   align-items: center;
@@ -180,6 +191,18 @@ body:not(.has-font) .site-header { display: none; }
 
 .home-button { cursor: pointer; }
 .home-button:hover { color: var(--color-muted); }
+
+/* Full black beside the name's grey, because this one does something. It goes
+   quiet on hover the way Home does — the ground cannot change under a backdrop
+   filter without the transition snapping. */
+.header-weight {
+  flex: none;
+  pointer-events: auto;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.header-weight:hover { color: var(--color-muted); }
 
 .header-bar {
   display: flex;
@@ -281,6 +304,7 @@ button,
 .banner-button,
 .home-button,
 .header-font,
+.header-weight,
 .font-preview {
   transition: background-color 200ms ease, color 200ms ease, opacity 200ms ease;
 }
