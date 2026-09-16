@@ -22,7 +22,7 @@
      One size, one weight, everywhere. Hierarchy comes from spacing,
      rules and muted colour, never from scaling type up. */
   --font-ui: ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
-  --size-ui: 12px;
+  --size-ui: 10px;
   --weight-ui: 400;
   --leading-ui: 1.5;
 
@@ -418,11 +418,14 @@ html { scroll-padding-top: var(--space-16); }
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 6px var(--space-5);
+  /* Height is fixed to the token rather than falling out of the font size, so
+     the hero subtext stays lined up with it whatever the UI size becomes. */
+  height: var(--banner-height);
+  padding: 0 var(--space-5);
   border-radius: var(--radius-pill);
   background: var(--color-banner);
   color: #ffffff;
-  font-size: 14px;
+  font-size: var(--size-ui);
   font-weight: 500;
   line-height: 1;
   letter-spacing: -0.02em;
