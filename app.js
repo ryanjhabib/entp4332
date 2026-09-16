@@ -211,7 +211,7 @@ const LINES = [
 
 /* The waterfall lines are edited in place, so the test string lives here rather
    than in any one element. */
-let testString = PHRASES[0];
+let testString = sentenceCase(PHRASES[0]);
 
 /* Paragraph specimens need running prose, not a label. These forms take two
    phrases from the pool above, so the paragraphs keep the same old-world voice
@@ -288,11 +288,39 @@ function paragraphText(sentences = PARAGRAPH_SENTENCES) {
     .join(" ");
 }
 
+/* Drawing at random with replacement repeats far sooner than it feels like it
+   should: with a hundred-odd options, seeing the same phrase two shuffles later
+   is ordinary chance, and it reads as a broken button. So each pool remembers
+   what it has handed out lately and will not repeat inside that window. The
+   window is a third of the pool, capped, so a short pool still has somewhere
+   left to go. */
+const recentPicks = new Map();
+
+function pickFresh(list, key) {
+  if (list.length < 2) return list[0];
+
+  const seen = recentPicks.get(key) ?? [];
+  const window = Math.min(12, Math.max(1, Math.floor(list.length / 3)));
+  const fresh = list.filter((item) => !seen.includes(item));
+  const pool = fresh.length ? fresh : list; // exhausted: start the cycle again
+
+  const choice = pool[Math.floor(Math.random() * pool.length)];
+  recentPicks.set(key, [...seen, choice].slice(-window));
+  return choice;
+}
+
+/* Written lowercase, shown sentence capped. The lines are set down in the voice
+   they were written in, but a specimen opens on a capital unless the person
+   reading it decides otherwise by editing the text. Only the first character is
+   touched, so anything already title cased is left alone. */
+function sentenceCase(text) {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 /* Never hand back the phrase already on screen — a shuffle that appears to do
    nothing reads as a broken button. */
 function randomPhrase() {
-  const pool = PHRASES.filter((p) => p !== testString.trim());
-  return pool[Math.floor(Math.random() * pool.length)];
+  return sentenceCase(pickFresh(PHRASES.filter((p) => sentenceCase(p) !== testString.trim()), "waterfall"));
 }
 
 function setPhrase(text) {
@@ -751,7 +779,8 @@ function renderStyle(names) {
   button.title = `Weight ${activeWeight} — click for the next of ${activeSample.weights.length}`;
   button.addEventListener("click", nextWeight);
 
-  el.fontStyle.replaceChildren(note, button);
+  // Control first, label second: the thing you can act on leads the row.
+  el.fontStyle.replaceChildren(button, note);
 }
 
 /* Fetches a weight if it has not been seen, and hands back its registered
@@ -1053,13 +1082,16 @@ function pageSample(shape) {
   if (shape === "paragraph") return pageParagraphs();
   // Even odds between a label and a full line, rather than weighting by pool
   // size — there are far more phrases, and the lines would hardly ever appear.
-  if (shape === "phrase") return pick(Math.random() < 0.5 ? LINES : PHRASES);
+  if (shape === "phrase") {
+    const pool = Math.random() < 0.5 ? LINES : PHRASES;
+    return sentenceCase(pickFresh(pool, "page-phrase"));
+  }
 
   // A single word, long enough to be worth looking at and never an ampersand.
   const words = PHRASES.join(" ")
     .split(/\s+/)
     .filter((w) => /[A-Za-z]{4,}/.test(w));
-  return pick(words);
+  return sentenceCase(pickFresh(words, "page-word"));
 }
 
 /* One word set huge can outrun the page. Measured rather than guessed, the

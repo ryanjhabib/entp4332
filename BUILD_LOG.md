@@ -448,6 +448,37 @@ with the wider case as the exception — which is the version that cannot rot.
 
 ---
 
+## 15. Shuffle looked broken, and was working correctly
+
+**Symptom** "Sometimes I'll notice the same phrase only 2 or 3 shuffles apart."
+
+**Cause** Nothing was wrong with the code. `randomPhrase()` excluded exactly one value —
+the phrase currently on screen — so it could not hand back the same thing twice in a row,
+which is the case that obviously reads as broken. Two apart was allowed: A, B, A is three
+distinct draws with no two adjacent.
+
+And that is common, not rare. Drawing uniformly with replacement from a pool of n, the
+chance of a repeat somewhere in the next k draws rises much faster than people expect —
+the birthday problem. Over a session of thirty shuffles, some near repeat is close to
+certain. The generator was behaving correctly and the output still looked wrong, which is
+the only thing that matters.
+
+**Fix** Uniform randomness is the wrong model for something a person watches. Each pool now
+keeps a short memory of what it has handed out and draws only from what is not in it —
+`pickFresh(list, key)`, with a window of a third of the pool capped at twelve, falling back
+to the whole list once exhausted so a short pool can never deadlock. Shared by the
+waterfall, the page phrase and the page word, each with its own history.
+
+**Verified** Thirty consecutive waterfall shuffles: 29 distinct, and no repeat anywhere
+inside a window of five. Thirty page shuffles: 30 distinct. Before, repeats two and three
+apart turned up within a handful of attempts.
+
+**Worth remembering** "Random" and "feels random" are different specifications, and for
+anything a person watches repeatedly the second is the one being asked for. A memory of
+recent draws is the whole fix.
+
+---
+
 ## Test matrix (all passing)
 
 | File | Format | Result |
