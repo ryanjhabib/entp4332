@@ -225,6 +225,7 @@ const el = {
   glyphCount: document.getElementById("glyph-count"),
   glyphNotice: document.getElementById("glyph-notice"),
   glyphToggle: document.getElementById("glyph-toggle"),
+  glyphHint: document.getElementById("glyph-hint"),
   viewer: document.getElementById("glyph-viewer"),
   viewerStage: document.getElementById("viewer-stage"),
   viewerMeta: document.getElementById("viewer-meta"),
@@ -870,6 +871,7 @@ function renderGlyphs({ font, note }) {
     el.glyphCount.textContent = "";
     el.glyphGrid.replaceChildren();
     el.glyphToggle.hidden = true;
+    el.glyphHint.hidden = true;
     return;
   }
 
@@ -903,7 +905,10 @@ function paintGlyphs() {
     shownGlyphs.length === allGlyphs.length
       ? `${shownGlyphs.length} Glyphs`
       : `${shownGlyphs.length} of ${allGlyphs.length} Glyphs`;
+  // The row holds nothing but the button now, so it goes when the button does —
+  // otherwise it leaves its own margin behind as a gap.
   el.glyphToggle.hidden = allGlyphs.length <= basicGlyphs.length;
+  el.glyphHint.hidden = el.glyphToggle.hidden;
   el.glyphToggle.textContent = showingAll
     ? "Show the basic set"
     : `Show all ${allGlyphs.length}`;
