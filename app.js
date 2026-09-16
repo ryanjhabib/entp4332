@@ -2036,14 +2036,12 @@ const COLOUR_PAIRS = [
   { fg: "#111111", bg: "#ff5fa2" }, // ink on hot pink
   { fg: "#5c1a1a", bg: "#d9e0cf" }, // oxblood on sage
   { fg: "#f9e7ff", bg: "#5b1a8f" }, // lilac on raspberry purple
-  { fg: "#06262b", bg: "#22d3ee" }, // deep teal on cyan
   { fg: "#10243a", bg: "#cfe3f5" }, // ink blue on pale sky
   { fg: "#1c1a17", bg: "#f2ece1" }, // ink on cream
   { fg: "#12143a", bg: "#ffd400" }, // navy on vivid yellow
   { fg: "#f5e0c0", bg: "#4a0d1f" }, // pale gold on deep wine
   { fg: "#f4efe4", bg: "#0d1b3e" }, // cream on midnight navy
   { fg: "#0f3a3a", bg: "#e6b8a2" }, // deep teal on terracotta
-  { fg: "#111111", bg: "#ff7a00" }, // ink on vibrant orange
   { fg: "#f2f0ff", bg: "#2b1b9c" }, // ice on electric indigo
   { fg: "#3a2718", bg: "#f0dcc0" }, // bark on wheat
   { fg: "#2e1a3a", bg: "#e3e8b0" }, // aubergine on pale chartreuse
