@@ -424,6 +424,7 @@ let activeSample = null;
 let activeWeight = null;
 const SAMPLE_FONTS = [
   { name: "Archivo", id: "archivo", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 600 },
+  { name: "Arimo", id: "arimo", weights: [400, 500, 600, 700], weight: 400 },
   { name: "Bodoni Moda", id: "bodoni-moda", weights: [400, 500, 600, 700, 800, 900], weight: 400 },
   { name: "Bricolage Grotesque", id: "bricolage-grotesque", weights: [200, 300, 400, 500, 600, 700, 800], weight: 400 },
   { name: "EB Garamond", id: "eb-garamond", weights: [400, 500, 600, 700, 800], weight: 400 },
@@ -447,6 +448,8 @@ const SAMPLE_FONTS = [
   { name: "Oxygen", id: "oxygen", weights: [300, 400, 700], weight: 400 },
   { name: "Playfair Display", id: "playfair-display", weights: [400, 500, 600, 700, 800, 900], weight: 400 },
   { name: "Poppins", id: "poppins", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
+  { name: "Public Sans", id: "public-sans", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
+  { name: "Schibsted Grotesk", id: "schibsted-grotesk", weights: [400, 500, 600, 700, 800, 900], weight: 400 },
   { name: "Source Serif 4", id: "source-serif-4", weights: [200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
   { name: "Space Grotesk", id: "space-grotesk", weights: [300, 400, 500, 600, 700], weight: 500 },
   { name: "UnifrakturMaguntia", id: "unifrakturmaguntia", weights: [400], weight: 400 },
