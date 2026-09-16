@@ -2012,7 +2012,15 @@ placeBanner();
    ---------------------------------------------------------------------- */
 /* A label you drag and a field you type into. Three of these exist, so it is
    worth one factory rather than three near-copies. */
-const CONTROL_DRAG_STEP = 5; // dragging lands on multiples of 5
+const CONTROL_DRAG_STEP = 5;
+
+/* Letter spacing, in thousandths of an em, and the same range in every section
+   — it was -200/200 in the waterfall and half that in the other two for no
+   reason anyone could state. Wide enough to drive a face well past where it
+   stops working, which is the point: seeing where a fit breaks is how you learn
+   where it holds. */
+const TRACKING_MIN = -500;
+const TRACKING_MAX = 1000;
 
 function scrubControl({ scrub, input, min, max, initial, apply }) {
   let value = initial;
@@ -2093,8 +2101,8 @@ function scrubControl({ scrub, input, min, max, initial, apply }) {
 const waterfallTracking = scrubControl({
   scrub: el.trackingScrub,
   input: el.trackingInput,
-  min: -200,
-  max: 200,
+  min: TRACKING_MIN,
+  max: TRACKING_MAX,
   // The ladder spans 12px to 128px, so it starts where the face was drawn and
   // leaves the tightening to you.
   initial: TEXT_ROLES.body.tracking,
@@ -2104,8 +2112,8 @@ const waterfallTracking = scrubControl({
 const paragraphTracking = scrubControl({
   scrub: el.paraTrackingScrub,
   input: el.paraTrackingInput,
-  min: -100,
-  max: 100,
+  min: TRACKING_MIN,
+  max: TRACKING_MAX,
   initial: TEXT_ROLES.body.tracking,
   apply: (v) => el.paragraphs.style.setProperty("--para-tracking", String(v / 1000)),
 });
@@ -2140,8 +2148,8 @@ const pageLeading = scrubControl({
 const pageTracking = scrubControl({
   scrub: el.pageTrackingScrub,
   input: el.pageTrackingInput,
-  min: -100,
-  max: 100,
+  min: TRACKING_MIN,
+  max: TRACKING_MAX,
   initial: TEXT_ROLES.body.tracking,
   apply: (v) => el.page.style.setProperty("--page-tracking", String(v / 1000)),
 });
