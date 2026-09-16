@@ -81,11 +81,12 @@ const SAMPLE_FONTS = [
 
 const el = {
   loader: document.getElementById("loader"),
-  dropzone: document.getElementById("dropzone"),
   fileInput: document.getElementById("file-input"),
-  browse: document.getElementById("browse"),
   status: document.getElementById("status"),
-  sampleList: document.getElementById("sample-list"),
+  sampleLeft: document.getElementById("sample-left"),
+  sampleRight: document.getElementById("sample-right"),
+  bannerSlot: document.getElementById("banner-slot"),
+  banner: document.getElementById("drop-banner"),
   specimen: document.getElementById("specimen"),
   intro: document.querySelector(".specimen-intro"),
   fontName: document.getElementById("font-name"),
@@ -192,6 +193,7 @@ async function handleFile(file) {
 
   el.specimen.hidden = false;
   document.body.classList.add("has-font");
+  placeBanner();
   const names = fontNames(file, parsed.font);
   renderTitle(names);
   renderInfo(file, format, parsed, names);
@@ -620,6 +622,7 @@ function closeViewer() {
 function resetSpecimen() {
   el.specimen.hidden = true;
   document.body.classList.remove("has-font");
+  placeBanner();
   el.fontName.textContent = "";
   el.fontStyle.textContent = "";
   el.headerFont.textContent = "";
@@ -634,19 +637,34 @@ function resetSpecimen() {
 /* -------------------------------------------------------------------------
    Sample fonts
    ---------------------------------------------------------------------- */
+function sampleItems(fonts) {
+  return fonts.map((sample) => {
+    const item = document.createElement("li");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "link-button";
+    button.textContent = sample.name;
+    button.addEventListener("click", () => loadSample(sample));
+    item.append(button);
+    return item;
+  });
+}
+
+/* Split either side of the banner, which sits in the middle of the row. */
 function renderSamples() {
-  el.sampleList.replaceChildren(
-    ...SAMPLE_FONTS.map((sample) => {
-      const item = document.createElement("li");
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "link-button";
-      button.textContent = sample.name;
-      button.addEventListener("click", () => loadSample(sample));
-      item.append(button);
-      return item;
-    })
-  );
+  const half = Math.ceil(SAMPLE_FONTS.length / 2);
+  el.sampleLeft.replaceChildren(...sampleItems(SAMPLE_FONTS.slice(0, half)));
+  el.sampleRight.replaceChildren(...sampleItems(SAMPLE_FONTS.slice(half)));
+}
+
+/* The banner is part of the centred row on the empty state and a pinned bar
+   once a specimen is up. The empty state's row is hidden wholesale, so the
+   banner has to actually move between the two rather than be restyled. */
+function placeBanner() {
+  const target = document.body.classList.contains("has-font")
+    ? document.body
+    : el.bannerSlot;
+  if (el.banner.parentElement !== target) target.append(el.banner);
 }
 
 async function loadSample(sample) {
@@ -665,15 +683,11 @@ async function loadSample(sample) {
 }
 
 renderSamples();
+placeBanner();
 
 /* -------------------------------------------------------------------------
    Events
    ---------------------------------------------------------------------- */
-el.browse.addEventListener("click", (e) => {
-  e.stopPropagation();
-  el.fileInput.click();
-});
-
 el.home.addEventListener("click", () => {
   resetSpecimen();
   setStatus("");
@@ -681,14 +695,6 @@ el.home.addEventListener("click", () => {
 });
 
 el.bannerBrowse.addEventListener("click", () => el.fileInput.click());
-
-el.dropzone.addEventListener("click", () => el.fileInput.click());
-el.dropzone.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" || e.key === " ") {
-    e.preventDefault();
-    el.fileInput.click();
-  }
-});
 
 el.fileInput.addEventListener("change", () => {
   const file = el.fileInput.files[0];

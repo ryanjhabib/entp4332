@@ -8,9 +8,9 @@
   --color-text: #111111;
   --color-muted: #6b6b6b;
   --color-rule: #111111;   /* the waterfall rules — the only strokes on the page */
-  --color-field: #f4f4f4;        /* light ground that replaces every border */
-  --color-field-strong: #eaeaea; /* the same ground, on hover */
-  --color-scrim: rgba(0, 0, 0, 0.32);
+  --color-field: #f0f0f0;        /* light ground that replaces every border */
+  --color-field-strong: #e4e4e4; /* the same ground, on hover */
+  --color-banner: #4c78cd;
 
   /* The banner's geometry, shared so the hero can line up with it. */
   --banner-inset: 24px;
@@ -113,8 +113,6 @@ h1 {
   color: var(--color-muted);
 }
 
-.lede { margin: 0; color: var(--color-muted); }
-
 
 button {
   font: inherit;
@@ -140,57 +138,62 @@ button:hover { background: var(--color-field-strong); }
 /* ==========================================================================
    Loader
    ========================================================================== */
-.dropzone {
-  border: 0;
-  border-radius: var(--radius);
-  padding: var(--space-12) var(--space-6);
-  text-align: center;
-  background: var(--color-field);
-  cursor: pointer;
-}
-.dropzone:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-
-/* A font can be dropped anywhere, so the whole page is the target while a drag
-   is in progress. pointer-events: none is essential — an overlay that captures
-   the pointer becomes the drop target and swallows the drop. */
-body.is-dragging::after {
-  content: "Drop to load the font";
+/* The empty state is one row, dead centre of the viewport. pointer-events are
+   off on the container so a drop anywhere still reaches the window; the pills
+   and the banner take the pointer back. */
+.loader {
   position: fixed;
   inset: 0;
-  z-index: 10;
-  display: grid;
-  place-items: center;
-  background: var(--color-bg);
-  outline: 1px dashed var(--color-rule);
-  outline-offset: -12px;
-  font-family: var(--font-ui);
-  font-size: var(--size-ui);
-  color: var(--color-text);
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  /* Not the page gutter: this row is centred, not set to the editorial measure,
+     and 100px either side is what pushed it onto two lines. */
+  padding: var(--space-6);
   pointer-events: none;
 }
+.loader > *, .home-row > *, .home-row .drop-banner { pointer-events: auto; }
 
-.dropzone-text { margin: 0 0 var(--space-2); font-size: var(--size-ui); }
-.dropzone-hint { margin: 0; color: var(--color-muted); font-size: var(--size-ui); }
+/* The two halves take equal width, so the banner between them lands on the
+   viewport's centre line no matter how wide the font names happen to be.
+   Each half wraps internally when the row runs out of room. */
+.home-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+}
 
-/* Once a font is loaded the picker goes entirely: the pinned banner carries
-   both affordances, and the specimen names the font far better than a status
-   line does. Errors clear has-font, so it returns to report them. */
-body.has-font .loader { display: none; }
+.home-row .sample-list {
+  flex: 1 1 0;
+  min-width: 0;
+}
 
-/* The blurb is empty-state copy — once a specimen is on screen it is noise. */
-body.has-font .lede { display: none; }
+#sample-left { justify-content: flex-end; }
+#sample-right { justify-content: flex-start; }
 
-.status { margin: var(--space-4) 0 0; min-height: 1.5em; color: var(--color-muted); }
+.status { margin: var(--space-4) 0 0; color: var(--color-muted); }
+
+/* Held out of the flow so its reserved height cannot pull the row off centre. */
+.loader .status {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  bottom: var(--space-12);
+  margin: 0;
+  text-align: center;
+}
 .status.is-error { color: var(--color-error); }
-
-/* Sample fonts — empty state only, so it disappears once a specimen is up. */
-.samples { margin-top: var(--space-8); }
-body.has-font .samples { display: none; }
 
 .sample-list {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2) var(--space-6);
+  align-items: center;
+  gap: var(--space-2);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -392,19 +395,12 @@ html { scroll-padding-top: var(--space-16); }
 /* pointer-events: none is deliberate — a fixed bar across the bottom would
    otherwise sit between the cursor and whatever is under it. */
 .drop-banner {
-  position: fixed;
-  left: 50%;
-  bottom: var(--banner-inset);
-  transform: translateX(-50%);
-  z-index: 15;
   display: flex;
   align-items: center;
   gap: 5px;
   padding: 6px var(--space-5);
   border-radius: var(--radius-pill);
-  background: var(--color-scrim);
-  backdrop-filter: blur(38px);
-  -webkit-backdrop-filter: blur(38px);
+  background: var(--color-banner);
   color: #ffffff;
   font-size: 14px;
   font-weight: 500;
@@ -412,6 +408,15 @@ html { scroll-padding-top: var(--space-16); }
   letter-spacing: -0.02em;
   white-space: nowrap;
   pointer-events: none;
+}
+
+/* Once a specimen is up the banner leaves the row and pins to the bottom. */
+body.has-font .drop-banner {
+  position: fixed;
+  left: 50%;
+  bottom: var(--banner-inset);
+  transform: translateX(-50%);
+  z-index: 15;
 }
 
 /* Only the action takes the pointer — the bar itself stays transparent to it,
@@ -527,14 +532,11 @@ body.has-font .site-footer {
   .glyph-cell { break-inside: avoid; }
   .glyph-grid { gap: 2px; }
 
-  /* Sample fonts — empty state only, so it disappears once a specimen is up. */
-.samples { margin-top: var(--space-8); }
-body.has-font .samples { display: none; }
-
-.sample-list {
+  .sample-list {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2) var(--space-6);
+  align-items: center;
+  gap: var(--space-2);
   margin: 0;
   padding: 0;
   list-style: none;

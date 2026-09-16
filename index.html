@@ -13,24 +13,19 @@
     <h1><button type="button" class="home-button" id="home">Font Specimen</button></h1>
     <span class="header-font" id="header-font"></span>
   </div>
-  <p class="lede">Drop a font file to generate a specimen sheet &mdash; files are read in your browser and never uploaded</p>
 </header>
 
 <main>
 
-  <!-- 1. Drop zone + file picker -->
+  <!-- 1. The whole empty state: sample fonts either side of the banner -->
   <section class="loader no-print" id="loader">
-    <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Drop a font file here or press Enter to browse">
-      <p class="dropzone-text">Drop a font file here</p>
-      <p class="dropzone-hint"><button type="button" class="link-button" id="browse">Choose a file</button> &middot; .ttf .otf .woff .woff2</p>
-      <input type="file" id="file-input" accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2" hidden>
+    <div class="home-row">
+      <ul class="sample-list" id="sample-left"></ul>
+      <span class="banner-slot" id="banner-slot"></span>
+      <ul class="sample-list" id="sample-right"></ul>
     </div>
     <p class="status" id="status" role="status" aria-live="polite"></p>
-
-    <div class="samples" id="samples">
-      <p class="hint">No font handy &mdash; preview one of these</p>
-      <ul class="sample-list" id="sample-list"></ul>
-    </div>
+    <input type="file" id="file-input" accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2" hidden>
   </section>
 
   <!-- Everything below is hidden until a font loads -->
