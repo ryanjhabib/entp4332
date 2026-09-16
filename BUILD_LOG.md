@@ -479,6 +479,56 @@ recent draws is the whole fix.
 
 ---
 
+## 16. The longest word and the widest word are not the same word
+
+**Symptom** On a phone, the page broke words across lines — "Our planet migrates
+tomorrow" set at 96px came out as "tomorro / w". There was already a fitter whose entire
+job was to prevent this, and it was running.
+
+**Cause** The fitter measured the wrong word.
+
+```js
+const longest = text.split(/\s+/)
+  .reduce((a, b) => (b.length > a.length ? b : a), "");
+const widthAt100 = titleCtx.measureText(longest).width;
+```
+
+It picked the word with the most characters and sized the page to that. "migrates" and
+"tomorrow" are both eight characters, so the strict `>` kept "migrates" — and at the same
+size, in Libre Baskerville, "tomorrow" is 17% wider. The page was fitted to a word that
+was not the problem, and the actual widest word overflowed by exactly that margin.
+
+Character count is a proxy for width that fails hardest in a font specimen, which is the
+one application where the whole point is that different letters have different widths.
+`iiii` and `WWWW` are both four characters. The same mistake was in the hover preview's
+fitter, copied from the same idea.
+
+**Fix** Do not identify a word at all. Measure every word and take the largest width:
+
+```js
+const widthAt100 = text.split(/\s+/)
+  .reduce((max, word) => Math.max(max, titleCtx.measureText(word).width), 0);
+```
+
+Two further gaps turned up under the same test. The fit ran once, at render, against a box
+that can still be zero-width on a first paint — and `fitPageText` returns the preset
+ceiling untouched when it cannot measure, which is how a 96px preset reached a phone
+unmodified. It now re-measures after layout and on every resize, and that re-measure only
+ever lowers the size, so a size set by hand on the scrub survives unless holding it would
+break a word. And the floor of 24px was itself too high for a face as wide as Michroma to
+get a long word onto one line of a phone; it is 16px now.
+
+**Verified** 360 shuffles across six faces — Michroma, League Gothic, UnifrakturMaguntia,
+Manufacturing Consent, Libre Baskerville, Playfair Display — at 420px wide: zero words
+wider than the box. Sizes ranged 20px to 180px, so the fitter is working across the range
+rather than pinning everything to the floor. 80 more at desktop width: zero.
+
+**Worth remembering** When a measurement is available, do not substitute a proxy for it.
+`length` is a property of a string; width is a property of a string *in a typeface*, and
+this program exists precisely because those two things come apart.
+
+---
+
 ## Test matrix (all passing)
 
 | File | Format | Result |

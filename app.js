@@ -223,6 +223,49 @@ const LINES = [
    than in any one element. */
 let testString = sentenceCase(PHRASES[0]);
 
+/* The two slots in the forms below are grammatical holes: "the steward promised
+   ___". Only a noun phrase can fill one. Most of the pool above is not — a good
+   number of the phrases are whole clauses ("mercy stays warm"), imperatives
+   ("kindle the dark") or statements ("you > helvetica"), and dropping one into
+   a slot produces "there was a song about mercy stays warm".
+
+   So the slots draw from their own list. It is a subset of the pool, curated by
+   hand for the one thing the forms require, and the waterfall and the page go
+   on drawing from everything. A phrase that reads well alone and a phrase that
+   reads well inside a sentence are different jobs, and most of these only do
+   the first. */
+const SLOT_PHRASES = [
+  "Eggs & Potatoes", "Quills & Ink", "Mead & Vespers", "Ye Olde Fox",
+  "Baron's Turnips", "Vexed Knights", "Blacksmith's Jig", "Hogs & Vellum",
+  "Plump Pheasants", "A Wretched Feast", "Crypts & Quails", "Frogs in the Moat",
+  "Quigley's Zephyr", "Brazen Squid", "The Alchemist", "Minstrels & Mud",
+  "Bewitched Turnip", "Plums for Abbot", "Gravy & Woe", "Jousting at Dawn",
+  "Pickled Herring", "Wizard's Laundry", "Oxen & Quiet", "Bread & Cheese",
+  "A Jug of Mead", "Cobbler's Lament", "Squires & Omens", "Buzzards Aloft",
+  "Velvet & Mud", "Quartz & Flax", "Knaves at Dusk", "Pottage & Grumbles",
+  "Wolves & Orchard",
+  "Crystal Vigil", "Moonlit Ruin", "Ashen Spire", "The Sundering", "Emberfall",
+  "Shivering Vale", "Glass Daggers", "Wyrmtongue", "Gilded Wyrm",
+  "Salt & Sorcery", "Runes of Vaal", "The Black Gate", "Hollow Crown",
+  "Aether Drift", "Summoner's Rest", "Starmetal Shard", "Obsidian Oath",
+  "Lichgate", "Velvet Grimoire", "Arcane Bazaar", "Duskwarden",
+  "Cinder & Psalm", "The Pale Wyrd", "Ghostlight Ford", "Glimmerwood",
+  "Oath of Ash", "Wraithcandle", "Vault of Echoes", "Riftglass",
+  "Bone & Beacon", "Silver Ley Line",
+  "Ash & Covenant", "The Dying Flame", "Forsaken Vigil", "The Waning Kings",
+  "Sundered Banner", "Hollow Bell", "Godless Garden", "The Gilded Rot",
+  "Cairn of Names", "The Slow Ruin", "Ember & Elegy", "Tomb of Verses",
+  "Ruinlight", "The Second Dawn", "Faithless Steel", "Weight of Crowns",
+  "The Unnamed Hour", "Nightfall Keep",
+  "The Beloved Waits", "A Heart Polished", "The Longing Itself",
+  "The Thirsty Return", "The Lamp Within", "Silence After Prayer",
+  "The Reed's Complaint", "A Love Without Why", "Poverty Before God",
+  "Remembrance & Rain",
+  "solar flares", "naked knight", "blue fireworks", "swollen palms",
+  "a thousand tears", "burnt sienna", "benevolence", "finality",
+  "mother and father", "brother and sister",
+];
+
 /* Paragraph specimens need running prose, not a label. These forms take two
    phrases from the pool above, so the paragraphs keep the same old-world voice
    as the waterfall rather than reading as lorem ipsum. */
@@ -360,7 +403,6 @@ const SAMPLE_FONTS = [
   { name: "Archivo", id: "archivo", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 600 },
   { name: "Bodoni Moda", id: "bodoni-moda", weights: [400, 500, 600, 700, 800, 900], weight: 400 },
   { name: "Bricolage Grotesque", id: "bricolage-grotesque", weights: [200, 300, 400, 500, 600, 700, 800], weight: 400 },
-  { name: "Cormorant Garamond", id: "cormorant-garamond", weights: [300, 400, 500, 600, 700], weight: 400 },
   { name: "EB Garamond", id: "eb-garamond", weights: [400, 500, 600, 700, 800], weight: 400 },
   { name: "Fraunces", id: "fraunces", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
   { name: "Geist", id: "geist", weights: [100, 200, 300, 400, 500, 600, 700, 800, 900], weight: 400 },
@@ -919,6 +961,7 @@ function sizeIntro() {
 window.addEventListener("resize", () => {
   sizeIntro();
   fitTitle();
+  clampPageSize(); // a narrower viewport can turn a fitted size into a broken word
   if (hoveredSample) fitPreview(); // the ceiling moves with the viewport
 });
 
@@ -1032,7 +1075,7 @@ function randInt([low, high]) {
    page of three paragraphs does not repeat a sentence shape across them. */
 function pageParagraphs() {
   const forms = shuffled(SENTENCE_FORMS);
-  const phrases = shuffled(PHRASES);
+  const phrases = shuffled(SLOT_PHRASES);
   let form = 0;
   let phrase = 0;
 
@@ -1112,18 +1155,30 @@ function pageSample(shape) {
 
 /* One word set huge can outrun the page. Measured rather than guessed, the
    same way the hover preview is, so it never breaks mid-word. */
+/* The floor the fit will not go under. It used to be 24 — the body preset —
+   which meant a face as wide as Michroma still could not get a long word onto
+   one line of a phone, and the word broke. Dropping to 16 is a visible shrink,
+   but only display faces ever ask for it and only on the narrowest screens,
+   and a shrunk line reads better than a word cut in half. */
+const PAGE_MIN_SIZE = 16;
+
 function fitPageText(text, ceiling) {
   const width = el.pageText.clientWidth;
   if (!width) return ceiling;
 
   titleCtx.font = `100px ${baseFamily ? `"${baseFamily}"` : `"${FAMILY}"`}`;
-  const longest = text
+
+  /* The widest word, measured — not the one with the most characters. They are
+     not the same word and the difference is not small: "migrates" and
+     "tomorrow" are both eight letters, and at the same size "tomorrow" is 17%
+     wider. Picking by character count fitted the page to "migrates" and let
+     "tomorrow" run off the end of the line. */
+  const widthAt100 = text
     .split(/\s+/)
-    .reduce((a, b) => (b.length > a.length ? b : a), "");
-  const widthAt100 = titleCtx.measureText(longest).width;
+    .reduce((max, word) => Math.max(max, titleCtx.measureText(word).width), 0);
   if (!widthAt100) return ceiling;
 
-  return Math.max(24, Math.min(ceiling, Math.floor((width / widthAt100) * 100)));
+  return Math.max(PAGE_MIN_SIZE, Math.min(ceiling, Math.floor((width / widthAt100) * 100)));
 }
 
 function renderPage(from = PAGE_SHAPES) {
@@ -1155,6 +1210,24 @@ function renderPage(from = PAGE_SHAPES) {
   pageTracking.set(style.tracking);
   // Measured on the whole text either way; only the longest word matters.
   pageSize.set(fitPageText(el.pageText.textContent, style.size));
+
+  // Measured again after layout. At render the box can still be zero-width —
+  // a first paint, a hidden section — and fitPageText has nothing to divide by,
+  // so it hands back the preset ceiling untouched. That is how a 96px phrase
+  // reached a phone at 96px and broke "tomorrow" across two lines.
+  requestAnimationFrame(clampPageSize);
+}
+
+/* Only ever brings the size down, never up, so a size chosen on the scrub
+   survives a resize unless holding it would break a word across lines — which
+   is the one thing a page of type must not do. Splitting a line is fine. */
+function clampPageSize() {
+  const text = el.pageText.textContent;
+  if (!text) return;
+
+  const current = pageSize.get();
+  const fitted = fitPageText(text, current);
+  if (fitted < current) pageSize.set(fitted);
 }
 
 /* -------------------------------------------------------------------------
@@ -1493,17 +1566,18 @@ function fitPreview() {
 
   /* A word must never be broken across lines. `overflow-wrap: anywhere` is on
      the element as a last resort, but a name splitting mid-word reads as a
-     bug — so the size is capped at whatever keeps the longest word on one
-     line. Wide faces like Michroma are constrained by this long before they
-     are constrained by height. */
-  const longest = preview.textContent
-    .split(/\s+/)
-    .reduce((a, b) => (b.length > a.length ? b : a), "");
+     bug — so the size is capped at whatever keeps the widest word on one line.
+     Wide faces like Michroma are constrained by this long before they are
+     constrained by height.
 
+     Widest as measured, not longest by character count: the two are different
+     words often enough to matter. */
   let high = previewCeiling();
-  if (previewFamily && longest) {
+  if (previewFamily) {
     titleCtx.font = `100px "${previewFamily}"`;
-    const wordAt100 = titleCtx.measureText(longest).width;
+    const wordAt100 = preview.textContent
+      .split(/\s+/)
+      .reduce((max, word) => Math.max(max, titleCtx.measureText(word).width), 0);
     if (wordAt100) {
       high = Math.min(high, Math.floor((preview.clientWidth / wordAt100) * 100));
     }
