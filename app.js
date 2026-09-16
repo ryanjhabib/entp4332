@@ -619,6 +619,7 @@ const el = {
   pageText: document.getElementById("page-text"),
   pageShuffle: document.getElementById("page-shuffle"),
   pageColors: document.getElementById("page-colors"),
+  viewerColors: document.getElementById("viewer-colors"),
   pageSizeScrub: document.getElementById("page-size-scrub"),
   pageSizeInput: document.getElementById("page-size-input"),
   pageLeadingScrub: document.getElementById("page-leading-scrub"),
@@ -1567,6 +1568,8 @@ function openViewer(i) {
   if (!shownGlyphs.length) return;
   lastFocused = document.activeElement;
   viewerIndex = i;
+  viewerPair = colourPair; // open on the ground the page is already wearing
+  applyViewerPair();
   paintViewer();
   el.viewer.hidden = false;
   document.body.classList.add("is-viewing");
@@ -1577,13 +1580,22 @@ function paintViewer() {
   const glyph = shownGlyphs[viewerIndex];
   if (!glyph) return;
   el.viewerStage.replaceChildren(glyphSvg(glyph, currentFont, 100, 72, true));
-  el.viewerMeta.textContent = [
-    glyphLabel(glyph),
-    glyph.name,
-    `${viewerIndex + 1} of ${shownGlyphs.length}`,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+
+  // Where you are first, then what you are looking at.
+  el.viewerMeta.replaceChildren(
+    ...[
+      `${viewerIndex + 1} of ${shownGlyphs.length}`,
+      glyphLabel(glyph),
+      glyph.name,
+    ]
+      .filter(Boolean)
+      .map((text) => {
+        const note = document.createElement("span");
+        note.className = "style-note";
+        note.textContent = text;
+        return note;
+      })
+  );
 }
 
 function stepViewer(delta) {
@@ -2043,6 +2055,24 @@ function applyColourPair() {
 el.pageColors.addEventListener("click", () => {
   colourPair = (colourPair + 1) % COLOUR_PAIRS.length;
   applyColourPair();
+});
+
+/* The viewer keeps its own pair rather than sharing the page's. Cycling colours
+   while looking at one letter should not quietly restyle the page you will be
+   back on when you close it. It opens on whatever the page is showing, so the
+   two are continuous without being coupled. */
+let viewerPair = 0;
+
+function applyViewerPair() {
+  const { fg, bg } = COLOUR_PAIRS[viewerPair];
+  el.viewer.style.setProperty("--viewer-fg", fg);
+  el.viewer.style.setProperty("--viewer-bg", bg);
+  el.viewerColors.style.background = `linear-gradient(90deg, ${bg} 0 50%, ${fg} 50% 100%)`;
+}
+
+el.viewerColors.addEventListener("click", () => {
+  viewerPair = (viewerPair + 1) % COLOUR_PAIRS.length;
+  applyViewerPair();
 });
 
 /* Each font arrives on a ground it has not just been seen on. Never the pair

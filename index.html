@@ -174,12 +174,18 @@
 
 <div class="glyph-viewer no-print" id="glyph-viewer" hidden role="dialog" aria-modal="true" aria-label="Glyph detail">
   <div class="viewer-bar">
-    <span class="viewer-meta" id="viewer-meta"></span>
     <button type="button" class="link-button" id="viewer-close">Close</button>
   </div>
+
+  <div class="viewer-meta" id="viewer-meta"></div>
   <button type="button" class="viewer-arrow" id="viewer-prev" aria-label="Previous glyph">&larr;</button>
   <div class="viewer-stage" id="viewer-stage"></div>
   <button type="button" class="viewer-arrow" id="viewer-next" aria-label="Next glyph">&rarr;</button>
+
+  <div class="control control--swatch viewer-colors">
+    <button type="button" class="swatch" id="viewer-colors" aria-label="Next colour pair"
+            title="Cycle through colour pairs"></button>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js"></script>

@@ -809,6 +809,10 @@ body.is-viewing { overflow: hidden; }
    explicitly or this overlay covers the page permanently. */
 .glyph-viewer[hidden] { display: none; }
 
+/* The viewer carries its own pair, set in JS, and everything in here takes its
+   colour from those two variables rather than from the page tokens — the
+   glyph, the metadata, the arrows and the ground. The fallbacks are the plain
+   page colours, so the overlay still works before a pair is applied. */
 .glyph-viewer {
   position: fixed;
   inset: 0;
@@ -819,21 +823,51 @@ body.is-viewing { overflow: hidden; }
   gap: var(--space-4);
   /* Symmetric: an uneven top and bottom shifted the glyph off the centre line. */
   padding: var(--space-16) var(--gutter);
-  background: var(--color-bg);
+  background: var(--viewer-bg, var(--color-bg));
+  color: var(--viewer-fg, var(--color-text));
 }
 
+/* Centred on the bottom edge, on the viewer's own centre line rather than
+   inside the grid, so it does not move with the glyph. */
+.viewer-colors {
+  position: absolute;
+  left: 50%;
+  bottom: var(--banner-inset);
+  transform: translateX(-50%);
+}
+
+/* Close alone now. The glyph's details moved to the foot of the screen, so the
+   top edge carries only the way out. */
 .viewer-bar {
   position: absolute;
   top: var(--space-4);
   left: var(--gutter);
   right: var(--gutter);
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-4);
+  justify-content: flex-end;
 }
 
-.viewer-meta { color: var(--color-muted); }
+/* Bottom left, one pill per fact, count first. Same treatment as the hero's
+   style note — glass ground, the brightest grey — because none of these are
+   buttons and they should not look like the one control down here. */
+.viewer-meta {
+  position: absolute;
+  left: var(--gutter);
+  bottom: var(--banner-inset);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Three pills and a centred swatch stop fitting on one line somewhere around
+   here — the pills run about 175px and the swatch wants the middle. Below it
+   the pills take the row above and the swatch keeps the bottom centre. */
+@media (max-width: 520px) {
+  .viewer-meta {
+    bottom: calc(var(--banner-inset) + var(--pill-height) + var(--space-3));
+  }
+}
 
 .viewer-stage {
   display: grid;
@@ -846,17 +880,39 @@ body.is-viewing { overflow: hidden; }
   height: min(70vh, 70vw);
   max-width: 100%;
 }
-.viewer-stage svg path { fill: var(--color-text); }
+.viewer-stage svg path { fill: var(--viewer-fg, var(--color-text)); }
 
+/* Pills like everything else, rather than two bare characters floating on the
+   ground. Glass, so they read the same on all thirty-five colour pairs instead
+   of needing a colour of their own. */
 .viewer-arrow {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--pill-height);
+  padding: 0 var(--space-3);
   border: 0;
-  background: none;
-  padding: var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--color-field-glass);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  color: var(--color-text);
   font-size: var(--size-ui);
-  color: var(--color-muted);
+  line-height: 1;
   cursor: pointer;
 }
-.viewer-arrow:hover { color: var(--color-text); }
+
+.viewer-arrow:hover { background: var(--color-field-glass-strong); }
+
+/* The pill is 24px like every other control here, which is small for a thumb.
+   The target is not: this reaches past the pill on every side without changing
+   anything you can see. */
+.viewer-arrow::before {
+  content: "";
+  position: absolute;
+  inset: calc(var(--space-3) * -1);
+}
 
 /* Footer */
 /* On a specimen the footer holds the print action and nothing else. The library
