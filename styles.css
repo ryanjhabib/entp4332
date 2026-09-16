@@ -489,10 +489,16 @@ body.has-font .loader { display: none; }
 .control-access:hover { background: var(--color-control); opacity: 0.85; }
 .control-access:focus-visible { outline: 2px solid var(--color-banner); outline-offset: 2px; }
 
-/* Bottom right of the footer, on the library's own last line rather than under
-   it, so offering the exchange costs the layout nothing. The footer is fixed on
-   the empty state and relative on a specimen; either way it is the containing
-   block. Below this it just takes its turn in the column. */
+/* Bottom right either way, so offering the exchange costs the layout nothing.
+
+   From 768px the footer is the containing block — fixed on the empty state,
+   relative on a specimen — and the pill sits in its corner, on the library's
+   own last line rather than under it.
+
+   Below that the footer has left the bottom of the screen: on a phone it runs
+   top down, with the library at the top and the file picker pinned bottom left.
+   So the pill pins itself to the opposite corner instead, which balances the
+   picker rather than trailing the list. */
 @media (min-width: 768px) {
   .site-footer { position: relative; }
 
@@ -500,6 +506,15 @@ body.has-font .loader { display: none; }
     position: absolute;
     right: 0;
     bottom: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .control-access {
+    position: fixed;
+    right: var(--gutter);
+    bottom: var(--banner-inset);
+    z-index: 15;
   }
 }
 
