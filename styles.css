@@ -275,11 +275,11 @@ button,
   .font-preview { transition: none; }
 }
 
-/* The print button is glass, like every other light pill. Glyph cells are not:
-   there are hundreds of them, they never overlap anything, and blurring each
-   one would cost a great deal to show nothing. */
-.site-footer button { background: var(--color-field); }
-.site-footer button:hover { background: var(--color-field-strong); }
+/* The print button, named rather than "any button in the footer" — that was
+   true when it was the only one, and stopped being true the moment another
+   joined it, at which point it won on specificity and painted it light. */
+#print { background: var(--color-field); }
+#print:hover { background: var(--color-field-strong); }
 
 /* Inline actions read as a quiet pill rather than an underline. */
 .link-button {
@@ -473,6 +473,35 @@ body.has-font .loader { display: none; }
 }
 .control-weight:hover { background: var(--color-control); opacity: 0.85; }
 .control-weight:focus-visible { outline: 2px solid var(--color-banner); outline-offset: 2px; }
+
+/* Not a typeface, so it does not look like one. It borrows the dark controls'
+   language — the weight toggle's exactly — because it is a setting rather than
+   something to look at. */
+.control-access {
+  height: var(--pill-height);
+  padding: 0 var(--space-3);
+  background: var(--color-control);
+  color: #ffffff;
+  border-radius: var(--radius-pill);
+  letter-spacing: -0.02em;
+}
+
+.control-access:hover { background: var(--color-control); opacity: 0.85; }
+.control-access:focus-visible { outline: 2px solid var(--color-banner); outline-offset: 2px; }
+
+/* Bottom right of the footer, on the library's own last line rather than under
+   it, so offering the exchange costs the layout nothing. The footer is fixed on
+   the empty state and relative on a specimen; either way it is the containing
+   block. Below this it just takes its turn in the column. */
+@media (min-width: 768px) {
+  .site-footer { position: relative; }
+
+  .control-access {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+  }
+}
 
 .control-group {
   display: flex;

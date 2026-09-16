@@ -757,6 +757,7 @@ const el = {
   pageColors: document.getElementById("page-colors"),
   viewerColors: document.getElementById("viewer-colors"),
   viewerFace: document.getElementById("viewer-face"),
+  localAccess: document.getElementById("local-access"),
   pageSizeScrub: document.getElementById("page-size-scrub"),
   pageSizeInput: document.getElementById("page-size-input"),
   pageLeadingScrub: document.getElementById("page-leading-scrub"),
@@ -2078,18 +2079,6 @@ async function requestLocalFonts() {
   }
 }
 
-function localAccessItem() {
-  const item = document.createElement("li");
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "link-button";
-  button.textContent = "Use my installed fonts";
-  button.title = "Read a short list of fonts from this machine, with your permission";
-  button.addEventListener("click", requestLocalFonts);
-  item.append(button);
-  return item;
-}
-
 /* The machine's fonts come after the library's rather than being merged into
    it. They behave differently — one weight, read off the disk, and absent
    altogether in Safari, which does not implement the API — and a group makes
@@ -2101,16 +2090,20 @@ function localAccessItem() {
    in Safari not even that. */
 function libraryItems() {
   const items = sampleItems(SAMPLE_FONTS);
-  if (!hasLocalFonts) return items;
-  return localFontsAllowed
-    ? [...items, ...localItems()]
-    : [...items, localAccessItem()];
+  return hasLocalFonts && localFontsAllowed ? [...items, ...localItems()] : items;
+}
+
+/* The offer lives in the footer rather than in the list: it is a setting, not a
+   typeface, and putting it among the pills made it look like one. */
+function syncLocalAccess() {
+  el.localAccess.hidden = !hasLocalFonts || localFontsAllowed;
 }
 
 function renderSamples() {
   el.sampleList.replaceChildren(...libraryItems());
   // The same library again, behind the name in the header.
   el.menuList.replaceChildren(...libraryItems());
+  syncLocalAccess();
 }
 
 /* -------------------------------------------------------------------------
@@ -2481,6 +2474,8 @@ el.menuList.addEventListener("click", closeFontMenu);
 window.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && el.fontMenu.classList.contains("is-open")) closeFontMenu();
 });
+
+el.localAccess.addEventListener("click", requestLocalFonts);
 
 el.bannerBrowse.addEventListener("click", () => el.fileInput.click());
 
