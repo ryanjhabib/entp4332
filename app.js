@@ -1747,9 +1747,16 @@ function previewFace(sample, index) {
   return previewFaces.get(sample.name);
 }
 
+/* Dip, swap, come back. The name, the face and the size all change in one
+   frame and the size change reflows the block — fading across it covers all
+   three with a single animated property. It dips to 0.25 rather than 0 so
+   scanning down the list reads as a soft blink rather than a strobe, and the
+   frame it waits is the one that lets the browser see the start value: set and
+   unset in the same frame, a transition has nothing to run between. */
+const PREVIEW_DIP = "0.25";
+
 async function showPreview(sample, index) {
   hoveredSample = sample.name;
-  el.fontPreview.textContent = sample.name;
 
   let family;
   try {
@@ -1762,11 +1769,17 @@ async function showPreview(sample, index) {
   // The pointer may have moved on while that was in flight.
   if (hoveredSample !== sample.name) return;
 
+  el.fontPreview.style.opacity = PREVIEW_DIP;
+  await new Promise(requestAnimationFrame);
+  if (hoveredSample !== sample.name) return;
+
+  el.fontPreview.textContent = sample.name;
   // `inherit` is not a valid entry inside a font list — it invalidates the whole
   // declaration, which silently leaves the UI stack in place.
   el.fontPreview.style.fontFamily = `"${family}", sans-serif`;
   previewFamily = family;
   fitPreview();
+  el.fontPreview.style.opacity = "1";
 }
 
 /* As large as it fits in the space above the pills, capped at 300px.
@@ -1840,6 +1853,7 @@ function restPreview() {
   el.fontPreview.textContent = PREVIEW_RESTING;
   el.fontPreview.style.fontFamily = "";
   el.fontPreview.style.fontSize = "";
+  el.fontPreview.style.opacity = "1"; // whatever happened, it comes back lit
 }
 
 function renderSamples() {

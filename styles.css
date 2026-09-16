@@ -226,6 +226,35 @@ button {
 }
 button:hover { background: var(--color-field-strong); }
 
+/* Hover eases rather than snaps, and only on properties that cost a repaint:
+   background-color, color, opacity. Nothing here transitions backdrop-filter,
+   a filter, a shadow or anything that moves the box — those are what make a
+   page of pills feel expensive on Safari, because each one re-blurs or
+   re-layouts every frame of the transition. 160ms is long enough to read as
+   deliberate and short enough that a pointer crossing four pills in a row does
+   not leave a trail of half-lit ones behind it. */
+button,
+.link-button,
+.swatch,
+.viewer-arrow,
+.banner-button,
+.home-button,
+.header-font,
+.font-preview {
+  transition: background-color 160ms ease, color 160ms ease, opacity 160ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  .link-button,
+  .swatch,
+  .viewer-arrow,
+  .banner-button,
+  .home-button,
+  .header-font,
+  .font-preview { transition: none; }
+}
+
 /* The print button is glass, like every other light pill. Glyph cells are not:
    there are hundreds of them, they never overlap anything, and blurring each
    one would cost a great deal to show nothing. */
