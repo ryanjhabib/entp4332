@@ -97,6 +97,7 @@ const el = {
   fileInput: document.getElementById("file-input"),
   status: document.getElementById("status"),
   sampleList: document.getElementById("sample-list"),
+  fontPreview: document.getElementById("font-preview"),
   bannerSlot: document.getElementById("banner-slot"),
   banner: document.getElementById("drop-banner"),
   specimen: document.getElementById("specimen"),
@@ -400,6 +401,7 @@ function sizeIntro() {
 window.addEventListener("resize", () => {
   sizeIntro();
   fitTitle();
+  if (hoveredSample) fitPreview(); // the ceiling moves with the viewport
 });
 
 function renderInfo(file, format, { font }, names) {
@@ -677,16 +679,137 @@ function resetSpecimen() {
    Sample fonts
    ---------------------------------------------------------------------- */
 function sampleItems(fonts) {
-  return fonts.map((sample) => {
+  return fonts.map((sample, i) => {
     const item = document.createElement("li");
     const button = document.createElement("button");
     button.type = "button";
     button.className = "link-button";
     button.textContent = sample.name;
     button.addEventListener("click", () => loadSample(sample));
+    button.addEventListener("mouseenter", () => showPreview(sample, i));
+    button.addEventListener("focus", () => showPreview(sample, i));
     item.append(button);
     return item;
   });
+}
+
+/* -------------------------------------------------------------------------
+   Hover preview — the name of the font you are pointing at, set in itself
+   ---------------------------------------------------------------------- */
+const PREVIEW_MAX = 300;
+const PREVIEW_MIN = 72;
+
+/* 300px is the ceiling on a roomy desktop, but it is a ceiling, not a fixed
+   size: on a smaller window it scales with the viewport so a long name still
+   lands on a sensible number of lines rather than being forced to shrink all
+   the way down by the height budget alone. */
+function previewCeiling() {
+  return Math.min(
+    PREVIEW_MAX,
+    Math.round(window.innerWidth * 0.22),
+    Math.round(window.innerHeight * 0.34)
+  );
+}
+
+const PREVIEW_TOP_GAP = 24; // clearance from the top of the window
+const PREVIEW_RESTING = "Hover to view sample typefaces";
+
+/* Each face is fetched once and kept. The map holds the in-flight promise, not
+   the result, so hovering the same pill twice in quick succession does not
+   start a second request. */
+const previewFaces = new Map();
+let hoveredSample = null;
+
+function previewFace(sample, index) {
+  if (!previewFaces.has(sample.name)) {
+    const family = `Preview${index}`;
+    previewFaces.set(
+      sample.name,
+      (async () => {
+        const res = await fetch(SAMPLE_CDN + sample.path);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const face = new FontFace(family, await res.arrayBuffer());
+        await face.load();
+        document.fonts.add(face);
+        return family;
+      })()
+    );
+  }
+  return previewFaces.get(sample.name);
+}
+
+async function showPreview(sample, index) {
+  hoveredSample = sample.name;
+  el.fontPreview.textContent = sample.name;
+
+  let family;
+  try {
+    family = await previewFace(sample, index);
+  } catch {
+    restPreview(); // a face that will not load simply does not preview
+    return;
+  }
+
+  // The pointer may have moved on while that was in flight.
+  if (hoveredSample !== sample.name) return;
+
+  // `inherit` is not a valid entry inside a font list — it invalidates the whole
+  // declaration, which silently leaves the UI stack in place.
+  el.fontPreview.style.fontFamily = `"${family}", sans-serif`;
+  fitPreview();
+}
+
+/* As large as it fits in the space above the pills, capped at 300px.
+
+   Measured from the laid-out element rather than calculated from text width: a
+   width calculation cannot know where the browser will break, and at 300px
+   "Manufacturing" alone is wider than the measure, so it breaks mid-word and
+   costs a line the arithmetic says should not exist.
+
+   The test is height against the available space and nothing else. An earlier
+   version also required the height to stay under `size * 2.05` to hold it to
+   two lines, which quietly broke the search: real line height here is 1.05x the
+   font size, so two lines measure 2.1x and *never* passed. Only single-line
+   fits survived, and long names came out at half the size they could be. It
+   also made the test non-monotonic — true at 149, false at 240, true again
+   at 290 — and binary search is only valid on a monotonic predicate. Height
+   against a fixed budget rises with size, so the search is sound. */
+function fitPreview() {
+  const preview = el.fontPreview;
+  if (!preview.textContent || !preview.clientWidth) return;
+
+  // Never taller than the space above the pills, which never move. The gap is
+  // read back from the stylesheet so the two cannot drift apart.
+  const gap = parseFloat(getComputedStyle(preview).marginBottom) || 0;
+  const headroom = el.sampleList.getBoundingClientRect().top - gap - PREVIEW_TOP_GAP;
+  const maxHeight = Math.max(PREVIEW_MIN, headroom);
+
+  let low = PREVIEW_MIN;
+  let high = previewCeiling();
+  let best = PREVIEW_MIN;
+
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    preview.style.fontSize = `${mid}px`;
+    if (preview.scrollHeight <= maxHeight) {
+      best = mid;
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  preview.style.fontSize = `${best}px`;
+}
+
+/* The slot is never empty: with nothing hovered it carries its own line of copy
+   at the size the stylesheet gives it. Clearing the inline styles is what hands
+   it back to the UI font. */
+function restPreview() {
+  hoveredSample = null;
+  el.fontPreview.textContent = PREVIEW_RESTING;
+  el.fontPreview.style.fontFamily = "";
+  el.fontPreview.style.fontSize = "";
 }
 
 function renderSamples() {
@@ -719,6 +842,7 @@ async function loadSample(sample) {
 }
 
 renderSamples();
+restPreview();
 placeBanner();
 
 /* -------------------------------------------------------------------------
@@ -801,6 +925,9 @@ el.waterfall.addEventListener("paste", (e) => {
 });
 
 el.shuffle.addEventListener("click", () => setPhrase(randomPhrase()));
+
+el.sampleList.addEventListener("mouseleave", restPreview);
+el.sampleList.addEventListener("focusout", restPreview);
 
 el.glyphToggle.addEventListener("click", () => {
   showingAll = !showingAll;

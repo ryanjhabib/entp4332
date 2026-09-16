@@ -574,17 +574,36 @@ body.is-viewing { overflow: hidden; }
 }
 
 /* On the empty state it sits at the foot of the viewport instead, left-aligned
-   against the gutter, with nothing to print yet. */
+   against the gutter, with nothing to print yet. Anchored by its bottom edge,
+   so the hover preview grows upward and the pills never move.
+   Below the banner's z-index, so the banner floats over a big preview. */
 body:not(.has-font) .site-footer {
   position: fixed;
   left: var(--gutter);
   right: var(--gutter);
   bottom: var(--banner-inset);
-  z-index: 15;
+  z-index: 14;
   margin-top: 0;
+  gap: 0;
 }
 
 body:not(.has-font) #print { display: none; }
+
+/* Hovering a sample font names it, set in itself, above the pills. Hidden by
+   default and only on a desktop-width empty state — it is a pointer gesture,
+   and there is no room for it beside a specimen. */
+.font-preview {
+  display: none;
+  width: 100%;
+  margin-bottom: 60px;
+  font-size: 32px;
+  line-height: 1;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 1200px) {
+  body:not(.has-font) .font-preview { display: block; }
+}
 
 /* ==========================================================================
    Print — a clean specimen sheet, no UI
