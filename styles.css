@@ -1183,6 +1183,27 @@ body.is-viewing { overflow: hidden; }
 }
 .viewer-stage svg path { fill: var(--viewer-fg, var(--color-text)); }
 
+/* The rules take the ink's own colour, faint enough to read behind the glyph
+   rather than across it. Baseline and ascender a little firmer than the rest,
+   since those two are the frame the others hang off. */
+.metric-line {
+  stroke: var(--viewer-fg, var(--color-text));
+  stroke-width: 1;
+  opacity: 0.22;
+}
+
+.metric-line--baseline,
+.metric-line--ascender { opacity: 0.45; }
+
+/* Pressed, in the dark controls' language: the pill fills rather than changing
+   its text, so it reads as on rather than as hovered. */
+.control-weight.is-on {
+  background: #ffffff;
+  color: var(--color-control);
+}
+
+.control-weight.is-on:hover { background: #ffffff; opacity: 0.85; }
+
 /* Solid, not glass. Everywhere else a pill sits over type that scrolls beneath
    it and the blur is doing real work; here it sits on one flat block of colour,
    where the same treatment only pulls the ground up through the pill and turns

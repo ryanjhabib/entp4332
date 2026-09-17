@@ -854,6 +854,7 @@ const el = {
   viewerColors: document.getElementById("viewer-colors"),
   viewerFace: document.getElementById("viewer-face"),
   viewerWeight: document.getElementById("viewer-weight"),
+  viewerMetrics: document.getElementById("viewer-metrics"),
   viewerSizeRange: document.getElementById("viewer-size-range"),
   viewerSizeValue: document.getElementById("viewer-size-value"),
   headerWeight: document.getElementById("header-weight"),
@@ -2059,6 +2060,63 @@ function paintFace() {
   );
 }
 
+/* The glyph on its own baseline inside the font's vertical metrics, with those
+   metrics drawn.
+
+   Centring the ink is right when you are looking at the letterform. It is wrong
+   when you are looking at where the letterform sits — which is the entire point
+   of this view — so here the glyph keeps its real position: baseline at zero,
+   its own advance width, and the box drawn from the font's ascender and
+   descender rather than from the ink.
+
+   The box still grows to hold ink that overruns those metrics, because plenty
+   of glyphs do and cropping one is never the answer. */
+function glyphMetricsSvg(glyph, font) {
+  const upm = font.unitsPerEm;
+  const os2 = font.tables.os2 || {};
+
+  /* opentype hands back a path already in SVG space, so above the baseline is
+     negative and a metric at +800 sits at -800. */
+  const metrics = [
+    ["ascender", font.ascender],
+    ["cap", os2.sCapHeight],
+    ["x", os2.sxHeight],
+    ["baseline", 0],
+    ["descender", font.descender],
+  ].filter(([, v]) => typeof v === "number" && Number.isFinite(v));
+
+  const drawn = glyph.getPath(0, 0, upm);
+  const ink = drawn.getBoundingBox();
+  const hasInk = ink.x2 > ink.x1 && ink.y2 > ink.y1;
+
+  const lows = metrics.map(([, v]) => -v);
+  const top = Math.min(...lows, hasInk ? ink.y1 : Infinity);
+  const bottom = Math.max(...lows, hasInk ? ink.y2 : -Infinity);
+  const left = Math.min(0, hasInk ? ink.x1 : 0);
+  const right = Math.max(glyph.advanceWidth || upm, hasInk ? ink.x2 : 0);
+
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", `${left} ${top} ${right - left} ${bottom - top}`);
+  svg.setAttribute("aria-hidden", "true");
+
+  for (const [name, value] of metrics) {
+    const line = document.createElementNS(SVG_NS, "line");
+    line.setAttribute("x1", String(left));
+    line.setAttribute("x2", String(right));
+    line.setAttribute("y1", String(-value));
+    line.setAttribute("y2", String(-value));
+    line.setAttribute("class", `metric-line metric-line--${name}`);
+    // Or the rule thickens with the glyph and swamps it at 300 percent.
+    line.setAttribute("vector-effect", "non-scaling-stroke");
+    svg.append(line);
+  }
+
+  const path = document.createElementNS(SVG_NS, "path");
+  path.setAttribute("d", drawn.toPathData(2));
+  svg.append(path);
+  return svg;
+}
+
 /* Only offered when there is another cut to go to, and named with whatever the
    cut is called — a number's name for the library, the style's own name for a
    dropped family. */
@@ -2091,10 +2149,16 @@ async function viewerNextWeight() {
   paintViewer();
 }
 
+let showingMetrics = false;
+
 function paintViewer() {
   const glyph = shownGlyphs[viewerIndex];
   if (!glyph) return;
-  el.viewerStage.replaceChildren(glyphSvg(glyph, currentFont, 100, 72, true));
+  el.viewerStage.replaceChildren(
+    showingMetrics
+      ? glyphMetricsSvg(glyph, currentFont)
+      : glyphSvg(glyph, currentFont, 100, 72, true)
+  );
 
   // Where you are first, then what you are looking at.
   el.viewerMeta.replaceChildren(
@@ -2813,6 +2877,13 @@ const viewerSize = sliderControl({
 });
 
 el.viewerWeight.addEventListener("click", viewerNextWeight);
+
+el.viewerMetrics.addEventListener("click", () => {
+  showingMetrics = !showingMetrics;
+  el.viewerMetrics.setAttribute("aria-pressed", String(showingMetrics));
+  el.viewerMetrics.classList.toggle("is-on", showingMetrics);
+  paintViewer();
+});
 
 el.viewerColors.addEventListener("click", () => {
   viewerStep = (viewerStep + 1) % colourOrder.length;
