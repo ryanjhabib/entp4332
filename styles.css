@@ -1183,17 +1183,53 @@ body.is-viewing { overflow: hidden; }
 }
 .viewer-stage svg path { fill: var(--viewer-fg, var(--color-text)); }
 
-/* The rules take the ink's own colour, faint enough to read behind the glyph
-   rather than across it. Baseline and ascender a little firmer than the rest,
-   since those two are the frame the others hang off. */
+/* Only the metrics view overflows: its rules deliberately run past the glyph's
+   box so the screen edge cuts them rather than the letter's own advance width.
+   The plain view keeps clipping, which is what stops a wide glyph bleeding out
+   of its square. */
+.glyph-metrics { overflow: visible; }
+
+/* Solid for the three the font is measured between — baseline, ascender,
+   descender — and dashed for the two derived from the letterforms, cap height
+   and x-height. That is the distinction type drawings already make, and it
+   survives every one of the 36 grounds where a second colour would not.
+
+   The baseline is firmest because everything else is stated relative to it.
+   All of it takes the ink's own colour, faint enough to read behind the glyph
+   rather than across it. */
 .metric-line {
   stroke: var(--viewer-fg, var(--color-text));
   stroke-width: 1;
-  opacity: 0.22;
+  opacity: 0.3;
 }
 
-.metric-line--baseline,
-.metric-line--ascender { opacity: 0.45; }
+.metric-line--baseline { opacity: 0.55; }
+
+.metric-line--cap,
+.metric-line--x {
+  stroke-dasharray: 3 5;
+  opacity: 0.4;
+}
+
+/* In the gutter, on the rules' own line. Never in the way: the glyph passes
+   under them and the pointer through them. */
+.viewer-labels {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.metric-label {
+  position: absolute;
+  left: var(--gutter);
+  transform: translateY(-50%);
+  font-size: var(--size-ui);
+  line-height: 1;
+  color: var(--viewer-fg, var(--color-muted));
+  opacity: 0.6;
+  white-space: nowrap;
+}
 
 /* Pressed, in the dark controls' language: the pill fills rather than changing
    its text, so it reads as on rather than as hovered. */

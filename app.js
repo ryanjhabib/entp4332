@@ -855,6 +855,7 @@ const el = {
   viewerFace: document.getElementById("viewer-face"),
   viewerWeight: document.getElementById("viewer-weight"),
   viewerMetrics: document.getElementById("viewer-metrics"),
+  viewerLabels: document.getElementById("viewer-labels"),
   viewerSizeRange: document.getElementById("viewer-size-range"),
   viewerSizeValue: document.getElementById("viewer-size-value"),
   headerWeight: document.getElementById("header-weight"),
@@ -1525,6 +1526,7 @@ window.addEventListener("resize", () => {
   sizeFooter(); // the pills rewrap, so the library changes height
   fitTitle();
   clampPageSize(); // a narrower viewport can turn a fitted size into a broken word
+  placeMetricLabels();
   resizeScale();
   if (hoveredSample) fitPreview(); // the ceiling moves with the viewport
 });
@@ -2085,6 +2087,14 @@ function glyphMetricsSvg(glyph, font) {
     ["descender", font.descender],
   ].filter(([, v]) => typeof v === "number" && Number.isFinite(v));
 
+  const METRIC_NAMES = {
+    ascender: "Ascender",
+    cap: "Cap height",
+    x: "x-height",
+    baseline: "Baseline",
+    descender: "Descender",
+  };
+
   const drawn = glyph.getPath(0, 0, upm);
   const ink = drawn.getBoundingBox();
   const hasInk = ink.x2 > ink.x1 && ink.y2 > ink.y1;
@@ -2098,11 +2108,19 @@ function glyphMetricsSvg(glyph, font) {
   const svg = document.createElementNS(SVG_NS, "svg");
   svg.setAttribute("viewBox", `${left} ${top} ${right - left} ${bottom - top}`);
   svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("class", "glyph-metrics");
+
+  /* Run the rules far past the glyph and let the screen edge do the cutting.
+     An SVG clips to its viewBox unless told otherwise, so the class above lifts
+     that; the length is in viewBox units, which scale with the glyph, so one
+     multiple covers every size from 5 percent to 300 rather than needing to
+     know how wide the window is. */
+  const bleed = (right - left) * 1000;
 
   for (const [name, value] of metrics) {
     const line = document.createElementNS(SVG_NS, "line");
-    line.setAttribute("x1", String(left));
-    line.setAttribute("x2", String(right));
+    line.setAttribute("x1", String(left - bleed));
+    line.setAttribute("x2", String(right + bleed));
     line.setAttribute("y1", String(-value));
     line.setAttribute("y2", String(-value));
     line.setAttribute("class", `metric-line metric-line--${name}`);
@@ -2114,7 +2132,44 @@ function glyphMetricsSvg(glyph, font) {
   const path = document.createElementNS(SVG_NS, "path");
   path.setAttribute("d", drawn.toPathData(2));
   svg.append(path);
+
+  /* Where each rule sits inside the box, kept as fractions rather than pixels
+     so the labels can be placed against whatever the box measures at the time —
+     the size slider changes that on every drag. */
+  lastMetrics = metrics.map(([name, value]) => ({
+    name: METRIC_NAMES[name] || name,
+    at: (-value - top) / (bottom - top),
+  }));
+
   return svg;
+}
+
+/* Anchored to the screen rather than to the glyph. Past 100 percent the glyph's
+   own box runs off both edges, so a label pinned to it would go with it; these
+   stay in the gutter where the rules leave the frame. Skipped when a rule is
+   off-screen, which at 300 percent most of them are. */
+let lastMetrics = null;
+
+function placeMetricLabels() {
+  el.viewerLabels.replaceChildren();
+  if (!showingMetrics || !lastMetrics) return;
+
+  const svg = el.viewerStage.querySelector("svg");
+  if (!svg) return;
+
+  const box = svg.getBoundingClientRect();
+  const frame = el.viewer.getBoundingClientRect();
+
+  for (const { name, at } of lastMetrics) {
+    const y = box.top + at * box.height - frame.top;
+    if (y < 0 || y > frame.height) continue;
+
+    const label = document.createElement("span");
+    label.className = "metric-label";
+    label.textContent = name;
+    label.style.top = `${Math.round(y)}px`;
+    el.viewerLabels.append(label);
+  }
 }
 
 /* Only offered when there is another cut to go to, and named with whatever the
@@ -2149,16 +2204,18 @@ async function viewerNextWeight() {
   paintViewer();
 }
 
-let showingMetrics = false;
+let showingMetrics = true;
 
 function paintViewer() {
   const glyph = shownGlyphs[viewerIndex];
   if (!glyph) return;
+  lastMetrics = null;
   el.viewerStage.replaceChildren(
     showingMetrics
       ? glyphMetricsSvg(glyph, currentFont)
       : glyphSvg(glyph, currentFont, 100, 72, true)
   );
+  placeMetricLabels();
 
   // Where you are first, then what you are looking at.
   el.viewerMeta.replaceChildren(
@@ -2873,7 +2930,14 @@ const viewerSize = sliderControl({
   min: 5,
   max: 300,
   initial: 70,
-  apply: (v) => el.viewer.style.setProperty("--glyph-size", String(v)),
+  apply: (v) => {
+    el.viewer.style.setProperty("--glyph-size", String(v));
+    /* Straight away, not on the next frame. placeMetricLabels measures, and a
+       measurement forces the pending style and layout to resolve first, so it
+       already reads the new height — where waiting on a frame leaves the labels
+       a drag behind whenever frames are throttled. */
+    placeMetricLabels();
+  },
 });
 
 el.viewerWeight.addEventListener("click", viewerNextWeight);
