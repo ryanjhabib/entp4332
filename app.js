@@ -2894,7 +2894,6 @@ el.viewerWeight.addEventListener("click", viewerNextWeight);
 el.viewerMetrics.addEventListener("click", () => {
   showingMetrics = !showingMetrics;
   el.viewerMetrics.setAttribute("aria-pressed", String(showingMetrics));
-  el.viewerMetrics.classList.toggle("is-on", showingMetrics);
   paintViewer();
 });
 

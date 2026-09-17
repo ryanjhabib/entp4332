@@ -1211,14 +1211,11 @@ body.is-viewing { overflow: hidden; }
   opacity: 0.4;
 }
 
-/* Pressed, in the dark controls' language: the pill fills rather than changing
-   its text, so it reads as on rather than as hovered. */
-.control-weight.is-on {
-  background: #ffffff;
-  color: var(--color-control);
-}
-
-.control-weight.is-on:hover { background: #ffffff; opacity: 0.85; }
+/* The Metrics toggle looks the same in both states, like the weight pill beside
+   it. Nothing is lost by that: the rules are either drawn across the screen or
+   they are not, so the state is the most visible thing in the viewer already,
+   and a pill that restyles itself to repeat it is saying something you can
+   plainly see. aria-pressed still carries it for anyone who cannot. */
 
 /* Solid, not glass. Everywhere else a pill sits over type that scrolls beneath
    it and the blur is doing real work; here it sits on one flat block of colour,
