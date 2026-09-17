@@ -2039,9 +2039,14 @@ function openViewer(i) {
   applyViewerPair();
   syncViewerWeight();
   paintFace();
-  paintViewer();
+
+  /* Shown before it is painted, not after. The labels are placed by measuring
+     the glyph, and a hidden element measures zero — so painting first put every
+     label at the top of the screen, where the first thing you saw on opening
+     was rules with nothing named. */
   el.viewer.hidden = false;
   document.body.classList.add("is-viewing");
+  paintViewer();
   el.viewerNext.focus();
 }
 

@@ -1223,7 +1223,9 @@ body.is-viewing { overflow: hidden; }
 .metric-label {
   position: absolute;
   left: var(--gutter);
-  transform: translateY(-50%);
+  /* Resting on the rule rather than centred across it, which struck every label
+     through with its own line. */
+  transform: translateY(calc(-100% - 3px));
   font-size: var(--size-ui);
   line-height: 1;
   color: var(--viewer-fg, var(--color-muted));
