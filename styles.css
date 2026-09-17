@@ -111,6 +111,17 @@
 /* ==========================================================================
    Base
    ========================================================================== */
+
+/* An author `display` beats the UA stylesheet's `[hidden] { display: none }`
+   whatever the specificity. Every pill here sets its own display, so every one
+   of them ignored the attribute: the weight toggles in the header and the
+   viewer sat there as empty 24px circles on a single-weight font, and the glyph
+   toggle and the local-fonts offer had the same hole.
+
+   This was found and fixed once already, on the glyph viewer, and written up —
+   and then missed three more times, because the fix was made where the bug was
+   noticed rather than where it comes from. Stated once, for everything. */
+[hidden] { display: none !important; }
 *, *::before, *::after { box-sizing: border-box; }
 
 /* Dragging to highlight picks up the accent. Written as separate rules on
@@ -1056,11 +1067,6 @@ body.is-viewing .drop-banner { display: none; }
    Glyph viewer
    ========================================================================== */
 body.is-viewing { overflow: hidden; }
-
-/* An author `display` beats the UA stylesheet's `[hidden] { display: none }`
-   whatever the specificity, so the hidden attribute must be honoured here
-   explicitly or this overlay covers the page permanently. */
-.glyph-viewer[hidden] { display: none; }
 
 /* The viewer carries its own pair, set in JS, and everything in here takes its
    colour from those two variables rather than from the page tokens — the

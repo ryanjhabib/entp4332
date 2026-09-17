@@ -869,6 +869,49 @@ would otherwise have gone and checked.
 
 ---
 
+## 24. The same trap, three more times, after writing it down
+
+**Symptom** Reported as "if there's no weight toggle I don't want there to be a black
+circle still that doesn't indicate anything". On a single-weight face the weight toggle
+was hidden and a small dark disc sat where it had been.
+
+**Cause** The disc was the button. Measured:
+
+```
+id: "viewer-weight"   hidden: true   display: "flex"   w: 24
+id: "header-weight"   hidden: true   display: "flex"   w: 24
+```
+
+The `hidden` attribute was set and ignored. An author `display` beats the UA stylesheet's
+`[hidden] { display: none }` whatever the specificity, and every pill on this page sets its
+own display. So the button collapsed to an empty 24px circle — padding, ground and radius,
+with its label removed — rather than disappearing.
+
+This is entry 8. It was found on the glyph viewer, fixed there, and written up with the
+mechanism spelled out. Then it was reintroduced three more times: both weight pills, the
+glyph grid's Show all toggle, and the local-fonts offer, each of which sets `display:
+inline-flex` and each of which is hidden with the attribute.
+
+The reason is worth stating plainly. Entry 8's fix was `.glyph-viewer[hidden] { display:
+none }` — made where the bug was noticed rather than where it comes from. It left every
+future element with the same hole, and writing the entry did not help, because the entry
+described one element's fix rather than a rule the stylesheet keeps.
+
+**Fix** `[hidden] { display: none !important; }`, once, at the top. The per-element rule
+on the glyph viewer comes out, since it is now covered.
+
+**Verified** On the empty state the specimen and the glyph toggle both collapse to zero.
+On a one-style face all four weight toggles — header, page, waterfall, paragraphs — and
+the viewer's collapse to zero, and the viewer's control row reads Metrics, swatch, slider
+with nothing in front of it.
+
+**Worth remembering** A fix belongs where the bug comes from, not where it was seen. If the
+answer had been a rule about the stylesheet rather than a patch on one selector, the other
+three would never have existed — and the write-up would have been unnecessary rather than
+merely unheeded.
+
+---
+
 ## Test matrix (all passing)
 
 | File | Format | Result |
