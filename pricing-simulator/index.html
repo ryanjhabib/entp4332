@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pricing Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F5F0;
+    --surface: #FFFFFF;
+    --ink: #1A1A1A;
+    --muted: #6B6A66;
+    --line: #DEDAD2;
+    --accent: #2F5D50;
+    --accent-soft: #E6EEEA;
+    --negative: #B3261E;
+
+    --serif: "Fraunces", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  main {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 48px 24px 64px;
+  }
+
+  h1, h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    margin: 0;
+  }
+  h1 { font-size: 32px; line-height: 1.2; }
+  h2 { font-size: 24px; line-height: 1.25; margin-bottom: 8px; }
+  h3 { font-size: 16px; font-weight: 500; margin: 0 0 16px; }
+
+  .lede { color: var(--muted); margin: 8px 0 0; }
+
+  /* Progress */
+  .progress {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin: 32px 0 48px;
+    padding: 0;
+  }
+  .progress li {
+    border-top: 2px solid var(--line);
+    padding-top: 8px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .progress li span { font-family: var(--mono); margin-right: 8px; }
+  .progress li.done { border-color: var(--accent); }
+  .progress li.current { border-color: var(--ink); color: var(--ink); }
+
+  /* Cards */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .card {
+    display: block;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px;
+    cursor: pointer;
+  }
+  .card:hover { border-color: var(--muted); }
+  .card[aria-pressed="true"] {
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent);
+    background: var(--accent-soft);
+  }
+  .card:disabled { opacity: 0.45; cursor: not-allowed; }
+  .card:disabled:hover { border-color: var(--line); }
+  .card strong { display: block; font-weight: 500; }
+  .card small { display: block; color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+  .choice {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .choice .card { padding: 8px 16px; }
+
+  section + section { margin-top: 48px; }
+
+  /* Inputs */
+  .fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+  .field label {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  .field label em { font-style: normal; color: var(--muted); }
+  .input {
+    display: flex;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 0 12px;
+  }
+  .input:focus-within { border-color: var(--accent); }
+  .input span { font-family: var(--mono); color: var(--muted); }
+  .input input {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font-family: var(--mono);
+    font-size: 16px;
+    padding: 12px 4px;
+    color: var(--ink);
+  }
+  .input input::-webkit-outer-spin-button,
+  .input input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .input input[type=number] { -moz-appearance: textfield; }
+  .field.invalid .input { border-color: var(--negative); }
+
+  /* Results */
+  .result {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 24px;
+    margin-top: 24px;
+  }
+  .result h3 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 20px;
+  }
+  .result dl { margin: 0; }
+  .result .row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0;
+    border-top: 1px solid var(--line);
+  }
+  .result dt { color: var(--muted); }
+  .result dd { margin: 0; font-family: var(--mono); text-align: right; }
+  .negative { color: var(--negative); }
+
+  /* Nav */
+  .nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-top: 48px;
+  }
+  .btn {
+    font: inherit;
+    font-weight: 500;
+    border-radius: 6px;
+    padding: 12px 24px;
+    white-space: nowrap;
+    cursor: pointer;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--bg);
+  }
+  .btn.secondary { background: transparent; color: var(--ink); border-color: var(--line); }
+  .error { color: var(--negative); font-size: 14px; margin: 0; }
+
+  @media (max-width: 720px) {
+    main { padding: 32px 16px 48px; }
+    .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 480px) {
+    .cards, .fields { grid-template-columns: 1fr; }
+    .progress li b { display: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Pricing Simulator</h1>
+    <p class="lede">Compare pricing strategies with your best guesses, before you talk to customers about price.</p>
+  </header>
+
+  <ol class="progress" id="progress">
+    <li><span>1</span><b>Product</b></li>
+    <li><span>2</span><b>Strategies</b></li>
+    <li><span>3</span><b>Numbers</b></li>
+    <li><span>4</span><b>Results</b></li>
+  </ol>
+
+  <!-- Step 1 -->
+  <div class="step" data-step="1">
+    <section>
+      <h2>What kind of product is it?</h2>
+      <div class="cards" id="productCards"></div>
+    </section>
+    <section>
+      <h2>Who pays?</h2>
+      <div class="choice" id="payerChoice">
+        <button type="button" class="card" data-payer="businesses"><strong>Businesses</strong></button>
+        <button type="button" class="card" data-payer="consumers"><strong>Consumers</strong></button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="step" data-step="2">
+    <h2>Which pricing strategies do you want to compare?</h2>
+    <p class="lede">Tick one or more.</p>
+    <div class="cards" id="strategyCards"></div>
+  </div>
+
+  <!-- Step 3 -->
+  <div class="step" data-step="3">
+    <section>
+      <h2>Your numbers</h2>
+      <p class="lede">Your best guesses, per month.</p>
+    </section>
+    <section>
+      <h3>Customers and costs</h3>
+      <div class="fields" id="sharedFields"></div>
+    </section>
+    <section>
+      <h3>Competitors and value</h3>
+      <div class="fields" id="marketFields"></div>
+    </section>
+    <section data-strategy="subscription">
+      <h3>Subscription</h3>
+      <div class="fields" id="subscriptionFields"></div>
+    </section>
+  </div>
+
+  <!-- Step 4 -->
+  <div class="step" data-step="4">
+    <h2>Results</h2>
+    <p class="lede">Per customer, per month.</p>
+    <div id="results"></div>
+  </div>
+
+  <div class="nav">
+    <button type="button" class="btn secondary" id="back">Back</button>
+    <p class="error" id="error" hidden></p>
+    <button type="button" class="btn" id="next">Next</button>
+  </div>
+</main>
+
+<script>
+  var PRODUCTS = [
+    { id: "software",    name: "Software tool",                  example: "Dropbox",       unit: "use",     cost: "Hosting cost per use",             preset: ["subscription", "tiers", "freemium"] },
+    { id: "ai",          name: "AI tool",                        example: "ChatGPT Plus",  unit: "request", cost: "AI cost per request",              preset: ["subscription", "tiers", "payperuse"] },
+    { id: "marketplace", name: "Marketplace",                    example: "Airbnb, Etsy",  unit: "sale",    cost: "Cost per sale",                    preset: ["commission"] },
+    { id: "physical",    name: "Physical product",               example: "Warby Parker",  unit: "order",   cost: "Materials and shipping per order", preset: ["onetime"] },
+    { id: "consumer",    name: "Consumer subscription or app",   example: "Netflix, Spotify", unit: "use",  cost: "Cost per use",                     preset: ["subscription", "freemium"] },
+    { id: "service",     name: "Service business",               example: "A design agency", unit: "job",   cost: "Staff cost per job",               preset: ["payperuse", "onetime"] }
+  ];
+
+  // Only Subscription is live in Milestone 1; the others are shown but disabled.
+  var STRATEGIES = [
+    { id: "subscription", name: "Subscription",      example: "Netflix",                           live: true },
+    { id: "tiers",        name: "Tiers",             example: "Spotify Individual, Duo, Family" },
+    { id: "freemium",     name: "Freemium",          example: "Spotify Free and Premium" },
+    { id: "payperuse",    name: "Pay per use",       example: "Uber, per ride" },
+    { id: "commission",   name: "Commission",        example: "Airbnb, Etsy" },
+    { id: "onetime",      name: "One-time purchase", example: "A video game" }
+  ];
+
+  var STORE_KEY = "pricing-simulator";
+
+  var state = {
+    step: 1,
+    product: null,
+    payer: null,
+    strategies: [],
+    inputs: {}
+  };
+
+  function load() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(STORE_KEY));
+      if (saved) state = Object.assign(state, saved);
+    } catch (e) {}
+  }
+  function save() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function product() {
+    return PRODUCTS.find(function (p) { return p.id === state.product; });
+  }
+
+  // ---------- Formatting ----------
+
+  var MINUS = "−";
+
+  function money(n) {
+    var s = Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return (n < 0 && s !== "0.00" ? MINUS : "") + "$" + s;
+  }
+  function percent(n) {
+    var r = Math.round(n * 100);
+    return (r < 0 ? MINUS : "") + Math.abs(r) + "%";
+  }
+
+  // ---------- Math (see CLAUDE.md) ----------
+
+  // Trims floating-point noise, e.g. 0.1 × 30 = 3.0000000000000004.
+  function clean(n) { return Math.round(n * 1e6) / 1e6; }
+
+  function perCustomer(revenue, uses, i) {
+    var cost = clean(i.costPerUse * uses);
+    var profit = clean(revenue - cost);
+    return { revenue: revenue, cost: cost, profit: profit };
+  }
+
+  function simulate(revenue, i) {
+    var typical = perCustomer(revenue, i.typicalUses, i);
+    var heavy = perCustomer(revenue, i.heavyUses, i);
+    return {
+      revenue: typical.revenue,
+      cost: typical.cost,
+      profit: typical.profit,
+      margin: revenue > 0 ? typical.profit / revenue : null,
+      total: clean(typical.profit * i.customers - i.fixedCosts),
+      breakEvenCustomers: typical.profit > 0 ? Math.ceil(clean(i.fixedCosts / typical.profit)) : null,
+      breakEvenRevenue: i.customers > 0 ? clean(typical.cost + i.fixedCosts / i.customers) : null,
+      heavyProfit: heavy.profit
+    };
+  }
+
+  function revenueFor(strategy, i) {
+    if (strategy === "subscription") return i.subPrice;
+  }
+
+  // ---------- Inputs ----------
+
+  function fields() {
+    var p = product();
+    var unit = p ? p.unit : "use";
+    var plural = unit + "s";
+    return {
+      sharedFields: [
+        { key: "customers",   label: "Expected customers per month" },
+        { key: "fixedCosts",  label: "Fixed costs per month", money: true },
+        { key: "costPerUse",  label: p ? p.cost : "Cost per use", money: true },
+        { key: "typicalUses", label: cap(plural) + " per month", note: "typical customer" },
+        { key: "heavyUses",   label: cap(plural) + " per month", note: "heaviest customer" }
+      ],
+      marketFields: [
+        { key: "compLow",      label: "Lowest competitor price",  money: true, optional: true },
+        { key: "compHigh",     label: "Highest competitor price", money: true, optional: true },
+        { key: "valueCeiling", label: "Value ceiling", note: "most a customer could pay per month", money: true, optional: true }
+      ],
+      subscriptionFields: [
+        { key: "subPrice", label: "Price per month", money: true }
+      ]
+    };
+  }
+
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  function renderFields() {
+    var groups = fields();
+    Object.keys(groups).forEach(function (id) {
+      document.getElementById(id).innerHTML = groups[id].map(function (f) {
+        var v = state.inputs[f.key];
+        return '<div class="field" data-key="' + f.key + '">' +
+          '<label for="in-' + f.key + '">' + f.label +
+            (f.note ? ' <em>· ' + f.note + '</em>' : '') +
+            (f.optional ? ' <em>· optional</em>' : '') +
+          '</label>' +
+          '<div class="input">' + (f.money ? '<span>$</span>' : '') +
+            '<input type="number" min="0" step="any" inputmode="decimal" id="in-' + f.key + '" data-key="' + f.key + '" value="' + (v == null ? "" : v) + '">' +
+          '</div></div>';
+      }).join("");
+    });
+  }
+
+  function requiredKeys() {
+    var groups = fields();
+    var keys = [];
+    ["sharedFields", "subscriptionFields"].forEach(function (g) {
+      groups[g].forEach(function (f) { if (!f.optional) keys.push(f.key); });
+    });
+    return keys;
+  }
+
+  // ---------- Rendering ----------
+
+  function renderCards() {
+    document.getElementById("productCards").innerHTML = PRODUCTS.map(function (p) {
+      return '<button type="button" class="card" data-product="' + p.id + '" aria-pressed="' + (state.product === p.id) + '">' +
+        '<strong>' + p.name + '</strong><small>' + p.example + '</small></button>';
+    }).join("");
+
+    document.querySelectorAll("[data-payer]").forEach(function (b) {
+      b.setAttribute("aria-pressed", state.payer === b.dataset.payer);
+    });
+
+    document.getElementById("strategyCards").innerHTML = STRATEGIES.map(function (s) {
+      return '<button type="button" class="card" data-strategy="' + s.id + '"' + (s.live ? '' : ' disabled') +
+        ' aria-pressed="' + (state.strategies.indexOf(s.id) > -1) + '">' +
+        '<strong>' + s.name + '</strong><small>' + (s.live ? s.example : 'Coming in Milestone 2') + '</small></button>';
+    }).join("");
+  }
+
+  function renderResults() {
+    var i = {};
+    Object.keys(state.inputs).forEach(function (k) { i[k] = Number(state.inputs[k]) || 0; });
+
+    document.getElementById("results").innerHTML = state.strategies.map(function (id) {
+      var s = STRATEGIES.find(function (x) { return x.id === id; });
+      var r = simulate(revenueFor(id, i), i);
+      var rows = [
+        ["Revenue per customer", money(r.revenue), r.revenue],
+        ["Cost per customer", money(r.cost), -r.cost],
+        ["Profit per customer", money(r.profit), r.profit],
+        ["Margin", r.margin == null ? "—" : percent(r.margin), r.margin],
+        ["Total monthly profit", money(r.total), r.total],
+        ["Customers to break even", r.breakEvenCustomers == null ? "never" : r.breakEvenCustomers.toLocaleString("en-US"), 0],
+        ["Break-even revenue per customer", r.breakEvenRevenue == null ? "—" : money(r.breakEvenRevenue), 0],
+        ["Heaviest customer profit", money(r.heavyProfit), r.heavyProfit]
+      ];
+      return '<article class="result"><h3>' + s.name + ' at ' + money(i.subPrice) + '</h3><dl>' +
+        rows.map(function (row) {
+          var neg = row[0] !== "Cost per customer" && row[2] != null && row[2] < 0;
+          return '<div class="row"><dt>' + row[0] + '</dt><dd' + (neg ? ' class="negative"' : '') + '>' + row[1] + '</dd></div>';
+        }).join("") +
+        '</dl></article>';
+    }).join("");
+  }
+
+  function render() {
+    document.querySelectorAll(".step").forEach(function (el) {
+      el.hidden = Number(el.dataset.step) !== state.step;
+    });
+    document.querySelectorAll("#progress li").forEach(function (li, idx) {
+      li.className = idx + 1 === state.step ? "current" : idx + 1 < state.step ? "done" : "";
+    });
+    document.querySelector('section[data-strategy="subscription"]').hidden = state.strategies.indexOf("subscription") < 0;
+
+    document.getElementById("back").style.visibility = state.step === 1 ? "hidden" : "visible";
+    document.getElementById("next").style.visibility = state.step === 4 ? "hidden" : "visible";
+    document.getElementById("next").textContent = state.step === 3 ? "See results" : "Next";
+    document.getElementById("error").hidden = true;
+
+    renderCards();
+    if (state.step === 3) renderFields();
+    if (state.step === 4) renderResults();
+  }
+
+  function stepError() {
+    if (state.step === 1 && (!state.product || !state.payer)) return "Pick a product type and who pays.";
+    if (state.step === 2 && !state.strategies.length) return "Tick at least one strategy.";
+    if (state.step === 3) {
+      var missing = requiredKeys().filter(function (k) {
+        var v = state.inputs[k];
+        return v === "" || v == null || isNaN(Number(v)) || Number(v) < 0;
+      });
+      document.querySelectorAll(".field").forEach(function (f) {
+        f.classList.toggle("invalid", missing.indexOf(f.dataset.key) > -1);
+      });
+      if (missing.length) return "Fill in every number that isn’t marked optional.";
+    }
+    return null;
+  }
+
+  // ---------- Events ----------
+
+  document.addEventListener("click", function (e) {
+    var card = e.target.closest("button");
+    if (!card) return;
+
+    if (card.dataset.product) {
+      if (state.product !== card.dataset.product) {
+        state.product = card.dataset.product;
+        var live = STRATEGIES.filter(function (s) { return s.live; }).map(function (s) { return s.id; });
+        state.strategies = product().preset.filter(function (id) { return live.indexOf(id) > -1; });
+      }
+    } else if (card.dataset.payer) {
+      state.payer = card.dataset.payer;
+    } else if (card.dataset.strategy) {
+      var id = card.dataset.strategy;
+      var at = state.strategies.indexOf(id);
+      if (at > -1) state.strategies.splice(at, 1); else state.strategies.push(id);
+    } else if (card.id === "back") {
+      state.step -= 1;
+    } else if (card.id === "next") {
+      var err = stepError();
+      if (err) {
+        var el = document.getElementById("error");
+        el.textContent = err;
+        el.hidden = false;
+        return;
+      }
+      state.step += 1;
+    } else {
+      return;
+    }
+    save();
+    render();
+  });
+
+  document.addEventListener("input", function (e) {
+    if (!e.target.dataset.key) return;
+    state.inputs[e.target.dataset.key] = e.target.value;
+    e.target.closest(".field").classList.remove("invalid");
+    save();
+  });
+
+  load();
+  render();
+</script>
+</body>
+</html>
