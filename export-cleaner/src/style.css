@@ -146,19 +146,19 @@ button:disabled {
 }
 
 /* Decisions on the overview: kept outlined green, rejected faded and outlined red. */
-.family-files li[data-decision="keep"] .thumb {
+.card-row li[data-decision="keep"] .thumb {
   outline: 2px solid var(--color-keep);
 }
 
-.family-files li[data-decision="reject"] .thumb {
+.card-row li[data-decision="reject"] .thumb {
   outline: 2px solid var(--color-reject);
 }
 
-.family-files li[data-decision="reject"] img {
+.card-row li[data-decision="reject"] img {
   opacity: 0.4;
 }
 
-.family-files {
+.card-row {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
@@ -167,7 +167,7 @@ button:disabled {
   list-style: none;
 }
 
-.family-files li {
+.card-row li {
   width: var(--family-thumb-size);
 }
 
@@ -298,4 +298,24 @@ button:disabled {
   justify-content: center;
   gap: var(--space-3);
   margin-bottom: var(--space-3);
+}
+
+/* Summary screen */
+.buttons {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.summary-group {
+  margin-bottom: var(--space-7);
+}
+
+.summary-head {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-m);
+  font-weight: 600;
+}
+
+code {
+  font-family: var(--font-mono);
 }

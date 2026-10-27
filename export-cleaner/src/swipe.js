@@ -71,14 +71,15 @@ function advance() {
   if (index < family.length) return renderCard();
   const next = sessions.flatMap((s) => s.families).find((f) => f.some((entry) => !entry.decision));
   if (next) startFamily(next);
-  else exit();
+  else exit(true);
 }
 
-function exit() {
+// finished: true when every file has been decided, false when the user left early.
+function exit(finished = false) {
   if (previewUrl) URL.revokeObjectURL(previewUrl);
   previewUrl = null;
   history = [];
-  onExit();
+  onExit(finished);
 }
 
 function renderCard() {
@@ -184,7 +185,7 @@ $('#reject').addEventListener('click', () => decide('reject'));
 $('#undo').addEventListener('click', undo);
 $('#keep-all').addEventListener('click', () => decideAll('keep'));
 $('#reject-all').addEventListener('click', () => decideAll('reject'));
-$('#swipe-back').addEventListener('click', exit);
+$('#swipe-back').addEventListener('click', () => exit());
 
 document.addEventListener('keydown', (event) => {
   if ($('#swipe').hidden || event.repeat) return;

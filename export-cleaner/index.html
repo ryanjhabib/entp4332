@@ -31,7 +31,10 @@
       </header>
       <div class="bar">
         <p class="muted" id="file-count"></p>
-        <button id="start-sorting" hidden>Start sorting</button>
+        <div class="buttons">
+          <button id="open-summary" hidden>Review summary</button>
+          <button id="start-sorting" hidden>Start sorting</button>
+        </div>
       </div>
       <form class="settings" id="settings" hidden>
         <label>New session after a gap of <input type="number" id="gap" min="1" value="20" /> min</label>
@@ -65,6 +68,30 @@
       <div class="swipe-actions">
         <button id="reject-all">Reject all</button>
         <button id="keep-all">Keep all</button>
+      </div>
+    </section>
+
+    <section class="screen" id="summary" hidden>
+      <header class="bar">
+        <h1>Summary</h1>
+        <button id="summary-back">Back to families</button>
+      </header>
+      <p class="muted" id="summary-count"></p>
+
+      <div class="summary-group" id="summary-reject">
+        <h2 class="summary-head"></h2>
+        <p class="muted">Will be moved into a <code>_to_delete</code> folder inside this folder. Nothing is deleted.</p>
+        <ul class="card-row"></ul>
+      </div>
+      <div class="summary-group" id="summary-keep">
+        <h2 class="summary-head"></h2>
+        <p class="muted">Stay where they are.</p>
+        <ul class="card-row"></ul>
+      </div>
+      <div class="summary-group" id="summary-undecided">
+        <h2 class="summary-head"></h2>
+        <p class="muted">Not sorted yet. They stay where they are.</p>
+        <ul class="card-row"></ul>
       </div>
     </section>
 

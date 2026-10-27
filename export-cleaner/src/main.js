@@ -4,6 +4,7 @@ import { isSupported, pickFolder, readFolder } from './scan.js';
 import { makeThumbnail } from './thumbs.js';
 import { groupFiles } from './group.js';
 import { openFamily } from './swipe.js';
+import { showSummary } from './summary.js';
 
 // Everything the app knows lives here.
 const state = {
@@ -65,11 +66,14 @@ function regroup() {
   renderSessions();
 }
 
+// Sorting every file leads straight to the summary; leaving early, to the overview.
 function sortFamily(family) {
-  openFamily(state.sessions, family, () => {
-    renderSessions();
-    show('files');
-  });
+  openFamily(state.sessions, family, (finished) => (finished ? showSummary(state.files) : showOverview()));
+}
+
+function showOverview() {
+  renderSessions();
+  show('files');
 }
 
 function renderCount(thumbsDone) {
@@ -82,6 +86,7 @@ function renderLoading() {
   $('#folder-name').textContent = state.dir.name;
   $('#settings').hidden = true;
   $('#start-sorting').hidden = true;
+  $('#open-summary').hidden = true;
   renderCount(0);
   const grid = document.createElement('ul');
   grid.className = 'thumb-grid';
@@ -103,6 +108,7 @@ function renderSessions() {
   $('#settings').hidden = false;
   $('#start-sorting').hidden = decided === state.files.length;
   $('#start-sorting').textContent = decided ? 'Continue sorting' : 'Start sorting';
+  $('#open-summary').hidden = !decided;
   $('#sessions').replaceChildren(...state.sessions.map(renderSession));
 }
 
@@ -121,7 +127,7 @@ function renderSession(session) {
 function renderFamily(entries) {
   const family = document.createElement('div');
   family.className = 'family';
-  family.innerHTML = '<div class="family-head"><p class="muted"></p><button>Sort</button></div><ul class="family-files"></ul>';
+  family.innerHTML = '<div class="family-head"><p class="muted"></p><button>Sort</button></div><ul class="card-row"></ul>';
   const kept = entries.filter((entry) => entry.decision === 'keep').length;
   const rejected = entries.filter((entry) => entry.decision === 'reject').length;
   family.querySelector('.family-head p').textContent = [
@@ -131,7 +137,7 @@ function renderFamily(entries) {
   ].filter(Boolean).join(' · ');
   family.querySelector('.family-head button').addEventListener('click', () => sortFamily(entries));
   for (const entry of entries) entry.card.dataset.decision = entry.decision ?? '';
-  family.querySelector('.family-files').append(...entries.map((entry) => entry.card));
+  family.querySelector('.card-row').append(...entries.map((entry) => entry.card));
   return family;
 }
 
@@ -163,6 +169,8 @@ $('#start-sorting').addEventListener('click', () => {
   const next = state.sessions.flatMap((s) => s.families).find((f) => f.some((entry) => !entry.decision));
   if (next) sortFamily(next);
 });
+$('#open-summary').addEventListener('click', () => showSummary(state.files));
+$('#summary-back').addEventListener('click', showOverview);
 $('#settings').addEventListener('input', regroup);
 $('#settings').addEventListener('submit', (event) => event.preventDefault());
 show(isSupported() ? 'start' : 'unsupported');
