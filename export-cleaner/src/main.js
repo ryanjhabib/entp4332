@@ -1,13 +1,18 @@
 import './style.css';
 import { isSupported, pickFolder, readFolder } from './scan.js';
+import { makeThumbnail } from './thumbs.js';
 
 const $ = (selector) => document.querySelector(selector);
 
 // Everything the app knows lives here.
 const state = {
   dir: null, // the folder the user picked (a FileSystemDirectoryHandle)
-  files: [], // { handle, file, name, ext } for each design file in it
+  files: [], // { handle, file, name, ext, thumb, card } for each design file in it
 };
+
+// How many thumbnails are made at once. More doesn't finish sooner,
+// it just holds more full-size images in memory at the same moment.
+const THUMB_WORKERS = 4;
 
 // Shows one screen and hides the rest.
 function show(id) {
@@ -22,32 +27,64 @@ async function chooseFolder() {
     if (err.name === 'AbortError') return; // the user closed the picker
     throw err;
   }
+  // Free the previous folder's thumbnails before replacing them.
+  for (const entry of state.files) if (entry.thumb) URL.revokeObjectURL(entry.thumb);
   state.dir = dir;
   state.files = await readFolder(dir);
   renderFiles();
   show('files');
+  await makeThumbnails(state.files);
+}
+
+// Fills in each card's thumbnail as it's made, a few files at a time.
+async function makeThumbnails(files) {
+  const queue = [...files];
+  let done = 0;
+  const work = async () => {
+    // Stop early if the user has picked another folder meanwhile.
+    while (queue.length && files === state.files) {
+      const entry = queue.shift();
+      entry.thumb = await makeThumbnail(entry);
+      showThumb(entry);
+      done += 1;
+      renderCount(done);
+    }
+  };
+  await Promise.all(Array.from({ length: THUMB_WORKERS }, work));
+}
+
+function renderCount(thumbsDone) {
+  const n = state.files.length;
+  const count = `${n} design file${n === 1 ? '' : 's'}, oldest first`;
+  $('#file-count').textContent = thumbsDone < n ? `${count} · previews ${thumbsDone} of ${n}` : count;
 }
 
 function renderFiles() {
   $('#folder-name').textContent = state.dir.name;
-  const n = state.files.length;
-  $('#file-count').textContent = `${n} design file${n === 1 ? '' : 's'}, oldest first`;
-  $('#file-list').replaceChildren(
-    ...state.files.map(({ name, ext, file }) => {
-      const li = document.createElement('li');
-      for (const text of [name, ext, formatSize(file.size), formatDate(file.lastModified)]) {
-        const span = document.createElement('span');
-        span.textContent = text;
-        li.append(span);
-      }
-      return li;
-    }),
-  );
+  renderCount(0);
+  $('#thumb-grid').replaceChildren(...state.files.map(renderCard));
 }
 
-function formatSize(bytes) {
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+function renderCard(entry) {
+  const card = document.createElement('li');
+  card.innerHTML = '<div class="thumb"></div><p class="card-name"></p><p class="card-time"></p>';
+  card.querySelector('.card-name').textContent = entry.name;
+  card.querySelector('.card-name').title = entry.name;
+  card.querySelector('.card-time').textContent = formatDate(entry.file.lastModified);
+  entry.card = card;
+  return card;
+}
+
+function showThumb(entry) {
+  const box = entry.card.querySelector('.thumb');
+  if (!entry.thumb) {
+    box.textContent = 'No preview';
+    return;
+  }
+  const img = document.createElement('img');
+  img.src = entry.thumb;
+  img.alt = '';
+  box.replaceChildren(img);
 }
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'short', timeStyle: 'short' });
