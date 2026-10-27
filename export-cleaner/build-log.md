@@ -16,6 +16,27 @@ Every break gets an entry: the exact error or symptom, the cause, the fix, and a
 - **pdf.js loads only when a folder has a PDF.** It's the biggest dependency by far, and `import()` (a dynamic import) fetches it on first use instead of on page load.
 - **One bad file never stops the scan.** A file that can't be decoded shows "No preview", and the rest carry on.
 
+## Steps 3–4 decisions: hashing and grouping
+
+- **The hash is made from the thumbnail canvas** at the moment the thumbnail is drawn, so no file is decoded twice. Transparent areas are filled white first (otherwise they read as black and every transparent logo looks alike).
+- **The spec changed mid-build.** The first version grouped by "similar hash AND within a 2-hour window". The new version first splits files into **sessions**: sorted by `lastModified`, with a new session whenever the gap to the previous file exceeds 20 minutes. Then it groups by hash **only within a session**. That's better: an export burst is a natural unit, and a fixed 2-hour window would have chopped a long afternoon at arbitrary points.
+- **Families use chaining** (union-find): if A looks like B and B looks like C, all three are one family, even if A and C are further apart. That keeps a run of small edits together.
+- **Measured dHash distances** on six macOS wallpapers converted to JPG (`test-images/`, git-ignored), each run through the app's own 320px thumbnail path:
+
+  | Same image, changed | Distance (of 64 bits) |
+  |---|---|
+  | resized to 1080 + JPEG quality 60 | 0–1 |
+  | brighter + contrast | 0–1 |
+  | warmer / saturated, black & white | 0–3 |
+  | heavy grade (dark, contrasty, desaturated) | 0–7 |
+  | same design, other colourway (iMac blue vs orange) | 2 |
+  | **centre crop to another aspect ratio (4:5, 16:9, 9:16)** | **10–34** |
+  | different images | 24–40 |
+
+  So the default "same family" threshold is **10**: every edit is at 7 or below, and every different image at 24 or above.
+- **Known limit:** dHash squashes every image to 9×8 regardless of shape, so a crop to a new aspect ratio usually reads as a different image. One 4:5 crop landed at exactly 10 and joined its family; the 16:9 and 9:16 crops didn't. "The same final in several aspect ratios" is **not** reliably grouped yet.
+- **Cross-session merge suggestions are not built.** They only catch near-identical re-exports, not aspect-ratio variants (see the limit above), and merging families across sessions needs its own UI. Parked until the core loop works.
+
 ## Breaks
 
 ### 1. SVGs with only a `viewBox` would be letterboxed into 300×150
@@ -54,3 +75,15 @@ Every break gets an entry: the exact error or symptom, the cause, the fix, and a
 - **Cause:** a box sized with `aspect-ratio: 1` has an automatic minimum height equal to its content. A 100%-height `<img>` inside counts as content, so the box grew to fit it.
 - **Fix:** `.thumb` is `position: relative` and the `<img>` is `position: absolute; inset: 0`, which takes it out of the box's sizing. Measured after: all 8 boxes 180×180 at a 1440px-wide window.
 - **Same pass:** the date sat 16px below the file name because the global `p { margin-bottom }` applied to card captions. The captions now have `margin: 0`: name 8px under the box, date 0px under the name.
+
+### 5. localhost:3400 went down between sessions
+
+- **Symptom:** Ryan reported "localhost is down". The page wouldn't load.
+- **Cause:** I had started `npm run dev` as a background task of the Claude session. When the session moved its working folder from `pricing-simulator/` to `export-cleaner/`, that background process was stopped with it. I also tried the app's built-in preview launcher, but it still looked for its config in the old folder.
+- **Fix:** the dev server now runs in its own Terminal tab ("dev server :3400"), which outlives Claude's turns and which Ryan can see and stop with Ctrl-C.
+
+### 6. Grouping test read "previews 0 of 14" and never finished
+
+- **Symptom:** the first grouping test sat at `14 design files, oldest first · previews 0 of 14` for 15 seconds, with no sessions shown.
+- **Cause:** "oldest first" is Step 2's wording. The Chrome tab was still running the old `main.js`, which treated the new `{ thumb, hash }` result from `makeThumbnail` as if it were the old plain URL. Vite's hot reload hadn't refreshed that tab after `main.js` was rewritten.
+- **Fix:** a hard reload of the tab, then the same test: 14 files grouped in 153 ms. Lesson: reload before every test run after editing `main.js`.
