@@ -87,3 +87,32 @@ Every break gets an entry: the exact error or symptom, the cause, the fix, and a
 - **Symptom:** the first grouping test sat at `14 design files, oldest first · previews 0 of 14` for 15 seconds, with no sessions shown.
 - **Cause:** "oldest first" is Step 2's wording. The Chrome tab was still running the old `main.js`, which treated the new `{ thumb, hash }` result from `makeThumbnail` as if it were the old plain URL. Vite's hot reload hadn't refreshed that tab after `main.js` was rewritten.
 - **Fix:** a hard reload of the tab, then the same test: 14 files grouped in 153 ms. Lesson: reload before every test run after editing `main.js`.
+
+## Step 5 decisions: the swipe screen
+
+- **Decisions are stored on each file object** (`entry.decision = 'keep' | 'reject'`), not in a separate list. They survive regrouping (changing the session gap or similarity) because the files are the same objects. Nothing touches the disk.
+- **Motion numbers:**
+
+  | | Value |
+  |---|---|
+  | Drag distance that counts as a decision | 120px |
+  | Tilt while dragging | 1° per 20px (6° at 120px) |
+  | Fly-off | 200ms ease-in, to 60% of the window width, 15° tilt, fading to 0 |
+  | Spring back (drag under 120px) | 200ms ease-out |
+  | Keep/Reject label | fades in with drag distance, fully visible at 120px |
+
+  Only `transform` and `opacity` animate, the two properties browsers can animate without re-laying out the page (kept light for Safari later).
+- **Input is ignored while a card is flying off** (`busy` flag), so a double key press can't skip a file. Measured: the next card appears 267ms after →, which is the 200ms fly-off plus a frame.
+- **Undo is one stack across families.** Finishing a family opens the next unfinished one automatically, and ⌘Z / Backspace can step back into the family before. "Keep all" / "Reject all" are one undo step. The stack is cleared on leaving the swipe screen; to change a decision after that, reopen the family from the overview.
+- **Thumbnail first, full size second.** The card shows the 320px thumbnail instantly (it's already decoded), loads the full image in a detached `Image`, and swaps it in only once `decode()` finishes, so the card never flashes empty. Measured: 21ms for a 2000px JPG, 359ms for a PDF page rendered at 1600px.
+
+### 7. Undo could silently lose a step (caught in review, before testing)
+
+- **Symptom (on reading the code back):** `undo()` called `history.pop()` *before* checking whether a card was mid-flight. Pressing Undo during the 200ms fly-off would remove the last step from history and then bail out, so that decision could never be undone.
+- **Fix:** check `busy` and an empty history first, then pop.
+
+### 8. Test dead end: "Cannot read properties of undefined (reading 'click')"
+
+- **Symptom:** a preview test clicked the overview's Sort buttons one by one and failed on the second, after reporting a "1600px → 1600px" upgrade that made no sense for a 2000px photo.
+- **Cause:** the test, not the app. It clicked "Choose another folder" and then checked a "ready" condition that was already true from the *previous* test folder, so it ran against the old overview while the new one was still loading. When the new overview rendered, the button list it had collected went stale.
+- **Fix:** re-ran from a clean, fully loaded state, re-querying the buttons on each loop: photo upgraded 320 → 2000px, PDF 320 → 1600px, and Esc returned to an overview with both Sort buttons. Lesson: wait on something the new folder *changes*, not on something that might already be true.
