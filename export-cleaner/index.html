@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Export Cleaner</title>
+  </head>
+  <body>
+    <!-- Each screen is a section; main.js shows one at a time. -->
+
+    <section class="screen" id="unsupported" hidden>
+      <h1>Export Cleaner</h1>
+      <p>This app needs desktop Chrome.</p>
+      <p class="muted">
+        It opens a folder on your computer with the File System Access API,
+        which Safari, Firefox and mobile browsers don't support.
+      </p>
+    </section>
+
+    <section class="screen" id="start" hidden>
+      <h1>Export Cleaner</h1>
+      <p>Open an export folder, sort each family of files into keep or reject, then clean up.</p>
+      <button id="choose">Choose folder</button>
+      <p class="muted">Your files never leave your computer.</p>
+    </section>
+
+    <section class="screen" id="files" hidden>
+      <header class="bar">
+        <h1 id="folder-name"></h1>
+        <button id="choose-again">Choose another folder</button>
+      </header>
+      <p class="muted" id="file-count"></p>
+      <ol class="file-list" id="file-list"></ol>
+    </section>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

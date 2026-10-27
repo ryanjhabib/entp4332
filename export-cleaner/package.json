@@ -1,0 +1,14 @@
+{
+  "name": "export-cleaner",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 3400 --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --port 3400 --strictPort"
+  },
+  "devDependencies": {
+    "vite": "^8.3.5"
+  }
+}
