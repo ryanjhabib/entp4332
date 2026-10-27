@@ -29,12 +29,43 @@
         <h1 id="folder-name"></h1>
         <button id="choose-again">Choose another folder</button>
       </header>
-      <p class="muted" id="file-count"></p>
+      <div class="bar">
+        <p class="muted" id="file-count"></p>
+        <button id="start-sorting" hidden>Start sorting</button>
+      </div>
       <form class="settings" id="settings" hidden>
         <label>New session after a gap of <input type="number" id="gap" min="1" value="20" /> min</label>
         <label>Same family within <input type="number" id="max-distance" min="0" max="32" value="10" /> of 64 bits</label>
       </form>
       <div id="sessions"></div>
+    </section>
+
+    <section class="screen" id="swipe" hidden>
+      <header class="bar">
+        <button id="swipe-back">All families</button>
+        <p class="muted" id="swipe-where"></p>
+      </header>
+
+      <div class="deck">
+        <div class="swipe-card" id="swipe-card">
+          <div class="swipe-preview" id="swipe-preview"><img id="swipe-img" alt="" draggable="false" /></div>
+          <span class="swipe-hint" data-hint="reject">Reject</span>
+          <span class="swipe-hint" data-hint="keep">Keep</span>
+        </div>
+      </div>
+
+      <p class="swipe-name" id="swipe-name"></p>
+      <p class="muted swipe-meta" id="swipe-meta"></p>
+
+      <div class="swipe-actions">
+        <button id="reject">← Reject</button>
+        <button id="undo">Undo</button>
+        <button id="keep">Keep →</button>
+      </div>
+      <div class="swipe-actions">
+        <button id="reject-all">Reject all</button>
+        <button id="keep-all">Keep all</button>
+      </div>
     </section>
 
     <script type="module" src="/src/main.js"></script>

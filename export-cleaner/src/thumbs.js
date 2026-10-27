@@ -21,6 +21,19 @@ export async function makeThumbnail({ file, ext }) {
   }
 }
 
+// Longest side of a PDF page on the swipe card.
+const PREVIEW_SIZE = 1600;
+
+// A bigger image for the swipe card, as an object URL. Images use the
+// original file (the browser scales it to the card); PDFs render page 1 larger.
+export async function makePreview({ file, ext }) {
+  if (ext === 'pdf') {
+    const canvas = await renderPdf(file, PREVIEW_SIZE);
+    return URL.createObjectURL(await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.9)));
+  }
+  return URL.createObjectURL(ext === 'svg' ? await svgBlob(file) : file);
+}
+
 // PNG, JPG and WebP decode straight to a bitmap (EXIF rotation included),
 // which is freed as soon as the small copy is drawn.
 async function renderRaster(file) {
@@ -82,8 +95,8 @@ async function loadPdfjs() {
   return pdfjs;
 }
 
-// Renders page 1 of a PDF straight onto a canvas at thumbnail size.
-async function renderPdf(file) {
+// Renders page 1 of a PDF straight onto a canvas, `size` px on its longest side.
+async function renderPdf(file, size = SIZE) {
   pdfjsReady ??= loadPdfjs();
   const pdfjs = await pdfjsReady;
   const task = pdfjs.getDocument({ data: await file.arrayBuffer() });
@@ -91,7 +104,7 @@ async function renderPdf(file) {
     const pdf = await task.promise;
     const page = await pdf.getPage(1);
     const { width, height } = page.getViewport({ scale: 1 });
-    const viewport = page.getViewport({ scale: SIZE / Math.max(width, height) });
+    const viewport = page.getViewport({ scale: size / Math.max(width, height) });
     const canvas = document.createElement('canvas');
     canvas.width = Math.round(viewport.width);
     canvas.height = Math.round(viewport.height);

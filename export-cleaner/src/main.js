@@ -1,25 +1,21 @@
 import './style.css';
+import { $, show, plural, sessionLabel, timeFormat } from './dom.js';
 import { isSupported, pickFolder, readFolder } from './scan.js';
 import { makeThumbnail } from './thumbs.js';
 import { groupFiles } from './group.js';
-
-const $ = (selector) => document.querySelector(selector);
+import { openFamily } from './swipe.js';
 
 // Everything the app knows lives here.
 const state = {
   dir: null, // the folder the user picked (a FileSystemDirectoryHandle)
-  files: [], // { handle, file, name, ext, thumb, hash, card } for each design file in it
+  // For each design file: { handle, file, name, ext, thumb, hash, card, decision }
+  files: [],
   sessions: [], // [{ files, families: [[entry, ...], ...] }], oldest first
 };
 
 // How many thumbnails are made at once. More doesn't finish sooner,
 // it just holds more full-size images in memory at the same moment.
 const THUMB_WORKERS = 4;
-
-// Shows one screen and hides the rest.
-function show(id) {
-  for (const screen of document.querySelectorAll('.screen')) screen.hidden = screen.id !== id;
-}
 
 async function chooseFolder() {
   let dir;
@@ -59,13 +55,21 @@ async function makeThumbnails(files) {
   await Promise.all(Array.from({ length: THUMB_WORKERS }, work));
 }
 
-// Re-runs the grouping with the current settings. Cheap, so it runs on every change.
+// Re-runs the grouping with the current settings. Cheap, so it runs on every
+// change. Decisions live on the files, so they survive regrouping.
 function regroup() {
   state.sessions = groupFiles(state.files, {
     gapMinutes: Number($('#gap').value) || 20,
     maxDistance: Number($('#max-distance').value) || 0,
   });
   renderSessions();
+}
+
+function sortFamily(family) {
+  openFamily(state.sessions, family, () => {
+    renderSessions();
+    show('files');
+  });
 }
 
 function renderCount(thumbsDone) {
@@ -77,6 +81,7 @@ function renderCount(thumbsDone) {
 function renderLoading() {
   $('#folder-name').textContent = state.dir.name;
   $('#settings').hidden = true;
+  $('#start-sorting').hidden = true;
   renderCount(0);
   const grid = document.createElement('ul');
   grid.className = 'thumb-grid';
@@ -88,23 +93,26 @@ function renderLoading() {
 // The cards made during loading are moved into place, not rebuilt.
 function renderSessions() {
   const families = state.sessions.reduce((sum, s) => sum + s.families.length, 0);
+  const decided = state.files.filter((entry) => entry.decision).length;
   $('#file-count').textContent = [
     plural(state.files.length, 'design file'),
     plural(state.sessions.length, 'session'),
     plural(families, 'family', 'families'),
+    `${decided} decided`,
   ].join(' · ');
   $('#settings').hidden = false;
+  $('#start-sorting').hidden = decided === state.files.length;
+  $('#start-sorting').textContent = decided ? 'Continue sorting' : 'Start sorting';
   $('#sessions').replaceChildren(...state.sessions.map(renderSession));
 }
 
-function renderSession({ files, families }) {
+function renderSession(session) {
+  const { files, families } = session;
   const section = document.createElement('section');
   section.className = 'session';
   section.innerHTML = '<h2 class="session-head"><span></span> <span class="muted"></span></h2><div class="families"></div>';
   const [when, counts] = section.querySelectorAll('.session-head span');
-  const start = files[0].file.lastModified;
-  const end = files.at(-1).file.lastModified;
-  when.textContent = `${dayFormat.format(start)} · ${timeFormat.formatRange(start, end)}`;
+  when.textContent = sessionLabel(session);
   counts.textContent = `${plural(files.length, 'file')} · ${plural(families.length, 'family', 'families')}`;
   section.querySelector('.families').append(...families.map(renderFamily));
   return section;
@@ -113,8 +121,16 @@ function renderSession({ files, families }) {
 function renderFamily(entries) {
   const family = document.createElement('div');
   family.className = 'family';
-  family.innerHTML = '<p class="family-head muted"></p><ul class="family-files"></ul>';
-  family.querySelector('.family-head').textContent = plural(entries.length, 'file');
+  family.innerHTML = '<div class="family-head"><p class="muted"></p><button>Sort</button></div><ul class="family-files"></ul>';
+  const kept = entries.filter((entry) => entry.decision === 'keep').length;
+  const rejected = entries.filter((entry) => entry.decision === 'reject').length;
+  family.querySelector('.family-head p').textContent = [
+    plural(entries.length, 'file'),
+    kept && `${kept} kept`,
+    rejected && `${rejected} rejected`,
+  ].filter(Boolean).join(' · ');
+  family.querySelector('.family-head button').addEventListener('click', () => sortFamily(entries));
+  for (const entry of entries) entry.card.dataset.decision = entry.decision ?? '';
   family.querySelector('.family-files').append(...entries.map((entry) => entry.card));
   return family;
 }
@@ -141,13 +157,12 @@ function showThumb(entry) {
   box.replaceChildren(img);
 }
 
-const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
-
-const dayFormat = new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-const timeFormat = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
-
 $('#choose').addEventListener('click', chooseFolder);
 $('#choose-again').addEventListener('click', chooseFolder);
+$('#start-sorting').addEventListener('click', () => {
+  const next = state.sessions.flatMap((s) => s.families).find((f) => f.some((entry) => !entry.decision));
+  if (next) sortFamily(next);
+});
 $('#settings').addEventListener('input', regroup);
 $('#settings').addEventListener('submit', (event) => event.preventDefault());
 show(isSupported() ? 'start' : 'unsupported');
