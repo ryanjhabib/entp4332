@@ -124,3 +124,25 @@ Every break gets an entry: the exact error or symptom, the cause, the fix, and a
 - **Two ways in:** finishing the last unfinished family goes straight to the summary, and the overview has a "Review summary" button once anything is decided. "Back to families" returns to the overview to change decisions there.
 - **The swipe screen now reports why it closed** (`exit(finished)`): `true` when every file is decided (show the summary), `false` for Esc or "All families" (show the overview). The "All families" click handler is wrapped as `() => exit()`. Passed straight in as `exit`, the click event would have arrived as a truthy `finished` and sent the user to the summary by mistake.
 - **The cards are the same elements as on the overview, moved, not copied.** The overview moves them back when it next renders (tested: 7 of 7 back in their families).
+
+## Step 7 decisions: Apply
+
+- **API used: `FileSystemFileHandle.move(destinationFolder, newName)`.** Chrome first shipped it only for its private sandbox storage (the "origin private file system"). Chrome's Intent to Ship for local files on disk targeted Chrome 111, with folder moves excluded. Current sources partly conflict on whether it's fully on for local files, so the app doesn't assume. It tries `move()`, and if that throws for any reason it falls back. Sources: [Intent to Ship](https://groups.google.com/a/chromium.org/g/blink-dev/c/ogS8CeyZ3n8), [whatwg/fs PR #180](https://github.com/whatwg/fs/pull/180), [Chrome's File System Access article](https://github.com/GoogleChrome/developer.chrome.com/blob/main/site/en/articles/file-system-access/index.md).
+- **Fallback: copy → check → remove.** Write the bytes to `_to_delete/name` with `createWritable()`, read the copy back, and compare its size to the original. Only if they match, call `removeEntry()` on the original. If the sizes differ, the original is left in place and the file is listed as failed.
+- **The fallback's risks:**
+  - `removeEntry()` is a permanent delete of the original, not the Trash. It's safe only because it runs after a verified copy exists.
+  - **The copy's modified date becomes "now"** (measured: 3:18:46 PM → 3:19:53 PM). Dragging it back out of `_to_delete` won't restore its original export time, so it would land in a different session.
+  - Finder tags and creation date are not copied. The image bytes, EXIF included, are identical (checked byte for byte: 36,886 B).
+  - For a moment the file takes twice the disk space.
+  - If Chrome or the Mac quits mid-copy, the original is still there, plus possibly a partial copy in `_to_delete`. The failure mode leaves *two* files, never zero.
+- **Write permission is asked for only on the Apply click.** The folder was opened read-only. `requestPermission({ mode: 'readwrite' })` needs a click to run from, so it can't happen earlier by accident.
+- **No overwriting inside `_to_delete`.** If a file with the same name is already there from an earlier run, the new one becomes `name (2).jpg`.
+- **Undecided and kept files are never touched.** Only files explicitly rejected are moved.
+- **The Done screen reports how each file went:** moved directly, or copied + removed, plus any renames and failures. A real-folder test shows which path Chrome actually took.
+
+### 9. Test scripts: three of my own mistakes, one unexplained run
+
+- **`Error: missing ) after argument list`:** my test used `await` inside a non-async `.every()` callback. Test-only; fixed and re-run.
+- **`NotFoundError` reading `_to_delete/horizon.jpg`:** my test assumed horizon.jpg would be the first card. Files sort oldest first, so it was sonoma.jpg. Test-only.
+- **Unexplained "Moved 0 files" run:** one fallback test reached the Done screen with 0 moved and 0 failed, meaning Apply ran with an empty reject list. Step by step, the ← press that should have rejected sonoma hadn't registered, and the script then called `.click()` on the summary's Apply button while it was hidden (scripts can click hidden buttons; people can't). I replayed the same sequence 6 times and every ← registered. Most likely cause: the script clicked "Start sorting" in the gap after the rescan, before the regroup, when the button was hidden and there were no families yet. Not reproduced, so the app is unchanged.
+- **Real-disk testing:** Chrome's folder picker is a native macOS dialog that the test tools can't drive, so `move()` on a real folder has to be checked by hand on a duplicated folder.
