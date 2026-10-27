@@ -74,9 +74,13 @@
     <section class="screen" id="summary" hidden>
       <header class="bar">
         <h1>Summary</h1>
-        <button id="summary-back">Back to families</button>
+        <div class="buttons">
+          <button id="summary-back">Back to families</button>
+          <button id="apply"></button>
+        </div>
       </header>
       <p class="muted" id="summary-count"></p>
+      <p id="apply-status"></p>
 
       <div class="summary-group" id="summary-reject">
         <h2 class="summary-head"></h2>
@@ -92,6 +96,24 @@
         <h2 class="summary-head"></h2>
         <p class="muted">Not sorted yet. They stay where they are.</p>
         <ul class="card-row"></ul>
+      </div>
+    </section>
+
+    <section class="screen" id="done" hidden>
+      <h1>Done</h1>
+      <p id="done-result"></p>
+      <p class="muted" id="done-how"></p>
+      <div id="done-failed" hidden>
+        <h2 class="summary-head" id="done-failed-head"></h2>
+        <ul class="failed-list" id="done-failed-list"></ul>
+      </div>
+      <p class="muted">
+        To undo, drag files back out of <code>_to_delete</code> in Finder.
+        To get rid of them for good, delete the <code>_to_delete</code> folder yourself.
+      </p>
+      <div class="buttons">
+        <button id="rescan">Rescan this folder</button>
+        <button id="done-choose">Choose another folder</button>
       </div>
     </section>
 

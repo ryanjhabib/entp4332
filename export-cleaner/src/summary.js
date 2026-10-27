@@ -13,6 +13,9 @@ export function showSummary(files) {
   $('#summary-count').textContent =
     `${plural(files.length, 'file')} · ${groups.reject.length} to reject · ${groups.keep.length} to keep · ` +
     `${groups.undecided.length} undecided · nothing has changed yet`;
+  $('#apply').hidden = !groups.reject.length;
+  $('#apply').textContent = `Move ${plural(groups.reject.length, 'file')} to _to_delete`;
+  $('#apply-status').textContent = '';
 
   const titles = { reject: 'Reject', keep: 'Keep', undecided: 'Undecided' };
   for (const [name, entries] of Object.entries(groups)) {

@@ -5,6 +5,7 @@ import { makeThumbnail } from './thumbs.js';
 import { groupFiles } from './group.js';
 import { openFamily } from './swipe.js';
 import { showSummary } from './summary.js';
+import { TRASH_FOLDER, requestWriteAccess, moveRejected } from './apply.js';
 
 // Everything the app knows lives here.
 const state = {
@@ -26,6 +27,12 @@ async function chooseFolder() {
     if (err.name === 'AbortError') return; // the user closed the picker
     throw err;
   }
+  await loadFolder(dir);
+}
+
+// Reads the folder fresh, makes previews and groups them. Used for a newly
+// picked folder and to rescan the same one after applying.
+async function loadFolder(dir) {
   // Free the previous folder's thumbnails before replacing them.
   for (const entry of state.files) if (entry.thumb) URL.revokeObjectURL(entry.thumb);
   const files = await readFolder(dir);
@@ -69,6 +76,56 @@ function regroup() {
 // Sorting every file leads straight to the summary; leaving early, to the overview.
 function sortFamily(family) {
   openFamily(state.sessions, family, (finished) => (finished ? showSummary(state.files) : showOverview()));
+}
+
+// The only code that changes anything on disk. Runs from the Apply click,
+// which Chrome requires before it will ask for write permission.
+async function apply() {
+  const rejected = state.files.filter((entry) => entry.decision === 'reject');
+  const status = $('#apply-status');
+  $('#apply').disabled = true;
+  $('#summary-back').disabled = true;
+  try {
+    if (!(await requestWriteAccess(state.dir))) {
+      status.textContent = 'Chrome wasn’t allowed to change this folder, so nothing moved.';
+      return;
+    }
+    const result = await moveRejected(state.dir, rejected, (done) => {
+      status.textContent = `Moving ${done} of ${rejected.length}…`;
+    });
+    showDone(result);
+  } catch (error) {
+    console.error(error);
+    status.textContent = `Stopped: ${error.message} Anything already moved is in ${TRASH_FOLDER}.`;
+  } finally {
+    $('#apply').disabled = false;
+    $('#summary-back').disabled = false;
+  }
+}
+
+function showDone({ moved, failed }) {
+  const kept = state.files.length - moved.length - failed.length;
+  $('#done-result').textContent =
+    `Moved ${plural(moved.length, 'file')} into ${TRASH_FOLDER} inside “${state.dir.name}”. ` +
+    `${plural(kept, 'other file')} ${kept === 1 ? 'wasn’t' : 'weren’t'} touched.`;
+  const copied = moved.filter((m) => m.how === 'copy').length;
+  $('#done-how').textContent = copied
+    ? `${moved.length - copied} moved directly; ${copied} copied, checked, then the original removed (Chrome refused a direct move).`
+    : 'Every file was moved directly: same file, same dates, nothing copied.';
+  const renamed = moved.filter((m) => m.name !== m.entry.name);
+  if (renamed.length) {
+    $('#done-how').textContent += ` ${renamed.length} renamed to avoid a clash with files already in ${TRASH_FOLDER}.`;
+  }
+  $('#done-failed').hidden = !failed.length;
+  $('#done-failed-head').textContent = `Couldn’t move ${plural(failed.length, 'file')}. They’re still in place.`;
+  $('#done-failed-list').replaceChildren(
+    ...failed.map(({ entry, error }) => {
+      const li = document.createElement('li');
+      li.textContent = `${entry.name}: ${error.message}`;
+      return li;
+    }),
+  );
+  show('done');
 }
 
 function showOverview() {
@@ -171,6 +228,9 @@ $('#start-sorting').addEventListener('click', () => {
 });
 $('#open-summary').addEventListener('click', () => showSummary(state.files));
 $('#summary-back').addEventListener('click', showOverview);
+$('#apply').addEventListener('click', apply);
+$('#rescan').addEventListener('click', () => loadFolder(state.dir));
+$('#done-choose').addEventListener('click', chooseFolder);
 $('#settings').addEventListener('input', regroup);
 $('#settings').addEventListener('submit', (event) => event.preventDefault());
 show(isSupported() ? 'start' : 'unsupported');

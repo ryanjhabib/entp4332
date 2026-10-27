@@ -319,3 +319,8 @@ button:disabled {
 code {
   font-family: var(--font-mono);
 }
+
+.failed-list {
+  margin: 0 0 var(--space-5);
+  font-size: var(--text-s);
+}
