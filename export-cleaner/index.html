@@ -30,7 +30,11 @@
         <button id="choose-again">Choose another folder</button>
       </header>
       <p class="muted" id="file-count"></p>
-      <ul class="thumb-grid" id="thumb-grid"></ul>
+      <form class="settings" id="settings" hidden>
+        <label>New session after a gap of <input type="number" id="gap" min="1" value="20" /> min</label>
+        <label>Same family within <input type="number" id="max-distance" min="0" max="32" value="10" /> of 64 bits</label>
+      </form>
+      <div id="sessions"></div>
     </section>
 
     <script type="module" src="/src/main.js"></script>

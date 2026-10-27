@@ -1,20 +1,23 @@
 // Step 2: a small preview image for every file.
 
+import { dHash } from './hash.js';
+
 // Longest side of a thumbnail in pixels: sharp at 160 CSS px on a retina screen.
 const SIZE = 320;
 
-// Makes one thumbnail and returns an object URL for an <img>, or null if the
-// file can't be read (corrupt, or a format the browser can't decode).
+// Makes one thumbnail and its perceptual hash, from the same small canvas.
+// Returns { thumb: object URL for an <img>, hash }, or nulls if the file can't
+// be read (corrupt, or a format the browser can't decode).
 export async function makeThumbnail({ file, ext }) {
   try {
     const render = { pdf: renderPdf, svg: renderSvg }[ext] ?? renderRaster;
     const canvas = await render(file);
     // WebP keeps transparency, which JPEG would turn black.
     const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.85));
-    return URL.createObjectURL(blob);
+    return { thumb: URL.createObjectURL(blob), hash: dHash(canvas) };
   } catch (err) {
     console.warn(`No thumbnail for ${file.name}:`, err);
-    return null;
+    return { thumb: null, hash: null };
   }
 }
 
