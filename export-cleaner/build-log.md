@@ -116,3 +116,11 @@ Every break gets an entry: the exact error or symptom, the cause, the fix, and a
 - **Symptom:** a preview test clicked the overview's Sort buttons one by one and failed on the second, after reporting a "1600px → 1600px" upgrade that made no sense for a 2000px photo.
 - **Cause:** the test, not the app. It clicked "Choose another folder" and then checked a "ready" condition that was already true from the *previous* test folder, so it ran against the old overview while the new one was still loading. When the new overview rendered, the button list it had collected went stale.
 - **Fix:** re-ran from a clean, fully loaded state, re-querying the buttons on each loop: photo upgraded 320 → 2000px, PDF 320 → 1600px, and Esc returned to an overview with both Sort buttons. Lesson: wait on something the new folder *changes*, not on something that might already be true.
+
+## Step 6 decisions: the summary
+
+- **Three groups:** Reject (will move to `_to_delete`), Keep, and Undecided (hidden when empty). **Undecided files are treated like kept files:** they stay where they are. Only an explicit reject ever moves a file.
+- **Each group shows its file count and total size**, plus one line on exactly what will happen to it. The top line ends with "nothing has changed yet".
+- **Two ways in:** finishing the last unfinished family goes straight to the summary, and the overview has a "Review summary" button once anything is decided. "Back to families" returns to the overview to change decisions there.
+- **The swipe screen now reports why it closed** (`exit(finished)`): `true` when every file is decided (show the summary), `false` for Esc or "All families" (show the overview). The "All families" click handler is wrapped as `() => exit()`. Passed straight in as `exit`, the click event would have arrived as a truthy `finished` and sent the user to the summary by mistake.
+- **The cards are the same elements as on the overview, moved, not copied.** The overview moves them back when it next renders (tested: 7 of 7 back in their families).
