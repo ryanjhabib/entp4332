@@ -73,6 +73,10 @@ button {
   cursor: pointer;
 }
 
+#choose {
+  margin-bottom: var(--space-4);
+}
+
 button:disabled {
   opacity: 0.4;
   cursor: default;
