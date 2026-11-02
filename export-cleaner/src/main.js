@@ -105,7 +105,7 @@ async function loadFolder(dir) {
   for (const entry of state.files) if (entry.thumb) URL.revokeObjectURL(entry.thumb);
   const files = await readFolder(dir);
   const bytes = files.reduce((sum, entry) => sum + entry.file.size, 0);
-  $('#start-folder-name').textContent = `${dir.name} (${formatSize(bytes).toLowerCase()})`;
+  $('#start-folder-name').textContent = `${dir.name} (${formatSize(bytes, 0).toLowerCase()})`;
   state.dir = dir;
   state.files = files;
   state.families = [];

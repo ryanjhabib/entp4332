@@ -20,8 +20,8 @@ export function familyDates(entries) {
   return dayFormat.formatRange(entries[0].file.lastModified, entries.at(-1).file.lastModified);
 }
 
-export function formatSize(bytes) {
+export function formatSize(bytes, decimals = 1) {
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-  return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} GB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(decimals)} MB`;
+  return `${(bytes / 1024 / 1024 / 1024).toFixed(decimals)} GB`;
 }
