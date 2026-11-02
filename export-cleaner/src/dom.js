@@ -9,14 +9,14 @@ export function show(id) {
 
 export const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
-const dayFormat = new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-export const timeFormat = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
+// "Oct 26, 10:05 AM": when one file was exported.
+export const exportFormat = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
-// "Mon, Oct 26 · 10:00 – 10:35 AM"
-export function sessionLabel({ files }) {
-  const start = files[0].file.lastModified;
-  const end = files.at(-1).file.lastModified;
-  return `${dayFormat.format(start)} · ${timeFormat.formatRange(start, end)}`;
+const dayFormat = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+
+// When a family's files were exported: "Oct 26, 2026", or "Mar 3 – Oct 26, 2026".
+export function familyDates(entries) {
+  return dayFormat.formatRange(entries[0].file.lastModified, entries.at(-1).file.lastModified);
 }
 
 export function formatSize(bytes) {

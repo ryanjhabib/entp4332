@@ -2,7 +2,7 @@
 // Right (drag, → key or button) keeps, left rejects. Each file's choice is
 // stored on it as entry.decision = 'keep' | 'reject'; nothing on disk changes.
 
-import { $, show, sessionLabel, timeFormat, formatSize } from './dom.js';
+import { $, show, familyDates, exportFormat, formatSize } from './dom.js';
 import { makePreview } from './thumbs.js';
 
 const SWIPE_DISTANCE = 120; // px a card must be dragged to count as a decision
@@ -10,7 +10,7 @@ const ROTATE_PER_PX = 1 / 20; // degrees of tilt per px dragged (6° at 120px)
 const FLY_MS = 200; // a decided card flying off screen
 const SNAP_MS = 200; // an undecided drag springing back to the centre
 
-let sessions = []; // every session, to find the next family to sort
+let families = []; // every family, to find the next one to sort
 let family = null; // the entries being sorted
 let index = 0; // which of them is on the card
 let history = []; // undo steps: { family, index, changes: [{ entry, previous }] }
@@ -22,8 +22,8 @@ const card = $('#swipe-card');
 
 // Opens a family. history is kept across families until the user leaves,
 // so Undo can step back into the family before.
-export function openFamily(allSessions, entries, exit) {
-  sessions = allSessions;
+export function openFamily(allFamilies, entries, exit) {
+  families = allFamilies;
   onExit = exit;
   history = [];
   startFamily(entries);
@@ -69,7 +69,7 @@ function undo() {
 // After a decision: the next file, else the next unfinished family, else back to the overview.
 function advance() {
   if (index < family.length) return renderCard();
-  const next = sessions.flatMap((s) => s.families).find((f) => f.some((entry) => !entry.decision));
+  const next = families.find((f) => f.some((entry) => !entry.decision));
   if (next) startFamily(next);
   else exit(true);
 }
@@ -89,13 +89,11 @@ function renderCard() {
   card.style.opacity = '';
   setHints(0);
 
-  const session = sessions.find((s) => s.families.includes(family));
-  const familyNumber = session.families.indexOf(family) + 1;
-  $('#swipe-where').textContent = `${sessionLabel(session)} · family ${familyNumber} of ${session.families.length} · file ${index + 1} of ${family.length}`;
+  $('#swipe-where').textContent = `${familyDates(family)} · family ${families.indexOf(family) + 1} of ${families.length} · file ${index + 1} of ${family.length}`;
 
   $('#swipe-name').textContent = entry.name;
   const status = { keep: ' · kept', reject: ' · rejected' }[entry.decision] ?? '';
-  $('#swipe-meta').textContent = `${timeFormat.format(entry.file.lastModified)} · ${formatSize(entry.file.size)} · ${entry.ext.toUpperCase()}${status}`;
+  $('#swipe-meta').textContent = `${exportFormat.format(entry.file.lastModified)} · ${formatSize(entry.file.size)} · ${entry.ext.toUpperCase()}${status}`;
 
   // The thumbnail shows at once; the full-size image replaces it once decoded.
   const img = $('#swipe-img');

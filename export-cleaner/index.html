@@ -41,10 +41,9 @@
         </div>
       </div>
       <form class="settings" id="settings" hidden>
-        <label>New session after a gap of <input type="number" id="gap" min="1" value="20" /> min</label>
-        <label>Same family within <input type="number" id="max-distance" min="0" max="32" value="10" /> of 64 bits</label>
+        <label>Same family at <input type="number" id="min-similarity" min="50" max="99" value="80" />% alike or more</label>
       </form>
-      <div id="sessions"></div>
+      <div class="families" id="families"></div>
     </section>
 
     <section class="screen" id="swipe" hidden>
