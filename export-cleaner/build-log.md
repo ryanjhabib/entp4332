@@ -379,3 +379,26 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - **Request:** `#EEEEEE` as the site background / solid wallpaper. Changed `--color-bg` from `#FFFFFF` to `#EEEEEE`. The pinned compare top uses the same background token.
 - Added `--color-surface: #FFFFFF` for existing white button fills and active-toggle text so the wallpaper choice only changes the backdrop.
 - **Checked:** `npm run build` passed (existing large-chunk warning only). Chrome computed the body and pinned compare background as `rgb(238, 238, 238)` and button fills / active-toggle text as `rgb(255, 255, 255)`. Visual check at the existing 1800×1043 window; no layout values changed. No app break encountered.
+
+## Syca's folder intro (2026-11-02)
+
+- **Request:** implement Ryan's supplied start-screen screenshots. Replaced the placeholder heading, copy and bordered Choose folder button with the Syca caption and “To start, drag or select a folder”. Select is a real button, rendered inline in italic Garamond with an underline. Page title is Syca; other screens retain their existing layouts.
+- **Tokens:** `#EEEEEE` background, `#333333` text and `#97A084` select (sampled from the screenshot); five stretch columns, 24px margins, 12px gutters. Intro is 36px / 110%, Regular 400, zero tracking; caption is 16px Medium 500. Spacing uses the 4px scale.
+- **Rule and spacing:** white `#FFFFFF`, 2 CSS pixels, full viewport width, centered vertically. Initial 28px text-box spacing left only about 24px of visible space, because the Garamond glyphs extend below their line box at 110%. Added a 4px optical offset: 32px box spacing gives about 28px visible spacing on the one-line intro. At 375px the last line has no descenders and has about 38px visible spacing; no phone-specific typography adjustment was made.
+
+  | Chrome viewport | Each of 5 columns | Rule center | Intro lines | Horizontal overflow |
+  | --- | --- | --- | --- | --- |
+  | 1800×1043 | 340.8px | 521.5px | 1 | None |
+  | 900×800 | 160.8px | 400px | 1 | None |
+  | 375×812 | 55.8px | 406px | 2 | None |
+
+- **Input:** drop one directory anywhere on the intro; capture its handle in the drop event's own tick, then reuse the existing local scan pipeline. Invalid files and multiple dropped items get a small error message. Drops during a loaded run cannot replace it or navigate the tab to a file. No new write access, upload path or persistent scan storage was added. [Handle timing reference](https://developer.mozilla.org/en-US/docs/Web/API/DataTransferItem/getAsFileSystemHandle).
+- **Verified:** build passed; Chrome native picker opened; nine synthetic browser integration checks plus helper edge-case assertions passed. Test events used synthetic handles and an ignored text file, not user images. Native Finder drag still needs end-to-end verification. No claim that the 1,200-image run was saved: the connected tab already showed the start screen and no loaded cards before edits.
+- **Test / tool dead ends:** the first picker click was in a background tab and did not display a native sheet; bringing the test tab forward and clicking its actual button opened the sheet. A later cancel encountered `The element ID is no longer valid`; refreshed native state showed the sheet was gone. Finder automation stopped when the user changed the app, so no cross-app drag was attempted. A browser evaluation returned `Timed out after 3000ms waiting for CDP command Page.getFrameTree`; existing tab inventory and accessibility/screenshot inspection recovered without reloading. The viewport override initially affected the newest test tab rather than the older intro tab; detected from `innerWidth === 1800`, then checked fresh dedicated previews at the requested dimensions. These were test/environment issues; no app workaround was added.
+
+## Garamond's weight was right, but its rendering looked too heavy (2026-11-02)
+
+- **Symptom:** Ryan found both the large Garamond intro and caption too thick, including at the font's lightest weight.
+- **Evidence / fix:** RH Studio's `app/layout.tsx` applies Tailwind's `antialiased` class to the root. Added its Chrome/macOS equivalent, `-webkit-font-smoothing: antialiased`, scoped to this intro. [Rendering property reference](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/font-smooth).
+- **Correction:** briefly tried dropping the caption from 500 to 400 while investigating. Ryan clarified that the Garamond caption must stay Medium 500; restored it before committing. Final weights are intro 400 and caption 500. No fake lighter weight or text stroke was added.
+- **Checked:** separate build passed and Chrome reported intro `400`, caption `500`, smoothing `antialiased`. Visually checked and saved the final desktop screenshot. Saved the intro and rendering fix as separate site commits, with these notes in a separate notes commit. Nothing pushed.

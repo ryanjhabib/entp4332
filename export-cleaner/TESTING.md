@@ -36,6 +36,16 @@ A running record of every kind of folder and file the app has been run on, what 
 - Chrome reported all four font faces `loaded`. Instrument Sans supports weights 400–700 and widths 75–100%; EB Garamond supports weights 400–800. Checked at 1800×1043 and 900×800, with no horizontal overflow.
 - `npm run build` passed and emitted all four WOFF2 files. Existing interface typography remains the system font; the new families are available through CSS custom properties for Ryan's design pass.
 
+## Syca intro and folder input (2026-11-02)
+
+- **Layout:** checked in Chrome at 1800×1043, 900×800 and 375×812. Five stretch columns, 24px margins, 12px gutters. The 2px rule's center was 521.5px, 400px and 406px respectively, exactly half the viewport height. No horizontal overflow. The intro is one line at the first two widths and two lines at 375px.
+- **Typography:** intro 36px EB Garamond Regular 400, 110% line height; brand/caption 16px Medium 500. Confirmed computed weights and `-webkit-font-smoothing: antialiased`, matching RH Studio's root `antialiased` utility. Accent and text sampled from Ryan's screenshot: `#97A084` and `#333333`.
+- **Visual spacing:** desktop and 900px screenshots show approximately 28px between visible letters and the white rule. The text box is 32px away, including a 4px optical adjustment for Garamond's glyphs. At 375px the last line is “folder”, with no descenders, and its visible gap is about 38px; the text-box gap remains 32px. No separate phone design was supplied.
+- **Native picker:** clicking select in the foreground test tab opened Chrome's macOS folder picker. Cancelling leaves the intro available.
+- **Synthetic browser integration:** a temporary copy of the app's HTML imported the real `main.js` and used synthetic `DragEvent` objects and directory handles with an ignored `.txt` file. Nine checks passed: invalid-file navigation blocked, intro retained, useful error shown; valid drop navigation blocked, directory routed through scanning, normal extension filtering retained; loaded-run drop navigation blocked and folder retained; select routed through the picker. Temporary page removed afterward. This does not establish native Finder drag end to end.
+- **Drop helper:** Node assertions passed for synchronous handle capture before awaiting, valid-directory acceptance, no items, string-only items, multiple files, unavailable handle API, a file handle, and a null handle.
+- **Limits:** no real user folder was used or moved. Full native Finder drag remains a manual check. Save progress is still not implemented; these changes do not preserve a loaded run across HTML/JavaScript reloads. The connected user tab was already on the start screen with zero loaded cards before this work.
+
 ## Kinds of content still untested
 - Figma exports (frames, components, variants)
 - Real multi-page client PDFs and slide decks

@@ -20,7 +20,7 @@ This is a source review, not a runtime network audit. Recheck it when the releva
 
 | Area | Evidence in the current implementation | Remaining uncertainty |
 | --- | --- | --- |
-| Folder access | `src/scan.js` opens a user-selected folder read-only. `src/main.js` requests write access at Apply. | Desktop permissions and folder watching are future work. |
+| Folder access | `src/scan.js` opens a user-selected folder read-only. The intro also accepts one dropped directory using `getAsFileSystemHandle()` and sends it through the existing `readFolder` / analysis pipeline. Files and multiple dropped items are rejected. Loaded runs ignore additional drops and suppress default file navigation. `src/main.js` requests write access at Apply. | Native Finder drag still needs end-to-end verification; synthetic drop/picker routing passed. Desktop permissions and folder watching are future work. |
 | Image analysis | `src/embed.js` runs `onnx-community/dinov2-small` through Transformers.js using WebGPU or local WebAssembly execution. | Verify the actual outgoing requests and exact downloaded model revision. |
 | Text and PDFs | `src/ocr.js` uses a Tesseract.js worker; `src/pdf.js` passes local file bytes to pdf.js. | Audit library requests and storage as well as our wrapper code. |
 | Training and uploads | No training/fine-tuning step or file-upload path was found in the app source checked. | This does not establish the behaviour of every dependency or future deployment. |
@@ -92,6 +92,7 @@ Explain model/resource downloads and any local caching in the supporting privacy
 | --- | --- | --- |
 | 2026-11-02 | App source, selected dependency defaults, and primary documentation reviewed; initial product discussion recorded. | Local processing direction supported by source. Network, storage, distribution-licence, and legal-scope checks remain open. Next routine review: 2026-12-02, or sooner at a trigger above. |
 | 2026-11-02 | Added local Instrument Sans and EB Garamond assets and reviewed font-loading source. | Both families include their OFL notices. Four font faces loaded in a temporary Chrome specimen page; no font CDN integration was added. Broader network checks remain open. |
+| 2026-11-02 | Added intro folder drag-and-drop and reviewed its access path. | Reuses existing local scan/analysis; no upload, persistence, write-permission request, or new processing provider was added. Native folder picker opened in Chrome. Browser tests used synthetic handles/events; native Finder drag remains unverified. |
 
 ## References
 
