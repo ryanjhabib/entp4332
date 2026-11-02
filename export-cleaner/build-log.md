@@ -185,3 +185,9 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - **Symptom:** the first test script using Transformers.js died with this error.
 - **Cause:** Vite pre-bundles each npm package the first time a page imports it, then reloads the page to use the bundle. The reload killed the running script.
 - **Fix:** run it again. Expected once per new dependency.
+
+### File names as a tie-breaker
+- **Rule:** if two files' name stems match, their similarity gets +0.05. That's enough to tip a 0.77 pair over the 80% line, never enough to join unrelated images (around 0.2–0.5).
+- **Stem:** lower case, extension off, then edit/copy markers stripped from the end, repeatedly: ` (1)`, ` copy 2`, `-Edit-2`, `_v3`, `_final` / `_new` / `_old` / `_export(ed)`. A trailing `-2` is stripped only when a 3+ digit camera number is left (`DSC01234-2` → `dsc01234`), so `Untitled-501` and `Untitled-502` stay different photos. Generic names (`untitled`, `image`, `photo`, `frame`…) aren't a clue.
+- **Tested:** `DSC01234`, `-Edit`, `-Edit-2` and `-2` all → `dsc01234`; `poster_v3 copy 2.png` and `poster_final.pdf` → `poster`. At 80%, a 0.77 pair joined only with matching stems; 0.74 with matching stems and 0.40 with matching stems stayed separate.
+- **Known gap:** `Frame 12-1` (if Figma names duplicates that way) doesn't match `Frame 12`. The rule is kept conservative on purpose.
