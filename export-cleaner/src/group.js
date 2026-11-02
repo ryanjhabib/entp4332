@@ -37,13 +37,15 @@ export function nameStem(name) {
   return GENERIC.has(stem) ? null : stem;
 }
 
-// A PDF with at least this many words is judged by its text: at thumbnail
-// size the image model can't read, so text pages from one template all look alike.
+// A file with at least this many words (a PDF's text, or an image's by OCR)
+// is judged by its text: at thumbnail size the image model can't read, so text
+// pages from one template all look alike. A photo poster's headline is too
+// few words, so posters are still judged by their looks.
 const MIN_WORDS = 20;
 
 const hasText = (entry) => (entry.words?.size ?? 0) >= MIN_WORDS;
 
-// How alike two files are. Two PDFs with text: the words they share (the same
+// How alike two files are. Two files with text: the words they share (the same
 // text in a new layout scores high, a different text in the same template low).
 // Anything else: how alike they look.
 function fileSimilarity(a, b) {
@@ -63,20 +65,22 @@ function lookAlike(a, b) {
   return (covered(a, b) + covered(b, a)) / 2;
 }
 
-// Words in both / words in either (0–1).
+// How much of the shorter text is in the longer one (0–1), so one slide
+// scores high against the whole deck it came from.
 function sharedWords(a, b) {
+  const [shorter, longer] = a.size <= b.size ? [a, b] : [b, a];
   let shared = 0;
-  for (const word of a) if (b.has(word)) shared += 1;
-  return shared / (a.size + b.size - shared);
+  for (const word of shorter) if (longer.has(word)) shared += 1;
+  return shared / shorter.size;
 }
 
 // Two files are in the same family when their similarity (plus NAME_BONUS if
 // their names share a stem) is at least minSimilarity. Chains count too (A
 // looks like B, B looks like C, so A, B and C are one family), which keeps a
 // run of small edits together. The strongest links are made first, and a
-// link is skipped if it would put two PDFs whose words say they're different
-// documents in one family (a PNG of a slide looks like every deck made from
-// that template; it joins the one it matches best).
+// link is skipped if it would put two files whose words say they're different
+// documents in one family (an image that looks like several decks made from
+// one template joins the one it matches best).
 // Files with nothing to compare (no preview) stay on their own.
 // Returns families as arrays of files, each oldest first, ordered by their oldest file.
 export function groupFiles(files, { minSimilarity }) {
@@ -94,17 +98,19 @@ export function groupFiles(files, { minSimilarity }) {
   links.sort((a, b) => b.score - a.score);
 
   // Union-find: each file points towards its family's representative, which
-  // also keeps the family's PDFs-with-text to check new links against.
+  // also keeps all the family's words together. Two families are different
+  // documents when their words mostly don't overlap; comparing whole families
+  // (not file by file) lets slides 2 and 3, which share few words, both join
+  // the deck that contains them.
   const parent = files.map((_, i) => i);
-  const texts = files.map((entry) => (hasText(entry) ? [entry] : []));
+  const texts = files.map((entry) => (hasText(entry) ? new Set(entry.words) : null));
   const root = (i) => (parent[i] === i ? i : (parent[i] = root(parent[i])));
-  const differentDocuments = (x, y) =>
-    texts[x].some((a) => texts[y].some((b) => sharedWords(a.words, b.words) < minSimilarity));
+  const differentDocuments = (x, y) => texts[x] && texts[y] && sharedWords(texts[x], texts[y]) < minSimilarity;
   for (const { i, j } of links) {
     const [x, y] = [root(i), root(j)];
     if (x === y || differentDocuments(x, y)) continue;
     parent[y] = x;
-    texts[x].push(...texts[y]);
+    if (texts[y]) texts[x] = texts[x] ? new Set([...texts[x], ...texts[y]]) : texts[y];
   }
 
   // Files are already oldest first, so families come out in order of their oldest file.

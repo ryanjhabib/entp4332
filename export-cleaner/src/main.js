@@ -72,15 +72,15 @@ async function makeThumbnails(files) {
   await Promise.all(Array.from({ length: THUMB_WORKERS }, work));
 }
 
-// Runs each file through the image model (and reads PDFs' text), one at a
-// time: the model uses the whole GPU. The first time, the model itself downloads first.
+// Runs each file through the image model and reads its text (a PDF's, or an
+// image's by OCR), one at a time: the model uses the whole GPU. The first time, the model itself downloads first.
 async function describeImages(files) {
   let done = 0;
   for (const entry of files) {
     if (files !== state.files) return;
     Object.assign(entry, await describe(entry, (percent) => setStatus(`loading the image model ${percent}%`)));
     done += 1;
-    setStatus(`comparing images ${done} of ${files.length}`);
+    setStatus(`looking at each file ${done} of ${files.length}`);
   }
 }
 
