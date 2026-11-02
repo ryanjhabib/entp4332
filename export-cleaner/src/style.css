@@ -43,12 +43,10 @@
   --color-keep: #1f7a3a;
   --color-reject: #b3261e;
   --color-thumb-bg: #f2f2f2;
-  --color-select: #97a084;
-  --color-progress: #95a081;
+  --color-accent: #95a081; /* select, the progress bar and the caret */
   --color-band: #e5e5e5;
   --color-band-line: #cccccc;
   --color-row-active: #222222;
-  --color-caret: #95a081;
 
   --font-sans: system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
   --font-instrument-sans: "Instrument Sans", var(--font-sans);
@@ -205,7 +203,7 @@ button {
   border: 0;
   border-radius: 0;
   background: transparent;
-  color: var(--color-select);
+  color: var(--color-accent);
   font: inherit;
   font-style: italic;
   text-decoration: underline;
@@ -274,7 +272,7 @@ button {
   background: var(--color-band);
   box-shadow: 0 var(--intro-rule-width) 0 var(--color-band-line);
   color: var(--color-text);
-  caret-color: var(--color-caret);
+  caret-color: var(--color-accent);
   font-family: var(--font-eb-garamond);
   font-size: var(--intro-size);
   font-weight: var(--font-weight-regular);
@@ -375,7 +373,7 @@ button {
 .loading-fill {
   width: 100%;
   height: 100%;
-  background: var(--color-progress);
+  background: var(--color-accent);
   transform: scaleX(0);
   transform-origin: left;
 }
