@@ -4,14 +4,14 @@ import { isSupported, pickFolder, readFolder } from './scan.js';
 import { makeThumbnail } from './thumbs.js';
 import { describe } from './describe.js';
 import { groupFiles } from './group.js';
-import { openFamily } from './swipe.js';
+import { openFamily } from './compare.js';
 import { showSummary } from './summary.js';
 import { TRASH_FOLDER, requestWriteAccess, moveRejected } from './apply.js';
 
 // Everything the app knows lives here.
 const state = {
   dir: null, // the folder the user picked (a FileSystemDirectoryHandle)
-  // For each design file: { handle, file, name, ext, thumb, vectors, words, card, decision }
+  // For each design file: { handle, file, name, ext, thumb, width, height, vectors, words, shot, colour, card, decision }
   files: [],
   families: [], // [[entry, ...], ...], each oldest first, similar families side by side
 };
@@ -63,7 +63,7 @@ async function makeThumbnails(files) {
     // Stop early if the user has picked another folder meanwhile.
     while (queue.length && files === state.files) {
       const entry = queue.shift();
-      entry.thumb = await makeThumbnail(entry);
+      Object.assign(entry, await makeThumbnail(entry));
       showThumb(entry);
       done += 1;
       setStatus(`previews ${done} of ${files.length}`);
@@ -91,8 +91,8 @@ function regroup() {
   renderFamilies();
 }
 
-// Sorting every file leads straight to the summary; leaving early, to the overview.
-function sortFamily(family) {
+// Comparing until nothing's left leads straight to the summary; leaving early, to the overview.
+function compareFamily(family) {
   openFamily(state.families, family, (finished) => (finished ? showSummary(state.files) : showOverview()));
 }
 
@@ -162,7 +162,7 @@ function setStatus(progress) {
 function renderLoading() {
   $('#folder-name').textContent = state.dir.name;
   $('#settings').hidden = true;
-  $('#start-sorting').hidden = true;
+  $('#start-comparing').hidden = true;
   $('#open-summary').hidden = true;
   setStatus('making previews');
   const grid = document.createElement('ul');
@@ -181,8 +181,8 @@ function renderFamilies() {
     `${decided} decided`,
   ].join(' · ');
   $('#settings').hidden = false;
-  $('#start-sorting').hidden = decided === state.files.length;
-  $('#start-sorting').textContent = decided ? 'Continue sorting' : 'Start sorting';
+  $('#start-comparing').hidden = !nextFamily();
+  $('#start-comparing').textContent = decided ? 'Continue comparing' : 'Start comparing';
   $('#open-summary').hidden = !decided;
   $('#families').replaceChildren(...state.families.map(renderFamily));
 }
@@ -191,7 +191,7 @@ function renderFamily(entries) {
   const family = document.createElement('div');
   family.className = 'family';
   family.innerHTML =
-    '<div class="family-head"><div><p class="family-dates"></p><p class="muted"></p></div><button>Sort</button></div><ul class="card-row"></ul>';
+    '<div class="family-head"><div><p class="family-dates"></p><p class="muted"></p></div><button>Compare</button></div><ul class="card-row"></ul>';
   family.querySelector('.family-dates').textContent = familyDates(entries);
   const kept = entries.filter((entry) => entry.decision === 'keep').length;
   const rejected = entries.filter((entry) => entry.decision === 'reject').length;
@@ -202,7 +202,7 @@ function renderFamily(entries) {
     kept && `${kept} kept`,
     rejected && `${rejected} rejected`,
   ].filter(Boolean).join(' · ');
-  family.querySelector('.family-head button').addEventListener('click', () => sortFamily(entries));
+  family.querySelector('.family-head button').addEventListener('click', () => compareFamily(entries));
   for (const entry of entries) entry.card.dataset.decision = entry.decision ?? '';
   family.querySelector('.card-row').append(...entries.map((entry) => entry.card));
   return family;
@@ -232,9 +232,15 @@ function showThumb(entry) {
 
 $('#choose').addEventListener('click', chooseFolder);
 $('#choose-again').addEventListener('click', chooseFolder);
-$('#start-sorting').addEventListener('click', () => {
-  const next = state.families.find((f) => f.some((entry) => !entry.decision));
-  if (next) sortFamily(next);
+// The next family with undecided versions to compare; one-file families only once those are done.
+function nextFamily() {
+  const open = (f) => f.some((entry) => !entry.decision);
+  return state.families.find((f) => f.length > 1 && open(f)) ?? state.families.find(open);
+}
+
+$('#start-comparing').addEventListener('click', () => {
+  const next = nextFamily();
+  if (next) compareFamily(next);
 });
 $('#open-summary').addEventListener('click', () => showSummary(state.files));
 $('#summary-back').addEventListener('click', showOverview);

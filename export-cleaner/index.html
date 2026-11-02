@@ -37,7 +37,7 @@
         <p class="muted" id="file-count"></p>
         <div class="buttons">
           <button id="open-summary" hidden>Review summary</button>
-          <button id="start-sorting" hidden>Start sorting</button>
+          <button id="start-comparing" hidden>Start comparing</button>
         </div>
       </div>
       <form class="settings" id="settings" hidden>
@@ -46,32 +46,37 @@
       <div class="families" id="families"></div>
     </section>
 
-    <section class="screen" id="swipe" hidden>
+    <!-- Compare: two versions side by side; the winner stays, the next version takes the loser's place. -->
+    <section class="screen" id="compare" hidden>
       <header class="bar">
-        <button id="swipe-back">All families</button>
-        <p class="muted" id="swipe-where"></p>
+        <button id="compare-back">All families</button>
+        <p class="muted" id="compare-where"></p>
       </header>
 
-      <div class="deck">
-        <div class="swipe-card" id="swipe-card">
-          <div class="swipe-preview" id="swipe-preview"><img id="swipe-img" alt="" draggable="false" /></div>
-          <span class="swipe-hint" data-hint="reject">Reject</span>
-          <span class="swipe-hint" data-hint="keep">Keep</span>
+      <div class="compare-sides">
+        <div class="compare-side">
+          <div class="compare-frame" id="frame-left"><img alt="" /></div>
+          <div class="compare-caption" id="caption-left"></div>
+          <div class="compare-actions">
+            <button id="pick-left">← This one</button>
+            <button id="keep-alone">Keep</button>
+            <button id="reject-alone">Reject</button>
+          </div>
+        </div>
+        <div class="compare-side">
+          <div class="compare-frame" id="frame-right"><img alt="" /></div>
+          <div class="compare-caption" id="caption-right"></div>
+          <div class="compare-actions">
+            <button id="pick-right">This one →</button>
+          </div>
         </div>
       </div>
 
-      <p class="swipe-name" id="swipe-name"></p>
-      <p class="muted swipe-meta" id="swipe-meta"></p>
-
-      <div class="swipe-actions">
-        <button id="reject">← Reject</button>
-        <button id="undo">Undo</button>
-        <button id="keep">Keep →</button>
+      <div class="compare-actions">
+        <button id="keep-both">Keep both ↓</button>
+        <button id="compare-undo">Undo</button>
       </div>
-      <div class="swipe-actions">
-        <button id="reject-all">Reject all</button>
-        <button id="keep-all">Keep all</button>
-      </div>
+      <ul class="filmstrip" id="filmstrip"></ul>
     </section>
 
     <section class="screen" id="summary" hidden>

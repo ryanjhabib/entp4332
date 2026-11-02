@@ -11,25 +11,26 @@ export function renderAt({ file, ext }, size) {
   return render(file, size);
 }
 
-// Makes one thumbnail. Returns an object URL for an <img>, or null if the
-// file can't be read (corrupt, or a format the browser can't decode).
+// Makes one thumbnail. Returns { thumb: object URL for an <img>, width, height }
+// (the image's own pixel size; none for PDFs), or a null thumb if the file
+// can't be read (corrupt, or a format the browser can't decode).
 export async function makeThumbnail(entry) {
   const { file } = entry;
   try {
     const canvas = await renderAt(entry, THUMB_SIZE);
     // WebP keeps transparency, which JPEG would turn black.
     const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.85));
-    return URL.createObjectURL(blob);
+    return { thumb: URL.createObjectURL(blob), width: canvas.sourceWidth, height: canvas.sourceHeight };
   } catch (err) {
     console.warn(`No thumbnail for ${file.name}:`, err);
-    return null;
+    return { thumb: null };
   }
 }
 
-// Longest side of a PDF page on the swipe card.
+// Longest side of a PDF page or TIFF in a compare frame.
 const PREVIEW_SIZE = 1600;
 
-// A bigger image for the swipe card, as an object URL. Images use the
+// A bigger image for a compare frame, as an object URL. Images use the
 // original file (the browser scales it to the card); PDFs and TIFFs, which an
 // <img> can't show, are rendered larger instead.
 export async function makePreview(entry) {
@@ -99,9 +100,12 @@ async function svgBlob(file) {
   return new Blob([new XMLSerializer().serializeToString(doc)], { type: 'image/svg+xml' });
 }
 
+// Also notes the source's own size on the canvas, for the compare screen's captions.
 function drawScaled(source, width, height, size) {
   const scale = size / Math.max(width, height);
   const canvas = document.createElement('canvas');
+  canvas.sourceWidth = width;
+  canvas.sourceHeight = height;
   canvas.width = Math.max(1, Math.round(width * scale));
   canvas.height = Math.max(1, Math.round(height * scale));
   const ctx = canvas.getContext('2d');
