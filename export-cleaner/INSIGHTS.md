@@ -79,6 +79,11 @@ Lightroom exports carry an original-photo ID and a capture moment. When both dif
 ## Frames of the same scene (from test 17)
 Ryan's view: different frames of one scene (shot seconds apart, slightly different angle or aspect) are **separate photos** and fine apart, as long as they're easy to compare. Today they sit side by side through look-ordering. If culling bursts becomes a goal, the capture-time gap (seconds) is a reliable signal for a *soft* "same moment" link: shown together, not merged.
 
+## After the big Lightroom run (tests 20–21)
+- **The main remaining photo weakness is "same subject, different photo":** consecutive frames of different people (cyclists, tests 19 and 21), the same garment on a model in different shots or sessions (white tee, test 21), and same-pose products (tests 14–15). The −0.08 "different photos" rule isn't enough when looks are 0.88+. Next step: collect the measured scores of the wanted pairs (e.g. building frames 2 s apart, 0.92) and the unwanted ones (cyclists, tee shots, dunes 0.82) and tune from the data, e.g. a larger penalty when the originals differ by more than a few seconds of capture time, or a centre/subject comparison.
+- **Same template, different content** (test 20, site screenshots): compare a centre crop as well as the whole (see test 20 for the acceptance check).
+- **Performance and memory at scale:** 1,286 photos took 41 min (about 1.9 s each) and the tab used about 1.8 GB. Most of the memory is every thumbnail held decoded on the page. To do: lazy-load thumbnails (only cards near the screen hold pixels), free full-size decodes promptly, and save progress (IndexedDB) so a reload doesn't redo 40 minutes. Ryan usually runs many tabs across browsers plus Figma, so memory matters.
+
 ## Suggested order for the next work
 1. ~~**Short-text phrase rule**~~ **done**, plus a second, larger OCR read for very large exports with a little text: all four test-16 misses fixed (eternity, phone, helvetica, black calendar; the calendar had the *same* text, just too small to read at 1600px).
    - Large exports (3200px+) with any text are re-read at full size, which also groups a text sheet with its mock-up (word overlap 0.46 → 0.97). **Mock-ups and "in context" shots are core designer output**, not an edge case.
