@@ -1,0 +1,27 @@
+# What Export Cleaner has been tested on
+
+A running record of every kind of folder and file the app has been run on, what each one checked, and how it went. Newest at the bottom. The test folders live in `test-images/` (git-ignored, never committed); Ryan's real folders stay where they are.
+
+| # | Folder / files | Kind of content | What it checked | Result |
+|---|---|---|---|---|
+| 1 | Fake folder: 9 entries | Mixed names, `.txt`, `.DS_Store`, subfolder | Step 1: only design files are read | ✅ 6 of 9 read; the rest skipped |
+| 2 | Fake folder: 8 files | Generated PNG, JPG (6000×4000), WebP, SVGs, PDF, broken files | Thumbnails for every type | ✅ all previewed, broken ones say "No preview" |
+| 3 | 6 macOS wallpapers → JPG | Landscapes, abstract colourful designs | Edits, crops, colourways, re-exports: how similar they score | ✅ used to choose DINOv2; dHash failed crops |
+| 4 | 23-image hard test set | Same photo as edits, crops (4:5, 16:9, 9:16, off-centre); one poster in 3 layouts; a different poster in the same layout | Can the model tell same content from different? | ✅ DINOv2: weakest same 0.84, strongest different 0.73 |
+| 5 | 14-file "Model Test" | Wallpapers across two days, re-edits months later, a broken file | Whole-folder families, months apart | ✅ March originals + October 9:16/16:9 re-edits = one family |
+| 6 | Hand-written PDFs | 3-page deck, same text re-laid out, different doc on the same template, PNG of a slide | PDF pages and words | ✅ after fix: deck + re-layout + slide together, other doc apart |
+| 7 | OCR test (10 files) | PNG exports of text slides, photo posters, photos | Reading text inside images | ✅ slides join their deck, template look-alikes stay apart |
+| 8 | Format test | TIFF (8-bit, LZW, 16-bit), AVIF, GIF beside JPG twins | More file types | ✅ all read, each grouped with its twin |
+| 9 | **Ryan's Lightroom Saved Photos** (3 JPG) | Three Lightroom exports of one iPhone photo | EXIF / original-photo ID | ✅ read as the same shot; also showed "Untitled-NNN" numbers count exports, not photos |
+| 10 | Re-crop with metadata | Centre-40% B&W crop with the original's metadata copied in | Original-photo ID deciding on its own | ✅ joins its original despite looking only 0.47 alike |
+| 11 | **Ryan's Unsplash folder** (362 photos) | Mostly distinct stock photos | Real-world grouping at scale | ✅ 334 families; matches seen were right (e.g. two `oxana-golubets` shots), no wrong merges spotted |
+| 12 | **Ryan's ~35-file folder** (Wolfgang Hasselmann photos) | One photographer's set: flowers, snow, landscapes | Grouping and look-ordering | ✅ "groups accurate", about a minute in total; prompted ordering by look |
+| 13 | 30-version test family | One photo graded 30 ways | Compare screen layout, pinned frames, scrolling | ✅ fits one screen at 1043 and 800px tall |
+| 14 | **Ryan's product flat-lays** (4 PNG, 4000×5333) | Two different jackets, front and back, same grey backdrop and pose | Same pose, different product | ❌ the two **fronts** grouped (looks 0.87): the model ignores colour by design, so "green bomber front" ≈ "brown leather front". Subject-only (0.80), detail matching (0.32 vs a legit crop's 0.34) and subject colour (ΔE 12–16 vs edits' 9–21) don't separate them cleanly. Workarounds: 88% similarity for such folders; planned "Not the same" split while comparing. |
+
+## Kinds of content still untested
+- Figma exports (frames, components, variants)
+- Real multi-page client PDFs and slide decks
+- RAW-adjacent Lightroom exports (16-bit TIFFs from a real catalogue)
+- Folders over 1,000 files end to end (time and memory)
+- Screenshots and UI mockups

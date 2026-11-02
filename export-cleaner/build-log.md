@@ -289,3 +289,24 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - **Keys:** ← → pick, ↓ keep both, S same piece, D different, ⌘Z / Backspace undo, Esc to Families. ⌘ shortcuts other than ⌘Z are left to the browser, so ⌘S and ⌘D never trigger a merge.
 - **Tested in Chrome** on the photo test folder: finishing Sonoma brought radial's closest version in for the check; D started radial; S merged radial with the iMac pair (6 → 5 families, comparing continued with 4 versions); ⌘Z restored 6; Families → Compare resumed at the next open family; the purple single got its check and stayed untouched after D; the unreadable file at the end offered Keep / Reject; then the summary showed 9 reject / 4 keep / 1 undecided.
 - **Known gap:** switching to Families *during* a same-piece check and back skips that one check (the stream resumes at the next family with undecided versions).
+
+### 14. Two different jackets in the same pose grouped (product flat-lays)
+- **Symptom:** Ryan's product photos (4000×5333 PNGs, flat grey backdrop): `Bomber_front` (olive nylon bomber) and `Bomber2_front` (dark brown leather jacket) became one family. The backs stayed separate.
+- **Measured** (DINOv2 small):
+
+  | Pair | Whole image | Subject only | Patch-level detail match | Subject colour ΔE |
+  |---|---|---|---|---|
+  | different jackets, fronts | **0.87** | 0.80 | 0.32 | 16 |
+  | different jackets, backs | 0.80 | 0.79 | 0.26 | 12 |
+  | same jacket, front vs back | 0.68 | 0.69–0.71 | 0.28–0.36 | 2–5 |
+  | photo vs B&W edit | 0.92 | 0.92 | 0.67 | 21 |
+  | photo vs 9:16 crop | 0.92 | 0.92 | 0.34 | – |
+  | photo vs heavy grade | 0.99 | 0.99 | 0.96 | 17 |
+
+- **Cause:** DINOv2 is trained to be colour-invariant (so B&W edits still match their originals). Same pose, backdrop and framing therefore outweigh a different garment.
+- **Dead ends:**
+  - **Cropping to the subject** only lowered the pair to 0.80, still on the line.
+  - **Patch-level mutual-nearest-neighbour matching** separates the jackets (0.26–0.32) but scores a legitimate photo crop at 0.34, so no threshold works.
+  - **Subject colour in Lab:** both jackets are near-neutral (chroma 3–6), and real edits change colour more (ΔE 17–21) than the jackets differ (12–16).
+  - **File names** (`Bomber` vs `Bomber2`) would help here, but Ryan's point stands: names are unreliable in general, so they stay a +0.05 nudge.
+- **Outcome:** no automatic fix yet. For folders like this, set similarity to 88%. Next: a **"Not the same"** action while comparing that splits a version into its own family (the counterpart of "Same piece"), so grouping mistakes take one key press to fix in either direction. Logged in `TESTING.md` (a new record of every kind of content tested).
