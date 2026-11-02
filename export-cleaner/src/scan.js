@@ -1,7 +1,7 @@
 // Step 1: open a folder and list the design files directly inside it.
 
 // File types the app looks at. Everything else in the folder is ignored.
-export const EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp', 'svg', 'pdf'];
+export const EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp', 'avif', 'gif', 'tif', 'tiff', 'svg', 'pdf'];
 
 // Safari, Firefox, Brave and mobile browsers don't have the picker at all.
 export const isSupported = () => 'showDirectoryPicker' in window;

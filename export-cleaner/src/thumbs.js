@@ -9,7 +9,7 @@ export const THUMB_SIZE = 320;
 // file can't be read (corrupt, or a format the browser can't decode).
 export async function makeThumbnail({ file, ext }) {
   try {
-    const render = { pdf: renderPdf, svg: renderSvg }[ext] ?? renderRaster;
+    const render = { pdf: renderPdf, svg: renderSvg, tif: renderTiff, tiff: renderTiff }[ext] ?? renderRaster;
     const canvas = await render(file);
     // WebP keeps transparency, which JPEG would turn black.
     const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.85));
@@ -24,21 +24,43 @@ export async function makeThumbnail({ file, ext }) {
 const PREVIEW_SIZE = 1600;
 
 // A bigger image for the swipe card, as an object URL. Images use the
-// original file (the browser scales it to the card); PDFs render page 1 larger.
+// original file (the browser scales it to the card); PDFs and TIFFs, which an
+// <img> can't show, are rendered larger instead.
 export async function makePreview({ file, ext }) {
-  if (ext === 'pdf') {
-    const canvas = await renderPdf(file, PREVIEW_SIZE);
+  const render = { pdf: renderPdf, tif: renderTiff, tiff: renderTiff }[ext];
+  if (render) {
+    const canvas = await render(file, PREVIEW_SIZE);
     return URL.createObjectURL(await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.9)));
   }
   return URL.createObjectURL(ext === 'svg' ? await svgBlob(file) : file);
 }
 
-// PNG, JPG and WebP decode straight to a bitmap (EXIF rotation included),
-// which is freed as soon as the small copy is drawn.
+// PNG, JPG, WebP, AVIF and GIF decode straight to a bitmap (EXIF rotation
+// included; a GIF's first frame).
 async function renderRaster(file) {
-  const bitmap = await createImageBitmap(file);
+  return drawBitmap(await createImageBitmap(file));
+}
+
+// Chrome can't decode TIFF (a common lossless Lightroom export, often
+// 16-bit), so UTIF.js does. It's only fetched the first time a folder has one.
+let utifReady;
+
+async function renderTiff(file, size = THUMB_SIZE) {
+  utifReady ??= import('utif').then((module) => module.default ?? module);
+  const UTIF = await utifReady;
+  const buffer = await file.arrayBuffer();
+  // A TIFF can hold several images (some tools add a small preview): use the largest.
+  const image = UTIF.decode(buffer).reduce((a, b) => (b.width * b.height > a.width * a.height ? b : a));
+  UTIF.decodeImage(buffer, image);
+  const rgba = UTIF.toRGBA8(image); // 16-bit channels come back as 8-bit
+  const pixels = new ImageData(new Uint8ClampedArray(rgba.buffer, rgba.byteOffset, rgba.length), image.width, image.height);
+  return drawBitmap(await createImageBitmap(pixels), size);
+}
+
+// Draws a decoded bitmap smaller, then frees its full-size pixels.
+function drawBitmap(bitmap, size = THUMB_SIZE) {
   try {
-    return drawScaled(bitmap, bitmap.width, bitmap.height);
+    return drawScaled(bitmap, bitmap.width, bitmap.height, size);
   } finally {
     bitmap.close();
   }
@@ -71,8 +93,8 @@ async function svgBlob(file) {
   return new Blob([new XMLSerializer().serializeToString(doc)], { type: 'image/svg+xml' });
 }
 
-function drawScaled(source, width, height) {
-  const scale = THUMB_SIZE / Math.max(width, height);
+function drawScaled(source, width, height, size = THUMB_SIZE) {
+  const scale = size / Math.max(width, height);
   const canvas = document.createElement('canvas');
   canvas.width = Math.max(1, Math.round(width * scale));
   canvas.height = Math.max(1, Math.round(height * scale));
