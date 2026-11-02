@@ -16,6 +16,7 @@ Every file becomes 384 numbers from **DINOv2 small**, an image model running in 
 | **Iterations of a printed piece** | crest prints: closest iterations get their own family, broader ones nearby (test 16) |
 | **Text documents re-laid out; slides vs their deck** | shared words decide (tests 6–7) |
 | **Ordering by look** | similar families sit side by side, so near-misses are next to each other (tests 11–12) |
+| **B&W photo sets** | exports of one photo group (original ID); separate frames of one scene, shot seconds apart, stay apart but sit side by side (test 17, confirmed by capture times) |
 
 ## Where it fails, and why
 ### 1. Crops and zooms of the same piece (the biggest weakness)
@@ -70,6 +71,9 @@ Each pair is then judged by the rules that fit its content, with no setting to t
 - **A vision-language model as judge, for borderline pairs only.** Ask something like "Are these two the same piece: same project, different iteration?" only for pairs scoring roughly 0.65–0.88. That's typically a small share of pairs, so the cost stays low, but it's real money per folder and **the images leave the computer**, so it should be opt-in. It fits the planned serverless function (the V2 AI-renaming key).
 - **A "describe how to group" prompt** ("group by product; colourways together; front and back separate") is the same judge with the user's instructions added. It's powerful for designers, and a natural paid feature.
 - In the Mac app, all of this can run in the background, so slower but more accurate is the right trade.
+
+## Frames of the same scene (from test 17)
+Ryan's view: different frames of one scene (shot seconds apart, slightly different angle or aspect) are **separate photos** and fine apart, as long as they're easy to compare. Today they sit side by side through look-ordering. If culling bursts becomes a goal, the capture-time gap (seconds) is a reliable signal for a *soft* "same moment" link: shown together, not merged.
 
 ## Suggested order for the next work
 1. ~~**Short-text phrase rule**~~ **done**, plus a second, larger OCR read for very large exports with a little text: all four test-16 misses fixed (eternity, phone, helvetica, black calendar; the calendar had the *same* text, just too small to read at 1600px).

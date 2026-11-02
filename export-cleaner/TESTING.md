@@ -23,9 +23,9 @@ A running record of every kind of folder and file the app has been run on, what 
 | 16b | Same graphic folder, after the **short-text phrase rule** | as above | Before/after | 25 → 24 families: ✅ eternity zooms joined, ✅ dua phone close/small joined, ✅ helvetica / eva suit split; all other families unchanged; tests 5–9 and 14 unchanged. Then the black calendar turned out to have the *same* text, unread at 1600px. |
 | 16c | Same graphic folder, after **re-reading large exports with a little text at 3200px** | as above | Before/after, time | 23 families in 61 s (original run 46 s): ✅ black calendar joins (calendar family of 4), and eternity, dua phone and helvetica fixes held. All four misses Ryan flagged are fixed. Earlier folders unchanged. |
 | 16d | Same graphic folder, re-reading **any** large export with text | as above | Sheet vs its mock-up (`Untitled-28` / `Untitled-35`) | ✅ grouped (word overlap 0.46 at 1600px → 0.97 at 3200px); 22 families in 70 s; all earlier fixes hold; earlier folders unchanged. |
+| 17 | **Ryan's B&W street photographs** (`portfolio media/photo/monotone`, 58 Lightroom exports, Ricoh GR III) | Monotone street photos; several frames of one scene seconds apart; repeat exports | Grouping photos with no colour and no text | ✅ **Accurate** (Ryan: "really great job"). Exports of the same photo grouped (`205` + `206`: same original ID, same capture second). Separate frames of the same scene stayed apart and Ryan agrees that's right; metadata confirms they're different photos (`204` shot 4 s after `205`; motorbike `218` / `239` 4 s apart; streets `192` / `193` 2 min apart). Look-ordering puts those near-frames side by side. |
 
 ## Kinds of content still untested
-- Black-and-white photographs (Ryan's own; next)
 - Figma exports (frames, components, variants)
 - Real multi-page client PDFs and slide decks
 - RAW-adjacent Lightroom exports (16-bit TIFFs from a real catalogue)
