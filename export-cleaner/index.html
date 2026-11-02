@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Export Cleaner</title>
+    <title>Syca</title>
   </head>
   <body>
     <!-- Each screen is a section; main.js shows one at a time. -->
@@ -18,14 +18,12 @@
     </section>
 
     <section class="screen" id="start" hidden>
-      <h1>Export Cleaner</h1>
-      <p>Open an export folder, sort each family of files into keep or reject, then clean up.</p>
-      <button id="choose">Choose folder</button>
-      <p class="muted">
-        Pick the folder your exports go into. Chrome won't open Downloads, Desktop or Documents themselves,
-        only folders inside them.
-      </p>
-      <p class="muted">Your files never leave your computer.</p>
+      <h1 class="start-brand">Syca</h1>
+      <div class="start-prompt">
+        <p class="start-intro">To start, drag or <button id="choose" type="button">select</button> a folder</p>
+        <p class="start-status" id="start-status" role="status" hidden></p>
+      </div>
+      <div class="start-rule" aria-hidden="true"></div>
     </section>
 
     <section class="screen" id="files" hidden>

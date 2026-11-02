@@ -1,6 +1,6 @@
 import './style.css';
 import { $, show, plural, familyDates, exportFormat, formatSize } from './dom.js';
-import { isSupported, pickFolder, readFolder } from './scan.js';
+import { isSupported, pickFolder, droppedFolder, readFolder } from './scan.js';
 import { makeThumbnail } from './thumbs.js';
 import { describe } from './describe.js';
 import { groupFiles } from './group.js';
@@ -26,10 +26,46 @@ async function chooseFolder() {
     dir = await pickFolder();
   } catch (err) {
     if (err.name === 'AbortError') return; // the user closed the picker
-    throw err;
+    showFolderError(err);
+    return;
   }
-  await loadFolder(dir);
+  await openFolder(dir);
 }
+
+function showFolderError(error) {
+  const status = $('#start').hidden ? $('#file-count') : $('#start-status');
+  status.hidden = false;
+  status.textContent = error.message;
+}
+
+async function openFolder(dir) {
+  $('#start-status').hidden = true;
+  try {
+    await loadFolder(dir);
+  } catch (error) {
+    showFolderError(error);
+  }
+}
+
+// Anywhere on the intro accepts a folder; loaded runs cannot be replaced by a drop.
+document.addEventListener('dragover', (event) => {
+  if (!event.dataTransfer.types.includes('Files')) return;
+  event.preventDefault();
+  event.dataTransfer.dropEffect = $('#start').hidden ? 'none' : 'copy';
+});
+
+document.addEventListener('drop', async (event) => {
+  if (!event.dataTransfer.types.includes('Files')) return;
+  event.preventDefault();
+  if ($('#start').hidden) return;
+  try {
+    const dir = await droppedFolder(event.dataTransfer);
+    // A picker may have opened a folder while the dropped handle resolved.
+    if (!$('#start').hidden) await openFolder(dir);
+  } catch (error) {
+    if (!$('#start').hidden) showFolderError(error);
+  }
+});
 
 // Reads the folder fresh, makes previews and groups them. Used for a newly
 // picked folder and to rescan the same one after applying.

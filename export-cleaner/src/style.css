@@ -43,6 +43,8 @@
   --color-keep: #1f7a3a;
   --color-reject: #b3261e;
   --color-thumb-bg: #f2f2f2;
+  --color-intro-text: #333333;
+  --color-select: #97a084;
 
   --font-sans: system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
   --font-instrument-sans: "Instrument Sans", var(--font-sans);
@@ -60,6 +62,20 @@
   --space-5: 24px;
   --space-6: 32px;
   --space-7: 48px;
+
+  --grid-columns: 5;
+  --grid-margin: 24px;
+  --grid-gutter: 12px;
+  --intro-size: 36px;
+  --intro-line-height: 1.1;
+  --intro-gap: 28px;
+  --intro-optical-offset: 4px;
+  --intro-rule-width: 2px;
+  --brand-size: 16px;
+  --caption-size: 12px;
+  --caption-line-height: 1.4;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
 
   --radius: 4px;
   --thumb-size: 160px;
@@ -112,8 +128,79 @@ button {
   cursor: pointer;
 }
 
+/* The intro owns the full viewport; the other app screens retain their layout. */
+#start {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+  column-gap: var(--grid-gutter);
+  align-content: start;
+  padding: var(--grid-margin);
+  background: var(--color-bg);
+  color: var(--color-intro-text);
+  font-family: var(--font-eb-garamond);
+}
+
+.start-brand {
+  grid-column: 1;
+  margin: 0;
+  font-size: var(--brand-size);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--intro-line-height);
+  letter-spacing: 0;
+}
+
+.start-prompt {
+  position: absolute;
+  right: var(--grid-margin);
+  bottom: calc(50% + var(--intro-rule-width) / 2 + var(--intro-gap) + var(--intro-optical-offset));
+  left: var(--grid-margin);
+}
+
+.start-intro {
+  margin: 0;
+  font-size: var(--intro-size);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--intro-line-height);
+  letter-spacing: 0;
+}
+
 #choose {
-  margin-bottom: var(--space-4);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-select);
+  font: inherit;
+  font-style: italic;
+  text-decoration: underline;
+  text-underline-offset: var(--space-1);
+  text-decoration-thickness: 1px;
+}
+
+#choose:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: var(--space-1);
+}
+
+.start-rule {
+  position: absolute;
+  top: calc(50% - var(--intro-rule-width) / 2);
+  right: 0;
+  left: 0;
+  height: var(--intro-rule-width);
+  background: var(--color-surface);
+}
+
+.start-status {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  margin: 0;
+  font-family: var(--font-instrument-sans);
+  font-size: var(--caption-size);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--caption-line-height);
 }
 
 button:disabled {
