@@ -27,9 +27,9 @@
   --radius: 4px;
   --thumb-size: 160px;
   --family-thumb-size: 120px;
-  /* the window minus the rest of the pinned top (~290px) and a first row of the grid (~150px) */
-  --compare-frame-height: calc(100vh - 440px);
-  --version-size: 120px;
+  /* the window minus the rest of the pinned top (~290px) and a first row of the grid with dates (~210px) */
+  --compare-frame-height: calc(100vh - 500px);
+  --version-size: 160px;
 }
 
 [hidden] {
@@ -294,11 +294,14 @@ button:disabled {
 }
 
 .version-grid li {
-  position: relative;
   flex: 0 0 var(--version-size);
+  cursor: pointer;
+}
+
+.version-thumb {
+  position: relative;
   aspect-ratio: 1;
   background: var(--color-thumb-bg);
-  cursor: pointer;
 }
 
 .version-grid img {
@@ -309,12 +312,19 @@ button:disabled {
   object-fit: contain;
 }
 
-.version-grid li[data-state="on-screen"] {
+.version-grid li[data-state="on-screen"] .version-thumb {
   outline: 2px solid var(--color-text);
 }
 
 .version-grid li[data-state="out"] img {
   opacity: 0.35;
+}
+
+/* When each version was exported: the quickest way to read their order. */
+.version-date {
+  margin: var(--space-1) 0 0;
+  color: var(--color-muted);
+  font-size: var(--text-s);
 }
 
 .version-grid .mark {

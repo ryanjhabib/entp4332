@@ -183,16 +183,15 @@ function renderVersions() {
       const onScreen = entry === slots.left || entry === slots.right;
       item.dataset.state = onScreen ? 'on-screen' : entry.decision === 'reject' ? 'out' : '';
       item.title = entry.name;
+      item.innerHTML = '<div class="version-thumb"><span class="mark"></span></div><p class="version-date"></p>';
       if (entry.thumb) {
         const img = document.createElement('img');
         img.src = entry.thumb;
         img.alt = '';
-        item.append(img);
+        item.firstChild.prepend(img);
       }
-      const mark = document.createElement('span');
-      mark.className = 'mark';
-      mark.textContent = { keep: '✓', reject: '✕' }[entry.decision] ?? '';
-      item.append(mark);
+      item.querySelector('.mark').textContent = { keep: '✓', reject: '✕' }[entry.decision] ?? '';
+      item.querySelector('.version-date').textContent = exportFormat.format(entry.file.lastModified);
       item.addEventListener('click', () => challengeWith(entry));
       return item;
     }),
