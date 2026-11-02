@@ -39,7 +39,8 @@ Every file becomes 384 numbers from **DINOv2 small**, an image model running in 
 - **Seen:** the full-bleed black calendar didn't join the light calendars (test 16), though a black calendar inside site UI did.
 - **Fix to try:** also describe a light/dark-inverted copy of each image and take the better match, only for low-colour, graphic images. The short-text rule (2) would also catch this one, since the calendar's words match.
 
-### 5. Same pose, different product
+### 5. Same pose, different product (or person)
+- **Also seen (test 19):** two different cyclists in consecutive frames 2 s apart grouped. Metadata can't help, because near-identical frames of the *same* subject (test 18 buildings, wanted together) have the same 2 s gap. What differs is *who or what* is in the frame, which a global image model doesn't weigh strongly. A future fix could compare the main subject (crop to the person or product and compare that), or use the opt-in AI judge for borderline same-moment pairs.
 - **Seen:** two different jackets, both fronts, on the same backdrop: 0.87 (tests 14–15).
 - **Why:** DINOv2 is trained to ignore colour (so B&W edits match), and pose, backdrop and framing dominate. Subject crop, patch matching and subject colour were all measured and none separates them cleanly.
 - **Handled for now:** Strict (0.88), or N while comparing.
