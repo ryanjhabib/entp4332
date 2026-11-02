@@ -35,7 +35,8 @@
 /* Placeholder look: neutral until Ryan's design replaces it.
    Every colour, font and space is a token here, so restyling starts in this block. */
 :root {
-  --color-bg: #ffffff;
+  --color-bg: #eeeeee;
+  --color-surface: #ffffff;
   --color-text: #111111;
   --color-muted: #6b6b6b;
   --color-line: #e2e2e2;
@@ -106,7 +107,7 @@ button {
   padding: var(--space-2) var(--space-4);
   border: 1px solid var(--color-text);
   border-radius: var(--radius);
-  background: var(--color-bg);
+  background: var(--color-surface);
   color: var(--color-text);
   cursor: pointer;
 }
@@ -250,7 +251,7 @@ button:disabled {
 
 .view-toggle button[aria-pressed="true"] {
   background: var(--color-text);
-  color: var(--color-bg);
+  color: var(--color-surface);
   cursor: default;
 }
 
