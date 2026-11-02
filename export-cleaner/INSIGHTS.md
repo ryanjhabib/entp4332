@@ -72,7 +72,7 @@ Each pair is then judged by the rules that fit its content, with no setting to t
 - In the Mac app, all of this can run in the background, so slower but more accurate is the right trade.
 
 ## Suggested order for the next work
-1. **Short-text phrase rule:** cheap; fixes eternity, the calendar, helvetica.
+1. ~~**Short-text phrase rule**~~ **done** (fixed eternity, the phone and helvetica; the calendar turned out to have different text, so it needs the inversion idea instead).
 2. **Multi-scale (zoomed-crop) matching:** the crop weakness.
 3. **Low-content guard:** stops near-blank pages merging.
 4. **Per-file content type** replacing the three levels.

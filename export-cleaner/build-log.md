@@ -312,3 +312,22 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - **Outcome:** no automatic fix yet. For folders like this, set similarity to 88%. Next: a **"Not the same"** action while comparing that splits a version into its own family (the counterpart of "Same piece"), so grouping mistakes take one key press to fix in either direction. Logged in `TESTING.md` (a new record of every kind of content tested).
 - **Added: "Not the same (N)" while comparing.** The newcomer (the version most recently brought in, named in the button's tooltip) leaves the family for one of its own, placed right after it in the stream; the next version comes in. The stream then visits it without asking "same piece?" about it again (an `apart` set, included in undo snapshots). So grouping mistakes take one key to fix in either direction: S joins, N splits. Tested on Ryan's flat-lays: the two jacket fronts split (3 → 4 families), the stream carried on, and ⌘Z rejoined them.
 - **Changed (Ryan): no 0–100 similarity number.** It's a developer's control, and most people want the holistic choice without choosing. It's now three levels, **Loose (0.75) · Balanced (0.80, default) · Strict (0.88)**, styled like the view toggle, with tooltips saying what each is for. Strict sits just above the two jackets' 0.87 and below the photo edits measured (0.92+). Tested: flat-lays 3 families at Loose/Balanced, 4 at Strict (fronts split); the photo test folder gave the same 6 correct families at all three levels.
+
+### Short text counts (phrase rule)
+- **Why:** in Ryan's graphic folder (test 16), three of four misses involved short text that the 20-word rule ignored.
+- **What OCR actually read** (which shaped the rule):
+
+  | Pair | Looks | Words read |
+  |---|---|---|
+  | "let me taste eternity", two zooms | 0.66 | `letm taste` / `letme taste eternity` (OCR runs "let me" together; the crop cuts words) |
+  | dua phone, close / small | 0.79 | identical 17 words on both, ignored for being under 20 |
+  | you > helvetica / eva suit page | 0.86 | `you helvetica` / `you are beautiful that eva suit` (only "you" shared) |
+  | black calendar / light calendars | 0.74–0.78 | different text altogether ("how many more acts…" vs "first second third…"), so not a word problem |
+
+- **Rule** (`phraseNudge` in group.js, applied when the full word comparison doesn't apply):
+  - drop filler words and junk readings (a letter repeated 3 times);
+  - a word matches another that it begins;
+  - if ≥ 2 key words and ≥ 80% of the shorter set is found in the other, **+0.25**, unless the longer text is more than 3× + 3 the shorter (chance matches);
+  - if both carry key words, none match, and there are ≥ 4 between them, **−0.15**.
+- **Result:** graphic folder 25 → 24 families. Eternity and the phone joined, the helvetica pair split, everything else unchanged. Photos, PDFs, OCR, formats, flat-lays and Lightroom test folders were all unchanged.
+- **Still missed:** the full-bleed black calendar, whose text really is different; that's a looks problem (inversion), noted in INSIGHTS.md.
