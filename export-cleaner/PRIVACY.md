@@ -27,6 +27,7 @@ This is a source review, not a runtime network audit. Recheck it when the releva
 | Scan state | `src/main.js` holds file handles, previews, extracted information, families, and decisions in memory. No app-level save-progress database was found. | Inspect browser/worker storage before making claims about retention. Memory use is not a promise that the OS never writes temporary data. |
 | Model/resource caching | Transformers.js caches downloaded resources; Tesseract.js downloads and caches its language data. | Distinguish cached processing resources from cached user content; confirm what is actually stored. |
 | External connections | The current setup downloads models from Hugging Face and OCR resources from jsDelivr; the app itself is served by its host. | Record actual destinations and request metadata. Download providers/hosts may receive IP addresses and other connection information. |
+| Fonts | Instrument Sans and EB Garamond are bundled as local WOFF2 files in `src/fonts/`, with normal and italic styles. `src/style.css` uses relative font URLs; no Google Fonts stylesheet, preconnect, or runtime font CDN was added. | Fonts will be served by the app's host when used. The broader runtime network audit remains open. |
 | Diagnostics | No analytics or remote crash-reporting integration was found in the checked app source. Existing console warnings/errors can include filenames and error details. | Review/redact these before connecting any remote reporting service. |
 | Changes to files | `src/apply.js` moves explicit rejects into `_to_delete`, with a copy-then-remove fallback. | This is not secure erasure or a retention policy for user originals; the user controls those files. |
 
@@ -90,6 +91,7 @@ Explain model/resource downloads and any local caching in the supporting privacy
 | Date | Review | Result / next step |
 | --- | --- | --- |
 | 2026-11-02 | App source, selected dependency defaults, and primary documentation reviewed; initial product discussion recorded. | Local processing direction supported by source. Network, storage, distribution-licence, and legal-scope checks remain open. Next routine review: 2026-12-02, or sooner at a trigger above. |
+| 2026-11-02 | Added local Instrument Sans and EB Garamond assets and reviewed font-loading source. | Both families include their OFL notices. Four font faces loaded in a temporary Chrome specimen page; no font CDN integration was added. Broader network checks remain open. |
 
 ## References
 

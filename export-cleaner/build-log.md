@@ -359,3 +359,17 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - **Cause:** mostly-plain compositions (sand and sky) look alike to the model, the photo version of the near-blank-pages problem. The metadata already said these were different shots, but only ever counted *for* grouping.
 - **Fix:** different original IDs **and** different capture moments → −0.08. Dunes 0.74 (apart); building frames 0.84 (together); same-photo exports unaffected.
 - **Tested:** the documentary subset gives the expected families; Lightroom, metadata re-crop, photos, flat-lays and OCR test folders unchanged.
+
+## Instrument Sans and EB Garamond are available (2026-11-02)
+
+- **Request:** load both families for the design pass. Registered four local `@font-face` entries, with `font-display: swap`, and added `--font-instrument-sans` / `--font-eb-garamond`. The existing `--font-sans` and all assigned interface styles stay as they were; font placement has not been specified yet.
+- **Sources:** Instrument Sans variable TTFs copied from `texas-mps/app/Instrument_Sans`; EB Garamond variable TTFs downloaded from the [Google Fonts repository](https://github.com/google/fonts/tree/main/ofl/ebgaramond). Converted to WOFF2 with the already-installed fontTools/Brotli; included both original OFL notices. No package dependency or remote font stylesheet added.
+
+  | Family | Before | Available now | Local asset size, normal + italic |
+  | --- | --- | --- | --- |
+  | Instrument Sans | Not registered | Weights 400–700; widths 75–100%; normal + italic | 88,456 + 94,068 bytes |
+  | EB Garamond | Not registered | Weights 400–800; normal + italic | 296,728 + 286,076 bytes |
+
+- **Size / cost:** 765,328 bytes total (about 765 kB) if all four files are requested. The browser requests a font when text uses it; no preloads were added. No paid service, push, or deployment.
+- **Checked:** `npm run build` passed (existing large-chunk warning only). A temporary specimen page displayed regular, maximum weight, italic, and maximum-weight italic for each family. Chrome's own `document.fonts` report showed all four faces `loaded`; checked at 1800×1043 and 900×800 with no horizontal overflow. Temporary page removed afterward.
+- **Environment / test dead ends:** sandboxed font download returned `curl: (6) Could not resolve host: fonts.googleapis.com`; downloaded official assets with approved network access instead. Sandboxed dev startup returned `Error: listen EPERM: operation not permitted ::1:3400`; an approved retry returned `Error: Port 3400 is already in use`, revealing the existing server, which was reused without stopping it. Reading `document.fonts` through the browser's read-only evaluation returned an empty list despite visible fonts, so the specimen page itself printed the browser's font status. A broad text locator returned `Playwright selector deadline exceeded`; reading the report by `#font-status` worked. These were environment/test issues; no app workaround was added.

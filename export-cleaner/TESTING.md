@@ -30,6 +30,12 @@ A running record of every kind of folder and file the app has been run on, what 
 | 21 | **Ryan's 3-year Lightroom folder** (`Lightroom 2`, 1,286 photos) | Three years of exports and re-edits: colour, B&W, crops, light-leak edits, fashion shoots, events | The biggest real test: "find the final" at scale | ✅ **Mostly very good** (Ryan). One photo re-edited over a year in one family (yellow bush, 9 versions, Dec 2024 – Dec 2025); beach portrait with 5 exports incl. light-leak edits and `613 FIXED` (Jul 2024 – Nov 2025); colour + B&W twins; crops to new shapes throughout. ❌ **Same subject, different photo:** consecutive B&W frames of different cyclists (`389`–`393`); the same white tee on a model in different shots and sessions (`1013` vs `1024`/`1026`; `1008` vs `1296`/`1297`). **Performance:** previews about 1 min, then about 1.9 s per photo, **41 minutes in total**; the Chrome tab used **about 1.8 GB**. |
 | 21b | Same Lightroom folder, more of Ryan's notes | | Crops and site screenshots | ✅ "Surprised how good it got some of these crops" (Ryan crops normally, plus 90° rotations): wide taxi shot + tight hooded crop (`1158` + `1159`); flower crops across months (`713`/`746`/`1817`/`1818`, `7` + `197`, `198` + `707`); a 7-file branch session. Cat frames in a near-identical pose grouped; Ryan accepts that as an iteration. ❌ **A site screenshot of a photo** (`wedaq.png`) didn't join the photo itself (`701` + `1811`): the reverse of test 20, where the frame hides that it's the *same* piece. **Second acceptance check for the centre-crop fix:** `wedaq.png` should join `701` + `1811`. |
 
+## Typography setup (2026-11-02)
+
+- Temporary font specimen page, removed after checking: Instrument Sans and EB Garamond, each at regular and maximum weight, in normal and italic styles. This is synthetic test text, not user folder content.
+- Chrome reported all four font faces `loaded`. Instrument Sans supports weights 400–700 and widths 75–100%; EB Garamond supports weights 400–800. Checked at 1800×1043 and 900×800, with no horizontal overflow.
+- `npm run build` passed and emitted all four WOFF2 files. Existing interface typography remains the system font; the new families are available through CSS custom properties for Ryan's design pass.
+
 ## Kinds of content still untested
 - Figma exports (frames, components, variants)
 - Real multi-page client PDFs and slide decks
