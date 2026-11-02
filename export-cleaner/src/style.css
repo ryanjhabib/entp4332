@@ -89,7 +89,7 @@
   --loading-fact-optical-offset: 2px;
   --fact-size: 32px;
   --describe-band-height: 76px;
-  --describe-row-height: 44px;
+  --describe-row-height: 40px;
 
   --radius: 4px;
   --family-thumb-size: 120px;
@@ -304,7 +304,7 @@ button {
   align-items: center;
   height: var(--describe-row-height);
   padding: 0 var(--grid-margin);
-  color: var(--color-muted);
+  color: var(--color-text);
   font-size: var(--brand-size);
   font-weight: var(--font-weight-medium);
   line-height: var(--intro-line-height);
