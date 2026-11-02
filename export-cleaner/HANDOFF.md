@@ -17,11 +17,12 @@ A Chrome web app (class project, ENTP 4332) that helps designers and photographe
 ## How it works
 **Intro UI update (2026-11-02):** the start screen now says Syca, with “To start, drag or select a folder”, a native picker on italic/underlined select, and whole-intro folder dropping. Five stretch columns, 24px margins, 12px gutters, 36px Garamond Regular intro, 16px Medium brand/caption, `#EEEEEE` backdrop and a centered 2px white rule. Garamond uses antialiased rendering, matching RH Studio; the caption stays weight 500. Font files are bundled locally. See `TESTING.md` for measured layouts and input-test limits. Save progress remains unbuilt; CSS hot updates generally retain state, but HTML/JavaScript reloads can reset it.
 
-**The flow:** choose folder → read files → thumbnails → describe each file → group → overview (Families) ⇄ Compare stream → Summary → Apply → Done.
+**The flow:** choose/drop folder → one loading screen (read files → thumbnails → model preparation → describe each file → group) → overview (Families) ⇄ Compare stream → Summary → Apply → Done.
 
 | File | Job |
 |---|---|
 | `index.html` | every screen as a `<section class="screen">`: start, files (overview), compare, summary, done, unsupported |
+| `src/loading.js` | unified loading UI, monotonic progress tween, dots, scan messages, ETA and future fact rotation |
 | `src/main.js` | state, the loading pipeline, overview rendering, view toggle, grouping levels, Apply / Done |
 | `src/scan.js` | folder picker; reads top-level `png jpg jpeg webp avif gif tif tiff svg pdf` |
 | `src/thumbs.js` | `renderAt(entry, size)` for every type; 320px thumbnails; 1600px previews; TIFF via UTIF.js; SVG viewBox fix |

@@ -54,3 +54,10 @@ A running record of every kind of folder and file the app has been run on, what 
 - Screenshots and UI mockups
 
 - 2026-11-02 caption check: new 12px / 500 Garamond description, 16.8px line height, two lines with one explicit break. Checked at 1800×1043 and 375×812; 40px visible wordmark gap on desktop, no overflow.
+
+## Unified loading screen (2026-11-02)
+
+- Chrome layout at 1800×1043, 900×800 and 375×812: centered 2px line, upright 36px / 400 percentage, 12px / 500 Instrument Sans status, 16px / 500 italic fact label and 32px fact. Verified `#95A081` progress and `#AAAAAA` muted text. No horizontal overflow; fact expands across additional columns in smaller windows.
+- Thirteen browser checks passed. Synthetic folder enumeration was delayed 500ms, and one generated PNG passed the real thumbnail, DINOv2, OCR, grouping and final-card pipeline. Confirmed loading before enumeration ends, hidden overview/no thumbnail grid during processing, 100% before overview, correct final card, monotonic/settled percentage, ETA calculation, failure recovery, stopped dots and completion without a hang when already at 100%.
+- Recorded progress samples from 0→67%: settled by 185ms and stayed settled through 501ms; dots observed as `.`, `..`, `...`, `.` at 600ms intervals. One fact remains stable; 20s rotation is configured for future additional facts. A 67% / approximately 3-minute preview was seeded for visual QA only. Temporary fixtures removed; no user images or real folder were used.
+- Limits: no repeat of the 1,200-image run or cold-cache resource network audit. Grouping logic and processing providers did not change. Reduced-motion handling is implemented; this session’s live animation measurement used normal motion.
