@@ -431,3 +431,9 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - **Break, self-inflicted:** first placed the intro in columns 1–2, which wrapped it to two lines at 800px. Fixed by letting the intro span all columns and moving the folder details to column 4 under 1200px and below the intro under 760px (the intro's ~402px width reaches column 4 below ~729px). Checked 1728, 900, 700 and 375 widths: no overlap, no horizontal overflow.
 - **Test note:** in the background browser pane `requestAnimationFrame` pauses, so the final tween to 100% (and the switch to families) waited until the pane was shown. Not an app bug.
 - **Not done:** the type isn't used by grouping yet. On a 375px phone the 36px placeholder is cut off at "Then, describe the medi" (the app needs desktop Chrome anyway).
+
+## Describe field tuning (2026-11-02)
+
+- **Grey line hidden by the list:** the list started at the band's bottom edge (581.5px) and covered the 2px `#CCC` line. Now it starts under the line: line 581.5–583.5, first row from 583.5 (at 1728×1009). Moved 2px, the line's full thickness; Ryan suggested 1px, which would have left half the line covered.
+- **Rows one step smaller, darker:** 44 → 40px rows, text `#AAA` → `#333`. Hover row stays `#222` / white. Eight rows run 583.5–903.5px. Cap centred: 14.9px above, 14.5px below.
+- **Smarter search (still local):** plurals ("images" → image), shared words (Photographs and Product Images both carry image / photo / shot), one-letter typos for 5+ letter words ("photgraph"), filler words ignored. Ranking: exact or plural 1, start of a word 0.75, typo 0.5, summed over the typed words; a typo only counts when the word matches nothing exactly. Dead end: first version let any keyword begin a typed word, so "app" ranked Mockups (apparel) first and "edits" matched editorial as a typo; fixed with the plural limit (≤ 2 extra letters) and the tiers.
