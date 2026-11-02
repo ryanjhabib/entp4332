@@ -146,3 +146,42 @@ Every break gets an entry: the exact error or symptom, the cause, the fix, and a
 - **`NotFoundError` reading `_to_delete/horizon.jpg`:** my test assumed horizon.jpg would be the first card. Files sort oldest first, so it was sonoma.jpg. Test-only.
 - **Unexplained "Moved 0 files" run:** one fallback test reached the Done screen with 0 moved and 0 failed, meaning Apply ran with an empty reject list. Step by step, the ← press that should have rejected sonoma hadn't registered, and the script then called `.click()` on the summary's Apply button while it was hidden (scripts can click hidden buttons; people can't). I replayed the same sequence 6 times and every ← registered. Most likely cause: the script clicked "Start sorting" in the gap after the rescan, before the regroup, when the button was hidden and there were no families yet. Not reproduced, so the app is unchanged.
 - **Real-disk testing:** Chrome's folder picker is a native macOS dialog that the test tools can't drive, so `move()` on a real folder has to be checked by hand on a duplicated folder.
+
+## Rework: look first, time second (2026-11-01)
+
+Ryan's goal, restated: the point of the app is finding every export of the same content anywhere in the folder, even months apart, cropped to another aspect ratio, re-edited, or in a different layout. Dates are secondary. File names are a weak clue, never the source of truth. Speed doesn't matter; accuracy does.
+
+### Why dHash had to go
+dHash shrinks every image to a 9×8 grey grid, so it only recognises "same picture, different colour or compression". Crops, aspect ratios and layouts all read as different images (measured 10–34 bits apart, overlapping unrelated photos at 24–40). Grouping by 20-minute sessions first also meant a re-edit months later could never join its original.
+
+### The test: three ways of measuring similarity on a deliberately hard set
+23 images from six macOS wallpapers. Same-content groups: edits (brightness, B&W, heavy grade), crops to 4:5, 16:9, 9:16 and off-centre, a crop plus an edit, and one poster in portrait, landscape and square layouts. Plus traps: a *different* poster in the *same* layout, two colourways of one design, and unrelated photos. Every pair was scored. The **gap** is the weakest same-content pair minus the strongest different-content pair; above 0 means one threshold separates them perfectly.
+
+| | Weakest same | Strongest different | Gap | Per image (M3, WebGPU) |
+|---|---|---|---|---|
+| dHash | 0.44 | 0.67 | **−0.23** | instant |
+| CLIP ViT-B/32 | 0.85 | 0.90 | **−0.05** | 35 ms |
+| DINOv3 small | 0.78 | 0.64 | **+0.14** | 51 ms |
+| **DINOv2 small** | **0.84** | **0.73** | **+0.11** | **28 ms** |
+
+DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; different poster, same layout 0.44; original vs 9:16 crop 0.92; off-centre crop 0.92; two different landscape photos 0.15.
+
+**Chosen: DINOv2 small** (`onnx-community/dinov2-small`, 84 MB, Apache 2.0). DINOv3 scored slightly better but ships under Meta's custom DINOv3 License, which is a risk for a paid product. CLIP judges "same kind of picture", not "same picture", so it confused colourful abstracts with each other. **Default threshold: 80%**, between 0.73 and 0.84.
+
+### How it works now
+- **Transformers.js** (Hugging Face's library for running models in the browser, v4.3.2) runs DINOv2 on the Mac's GPU through WebGPU, or the CPU if WebGPU isn't available. Each 320px thumbnail becomes 384 numbers (the model's CLS token, a summary of the whole image), scaled to length 1. Two images' similarity is the dot product: 1 = identical.
+- **The model downloads once from Hugging Face** and Chrome caches it. No image leaves the computer: the model comes to the images.
+- **Families are found across the whole folder** (union-find chaining at ≥ 80%) and ordered by their oldest file. Each family shows its export date span, e.g. "Mar 3 – Oct 30, 2026", and each card its own date and time. Sessions and the gap setting are gone; one setting remains, "Same family at [80]% alike or more", applied on change rather than per keystroke.
+- **Measured:** in a 14-file folder, March originals plus October re-edits cropped to 9:16 and 16:9 formed one family; a square crop from a day later joined its original. Families: 95% → 10, 80% → 6, 60% → 5. Comparing every pair of 1,200 files is 719,400 pairs; the earlier BigInt version took 0.77 s, and float dot products are cheaper.
+- **The model library loads only when a folder is opened** (dynamic import), so the start page's script stays 17 KB.
+- **Cost note:** the build includes ONNX Runtime's WebAssembly engine, 26.9 MB (6.8 MB compressed), downloaded once per visitor from Vercel. The Hobby plan's 100 GB a month covers roughly 15,000 first visits. The model itself comes from Hugging Face, not Vercel.
+
+### 10. `No pooled output was returned`
+- **Symptom:** the first DINOv3 run threw `Error: No pooled output was returned. Make sure the model has a 'pooler' layer when using the 'pool' option.`
+- **Cause:** I'd asked for `{ pool: true }`. CLIP's export has a pooling layer that produces one vector; the DINO exports don't, and return one vector per 16×16 image patch (`[1, tokens, 384]`).
+- **Fix:** no `pool` option. Take the first token (CLS), which DINO is trained to use as the whole-image summary. For CLIP's `[1, 512]` that's simply the whole output.
+
+### 11. `Execution context was destroyed, most likely because of a navigation`
+- **Symptom:** the first test script using Transformers.js died with this error.
+- **Cause:** Vite pre-bundles each npm package the first time a page imports it, then reloads the page to use the bundle. The reload killed the running script.
+- **Fix:** run it again. Expected once per new dependency.
