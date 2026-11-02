@@ -442,3 +442,8 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 
 - `--color-select` `#97A084`, `--color-progress` and `--color-caret` `#95A081` merged into `--color-accent: #95A081` (Ryan's Figma value; the other was a screenshot sample, 2–3/255 off per channel). Chrome: rgb(149, 160, 129) on select, its underline, both progress fills and the caret.
 - Home folder size rounds to whole numbers ("5 mb", "27 gb"); `formatSize(bytes, decimals = 1)` keeps the done screen at one decimal. Note: 1.4 GB shows as "1 gb" on the home screen.
+
+## General catch-all words, row separators (2026-11-02)
+
+- General also matches unsorted, junk, mess(y), clutter, dump, leftovers, downloads, desktop, exports, archive, backup, untitled, unknown, idk, dunno, whatever, assorted. Ties now put General after the specific type ("desktop screenshots" → Screenshots · General).
+- 1px `#CCC` line between rows (Ryan: "try"), inside the 40px rows; none above the first row (under the band's 2px line) or after the last. Hover row's line turns `#222`. Measured: rows unchanged at 583.5–903.5px.
