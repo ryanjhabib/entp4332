@@ -290,14 +290,10 @@ button {
   background: var(--color-band-line);
 }
 
-/* While the list is open its first row covers the band's bottom line. */
-.describe-input[aria-expanded="true"] {
-  box-shadow: none;
-}
-
+/* The list starts under the band's bottom line, so the line stays visible. */
 .describe-list {
-  max-height: calc(50vh - var(--intro-rule-width) / 2 - var(--describe-band-height));
-  margin: 0;
+  max-height: calc(50vh - var(--intro-rule-width) * 1.5 - var(--describe-band-height));
+  margin: var(--intro-rule-width) 0 0;
   padding: 0;
   overflow-y: auto;
   list-style: none;
