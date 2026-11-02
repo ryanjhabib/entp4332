@@ -218,3 +218,17 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - **AVIF and GIF:** Chrome decodes them with `createImageBitmap` (a GIF's first frame), so they're just added to the list.
 - **TIFF:** Chrome can't decode TIFF at all, and it's a common lossless Lightroom export, often 16-bit. **UTIF.js** (Photopea's decoder, MIT, 83 KB, loaded only when a folder has a TIFF) decodes it; `toRGBA8` turns 16-bit channels into 8-bit; if the file holds several images, the largest is used. An `<img>` can't show TIFF either, so the swipe card renders TIFFs at 1600px like PDFs.
 - **Tested** with files made by macOS's `sips` (8-bit TIFF, LZW-compressed TIFF, AVIF, GIF) and a 16-bit RGB TIFF written byte by byte, since `sips` can't make one. Each grouped with its JPG twin. The 16-bit gradient's corners came out as expected (blue channel 20000/65535 → 79/255). TIFF swipe previews took 63–127 ms.
+
+### OCR: reading text inside images
+- **Why:** after the PDF fix, images of text (PNG/JPG exports of slides) were still judged by looks, which can't tell two text slides on one template apart.
+- **Tool:** **Tesseract.js 7** (Apache 2.0), English. Its engine and language data come from the jsDelivr CDN the first time and are then cached (not served by Vercel). It loads only when a folder is opened.
+- **Measured on the M3, per image at 1600px:** text slide 291 ms (34 of 39 words read confidently); another deck's page 225 ms (36/36); plain photo 268 ms (**0** confident words); photo poster 101 ms (3 words: "SUMMER RELEASE October"). At 1000px, accuracy on these was the same, but 1600 keeps small body text readable, and speed isn't a priority. Estimate for 1,200 files with the model: about 5–8 minutes.
+- **Rule:** every non-PDF image is read at 1600px. Words under 80% confidence are dropped (on photos Tesseract "finds" low-confidence words in textures). A file with 20+ words, PDF or image, is a **text file** and is compared by words with other text files; photos and photo-led posters are still judged by looks.
+- **Word score changed** from "in both ÷ in either" to **"how much of the shorter text is in the longer one"**. A single slide holds about a third of its deck's words, so the old score put slide-vs-deck at about 0.37 ("different"); the new one scores it high, while different documents still score about 0.05.
+- `renderAt(entry, size)` in `thumbs.js` now renders any supported type at any size; thumbnails, previews and OCR all use it.
+
+### 13. A deck's second slide image blocked from joining its deck
+- **Symptom:** with OCR on, `brand-review.pdf` + `brand-slide-2.png` grouped correctly, but `brand-slide-3.png` sat alone.
+- **Cause:** the "two different documents can't share a family" check compared files one by one. Slide 3 had to pass a check against slide 2 already in the family, and two different slides of one deck share few words, so it was blocked as a "different document".
+- **Fix:** each family keeps **all its words together**, and the check compares whole families' words. Slide 3's words are all in the deck's text, so it joins; the other document's words aren't, so it stays out.
+- **Result (OCR test folder, 10 files, 4.1 s):** {deck, slide 2, slide 3}, {other document, its slide 3}, {two photo edits}, {one poster in two layouts}, {other poster}. The photo folder (6 families) and PDF folder (2 families) were unchanged.
