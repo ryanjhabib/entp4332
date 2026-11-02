@@ -12,7 +12,8 @@ export const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many
 // "Oct 26, 10:05 AM": when one file was exported.
 export const exportFormat = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
-const dayFormat = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+// "Oct 26, 2026"
+export const dayFormat = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 
 // When a family's files were exported: "Oct 26, 2026", or "Mar 3 – Oct 26, 2026".
 export function familyDates(entries) {

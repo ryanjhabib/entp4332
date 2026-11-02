@@ -7,6 +7,13 @@ import { similarity } from './embed.js';
 // unrelated images score around 0.2–0.5, far below any threshold.
 const NAME_BONUS = 0.05;
 
+// Photo metadata saying two files are the same shot (see metadata.js) is a much
+// stronger clue, but the looks still count: a same-shot pair still has to look
+// at least 0.5 alike (about a heavy crop) to join at the default 80%.
+const SAME_SHOT_BONUS = 0.3;
+
+const sameShot = (a, b) => Boolean(a.shot && b.shot && a.shot.keys.some((key) => b.shot.keys.includes(key)));
+
 // Edit and copy markers that tools add to the end of a name.
 const SUFFIXES = [
   / \(\d+\)$/, // browser duplicate: "photo (1)"
@@ -75,7 +82,8 @@ function sharedWords(a, b) {
 }
 
 // Two files are in the same family when their similarity (plus NAME_BONUS if
-// their names share a stem) is at least minSimilarity. Chains count too (A
+// their names share a stem, SAME_SHOT_BONUS if their metadata says they're the
+// same shot) is at least minSimilarity. Chains count too (A
 // looks like B, B looks like C, so A, B and C are one family), which keeps a
 // run of small edits together. The strongest links are made first, and a
 // link is skipped if it would put two files whose words say they're different
@@ -90,7 +98,8 @@ export function groupFiles(files, { minSimilarity }) {
     if (!files[i].vectors?.length) continue;
     for (let j = i + 1; j < files.length; j++) {
       if (!files[j].vectors?.length) continue;
-      const bonus = stems[i] && stems[i] === stems[j] ? NAME_BONUS : 0;
+      const bonus =
+        (stems[i] && stems[i] === stems[j] ? NAME_BONUS : 0) + (sameShot(files[i], files[j]) ? SAME_SHOT_BONUS : 0);
       const score = fileSimilarity(files[i], files[j]) + bonus;
       if (score >= minSimilarity) links.push({ i, j, score });
     }

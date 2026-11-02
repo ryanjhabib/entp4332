@@ -2,7 +2,7 @@
 // Right (drag, → key or button) keeps, left rejects. Each file's choice is
 // stored on it as entry.decision = 'keep' | 'reject'; nothing on disk changes.
 
-import { $, show, familyDates, exportFormat, formatSize } from './dom.js';
+import { $, show, familyDates, exportFormat, dayFormat, formatSize } from './dom.js';
 import { makePreview } from './thumbs.js';
 
 const SWIPE_DISTANCE = 120; // px a card must be dragged to count as a decision
@@ -93,7 +93,8 @@ function renderCard() {
 
   $('#swipe-name').textContent = entry.name;
   const status = { keep: ' · kept', reject: ' · rejected' }[entry.decision] ?? '';
-  $('#swipe-meta').textContent = `${exportFormat.format(entry.file.lastModified)} · ${formatSize(entry.file.size)} · ${entry.ext.toUpperCase()}${status}`;
+  const shot = entry.shot?.taken ? ` · shot ${dayFormat.format(entry.shot.taken)}` : '';
+  $('#swipe-meta').textContent = `${exportFormat.format(entry.file.lastModified)}${shot} · ${formatSize(entry.file.size)} · ${entry.ext.toUpperCase()}${status}`;
 
   // The thumbnail shows at once; the full-size image replaces it once decoded.
   const img = $('#swipe-img');

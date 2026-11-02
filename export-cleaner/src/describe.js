@@ -1,11 +1,13 @@
 // What the grouping compares for each file: what it looks like (one vector
 // per image, one per PDF page), the words in it (a PDF's text, or an image's
-// text read by OCR), and its average colour (for ordering the overview).
+// text read by OCR), which shot it is (photo metadata), and its average
+// colour (for ordering the overview).
 
 import { embed } from './embed.js';
 import { withPdf, renderPage, readWords } from './pdf.js';
 import { THUMB_SIZE, renderAt } from './thumbs.js';
 import { readImageWords } from './ocr.js';
+import { readShot } from './metadata.js';
 
 // A very long PDF stops being described after this many pages.
 const MAX_PDF_PAGES = 50;
@@ -13,10 +15,15 @@ const MAX_PDF_PAGES = 50;
 // Images are read for text at this size: big enough for body text on a slide.
 const OCR_SIZE = 1600;
 
-// Returns { vectors: [Float32Array, ...], words: Set | null, colour: [r, g, b] | null }.
+// Returns { vectors: [Float32Array, ...], words: Set | null, shot: { taken, keys } | null,
+// colour: [r, g, b] | null }.
 export async function describe(entry, onDownload) {
-  if (!entry.thumb) return { vectors: [], words: null, colour: null }; // unreadable file
-  return { ...(await describeContent(entry, onDownload)), colour: await averageColour(entry.thumb) };
+  if (!entry.thumb) return { vectors: [], words: null, shot: null, colour: null }; // unreadable file
+  return {
+    ...(await describeContent(entry, onDownload)),
+    shot: await readShot(entry),
+    colour: await averageColour(entry.thumb),
+  };
 }
 
 async function describeContent(entry, onDownload) {
