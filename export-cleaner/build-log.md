@@ -471,3 +471,8 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - Ryan: essays are Documents, not General. Added keywords essay, thesis, dissertation, article, writing, research and the phrase "essays, research papers and school writing". Now by keyword: essays, thesis about birds, term paper, book report, writing samples → Documents. Still General via the AI: school assignment, english homework, class project.
 - Leftovers: "cover letter" → Graphic & Type (cover + lettering prefix); "brand deck" lists Graphic & Type first, Documents second (tie, list order).
 - Open question from Ryan: is Documents useful? Right now it only sets Balanced, same as General, so choosing it changes nothing yet.
+
+## Decks win ties (2026-11-02)
+
+- "brand deck" tied Graphic & Type (brand) with Documents (deck) and list order put Graphic first. `FORMATS` (deck, slide, pdf) now score 1.25 on an exact or plural match, so the format word wins a tie. Only brand deck(s) / brand slides / client brand deck / brand pdf changed in a 23-phrase before/after diff. Chrome: "brand decks" → Documents, Graphic & Type.
+- Ryan floated renaming Documents to Decks; not changed (it now also holds essays).
