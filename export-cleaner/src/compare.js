@@ -1,52 +1,76 @@
-// Step 5: compare a family's versions side by side to find the final.
-// "Winner stays on": two versions are on screen; pick the better one and it
-// stays where it is, the other is out (rejected), and the next version takes
-// its place. "Keep both" keeps the newcomer too (a 4:5 post and a 9:16 story)
-// and brings in the next. When no versions are left, the last one standing is
-// the final. Choices are stored on each file as entry.decision = 'keep' |
-// 'reject'; nothing on disk changes.
+// Step 5: compare versions side by side to find the final, one continuous
+// stream through the whole folder in the overview's order (similar families
+// next to each other).
+//
+// Inside a family, "winner stays on": two versions are on screen; pick the
+// better one and it stays where it is, the other is out (rejected), and the
+// next version takes its place. "Keep both" keeps the newcomer too (a 4:5 post
+// and a 9:16 story) and brings in the next.
+//
+// Where a family ends, its final is checked against the closest version of the
+// next family: "Same piece" merges the two families and the comparing goes
+// on; "Different" starts the next family. That catches the versions the
+// grouping missed, one-file families included.
+//
+// Choices are stored on each file as entry.decision = 'keep' | 'reject';
+// nothing on disk changes.
 
 import { $, show, familyDates, exportFormat, dayFormat, formatSize } from './dom.js';
 import { makePreview } from './thumbs.js';
+import { fileSimilarity } from './group.js';
 
-let families = []; // every family, to find the next one to compare
+let families = []; // every family, in the overview's order (shared with it: merges change it)
 let family = null; // the versions being compared, oldest first
 const slots = { left: null, right: null }; // the version on each side, or null
 let newcomer = 'right'; // the side most recently filled: "keep both" replaces it
 let queue = []; // versions still to take a turn, next first
+let boundary = null; // the next family, while asking whether it's the same piece
 let history = []; // undo: a snapshot from before each choice
 let onExit = () => {};
 
-// Opens a family. history is kept across families until the user leaves,
-// so Undo can step back into the family before.
+// Opens the stream at a family. history is kept until the user leaves, so
+// Undo can step back across families and merges.
 export function openFamily(allFamilies, entries, exit) {
   families = allFamilies;
   onExit = exit;
   history = [];
-  startFamily(entries);
   show('compare');
+  startFamily(entries);
 }
+
+const contending = (entries) => entries.filter((entry) => entry.decision !== 'reject');
 
 // The newest version starts on the left (most likely the final), the next
 // newest on the right; the rest wait their turn, newest first. Versions
 // already out stay out: click one in the versions grid to bring it back.
+// A family with one version goes straight to the check against its neighbour.
 function startFamily(entries) {
   family = entries;
-  const contenders = entries.filter((entry) => entry.decision !== 'reject').reverse();
+  boundary = null;
+  const contenders = contending(entries).reverse();
   if (!contenders.length) contenders.push(entries.at(-1));
   [slots.left, slots.right = null, ...queue] = contenders;
   newcomer = 'right';
-  render();
+  if (slots.right) render();
+  else afterChoice();
 }
 
 function snapshot() {
-  history.push({ family, slots: { ...slots }, newcomer, queue: [...queue], decisions: family.map((entry) => entry.decision) });
+  history.push({
+    families: [...families],
+    family,
+    slots: { ...slots },
+    newcomer,
+    queue: [...queue],
+    boundary,
+    decisions: family.map((entry) => entry.decision),
+  });
 }
 
 // The version on `side` wins: it stays, the other is out, the next comes in.
 function pick(side) {
   const other = side === 'left' ? 'right' : 'left';
-  if (!slots.right) return;
+  if (boundary || !slots.left || !slots.right) return;
   snapshot();
   slots[side].decision = 'keep';
   slots[other].decision = 'reject';
@@ -56,7 +80,7 @@ function pick(side) {
 }
 
 function keepBoth() {
-  if (!slots.right) return;
+  if (boundary || !slots.left || !slots.right) return;
   snapshot();
   slots.left.decision = 'keep';
   slots.right.decision = 'keep';
@@ -64,30 +88,68 @@ function keepBoth() {
   afterChoice();
 }
 
-// A version with nothing left to compare it to (a one-file family).
+// A lone version at the very end of the stream, with no neighbour left.
 function decideAlone(decision) {
   snapshot();
-  slots.left.decision = decision;
+  (slots.left ?? slots.right).decision = decision;
   afterChoice();
 }
 
-// Once a side is empty the family is done; on to the next family with
-// versions to compare, or, when there's none, out of this screen.
+// Once one side is empty this family's comparing is done: check its final
+// against the next family. At the end of the stream, a version never decided
+// waits for Keep / Reject; otherwise it's over.
 function afterChoice() {
   if (slots.left && slots.right) return render();
-  const next = families.find((f) => f.length > 1 && f.some((entry) => !entry.decision));
-  if (next) startFamily(next);
-  else exit(true);
+  const next = families.slice(families.indexOf(family) + 1).find((f) => contending(f).some((entry) => !entry.decision));
+  if (next) return askSamePiece(next);
+  if (!(slots.left ?? slots.right).decision) return render();
+  exit(true);
 }
 
-// Clicking a version in the grid brings it in as the newcomer; one that was out comes back undecided.
+// The final stays where it is; the next family's closest version comes in beside it.
+function askSamePiece(next) {
+  const final = slots.left ?? slots.right;
+  const side = slots.left ? 'right' : 'left';
+  const candidates = contending(next);
+  boundary = next;
+  slots[side] = final.vectors?.length
+    ? candidates.reduce((best, entry) => (fileSimilarity(final, entry) > fileSimilarity(final, best) ? entry : best))
+    : candidates.at(-1);
+  newcomer = side;
+  render();
+}
+
+// Same piece: the two families become one, and the comparing goes on with
+// the next family's versions taking their turns.
+function samePiece() {
+  if (!boundary) return;
+  snapshot();
+  const merged = [...family, ...boundary].sort((a, b) => a.file.lastModified - b.file.lastModified);
+  families.splice(families.indexOf(boundary), 1);
+  families.splice(families.indexOf(family), 1, merged);
+  queue = contending(boundary).filter((entry) => entry !== slots[newcomer]).reverse();
+  family = merged;
+  boundary = null;
+  render();
+}
+
+function different() {
+  if (!boundary) return;
+  snapshot();
+  startFamily(boundary);
+}
+
+// Clicking a version in the grid brings it in as the newcomer; one that was
+// out comes back undecided. While asking "same piece?", only the next
+// family's versions can be swapped in, to check a different one.
 function challengeWith(entry) {
   if (entry === slots.left || entry === slots.right) return;
+  if (boundary && !boundary.includes(entry)) return;
   snapshot();
   if (entry.decision === 'reject') entry.decision = undefined;
   queue = queue.filter((waiting) => waiting !== entry);
-  const side = slots.right ? newcomer : 'right';
-  if (slots[side]) queue.unshift(slots[side]);
+  const side = slots.left && slots.right ? newcomer : slots.left ? 'right' : 'left';
+  if (slots[side] && !boundary) queue.unshift(slots[side]);
   slots[side] = entry;
   newcomer = side;
   render();
@@ -96,35 +158,42 @@ function challengeWith(entry) {
 function undo() {
   const step = history.pop();
   if (!step) return;
+  families.splice(0, families.length, ...step.families);
   step.family.forEach((entry, i) => (entry.decision = step.decisions[i]));
   family = step.family;
   Object.assign(slots, step.slots);
   newcomer = step.newcomer;
   queue = step.queue;
+  boundary = step.boundary;
   render();
 }
 
-// finished: true when there's nothing left to compare, false when the user left early.
+// finished: true when the stream has reached its end, false when the user left.
+// The overview is told which family the stream was on, to show it there.
 function exit(finished = false) {
   for (const side of ['left', 'right']) showFrame(side, null);
   history = [];
-  onExit(finished);
+  onExit(finished, family);
 }
 
 function render() {
-  const left = queue.length + (slots.right ? 1 : 0);
+  const pair = Boolean(slots.left && slots.right);
+  const left = queue.length + (pair && !boundary ? 1 : 0);
   $('#compare-where').textContent =
     `${familyDates(family)} · family ${families.indexOf(family) + 1} of ${families.length} · ` +
-    `${family.length} versions · ${left ? `${left} left to compare` : 'nothing left to compare'}`;
-  const pair = Boolean(slots.right);
+    `${family.length} version${family.length > 1 ? 's' : ''} · ` +
+    (boundary ? 'same piece as the next family?' : left ? `${left} left to compare` : 'nothing left to compare');
   for (const side of ['left', 'right']) {
     const other = slots[side === 'left' ? 'right' : 'left'];
     showFrame(side, slots[side]);
     renderCaption($(`#caption-${side}`), slots[side], other);
   }
-  $('#pick-left').hidden = !pair;
-  $('#pick-right').hidden = !pair;
-  $('#keep-both').hidden = !pair;
+  const comparing = pair && !boundary;
+  $('#pick-left').hidden = !comparing;
+  $('#pick-right').hidden = !comparing;
+  $('#keep-both').hidden = !comparing;
+  $('#same-piece').hidden = !boundary;
+  $('#different').hidden = !boundary;
   $('#keep-alone').hidden = pair;
   $('#reject-alone').hidden = pair;
   $('#compare-undo').disabled = !history.length;
@@ -176,26 +245,34 @@ function ratio(width, height) {
   return match ? `${match[0]}:${match[1]}` : `${r.toFixed(1)}:1`;
 }
 
+// This family's versions; while asking "same piece?", the next family's after a divider.
 function renderVersions() {
-  $('#version-grid').replaceChildren(
-    ...family.map((entry) => {
-      const item = document.createElement('li');
-      const onScreen = entry === slots.left || entry === slots.right;
-      item.dataset.state = onScreen ? 'on-screen' : entry.decision === 'reject' ? 'out' : '';
-      item.title = entry.name;
-      item.innerHTML = '<div class="version-thumb"><span class="mark"></span></div><p class="version-date"></p>';
-      if (entry.thumb) {
-        const img = document.createElement('img');
-        img.src = entry.thumb;
-        img.alt = '';
-        item.firstChild.prepend(img);
-      }
-      item.querySelector('.mark').textContent = { keep: '✓', reject: '✕' }[entry.decision] ?? '';
-      item.querySelector('.version-date').textContent = exportFormat.format(entry.file.lastModified);
-      item.addEventListener('click', () => challengeWith(entry));
-      return item;
-    }),
-  );
+  const items = family.map(versionItem);
+  if (boundary) {
+    const divider = document.createElement('li');
+    divider.className = 'version-divider';
+    divider.textContent = `Next family · ${familyDates(boundary)}`;
+    items.push(divider, ...boundary.map(versionItem));
+  }
+  $('#version-grid').replaceChildren(...items);
+}
+
+function versionItem(entry) {
+  const item = document.createElement('li');
+  const onScreen = entry === slots.left || entry === slots.right;
+  item.dataset.state = onScreen ? 'on-screen' : entry.decision === 'reject' ? 'out' : '';
+  item.title = entry.name;
+  item.innerHTML = '<div class="version-thumb"><span class="mark"></span></div><p class="version-date"></p>';
+  if (entry.thumb) {
+    const img = document.createElement('img');
+    img.src = entry.thumb;
+    img.alt = '';
+    item.firstChild.prepend(img);
+  }
+  item.querySelector('.mark').textContent = { keep: '✓', reject: '✕' }[entry.decision] ?? '';
+  item.querySelector('.version-date').textContent = exportFormat.format(entry.file.lastModified);
+  item.addEventListener('click', () => challengeWith(entry));
+  return item;
 }
 
 // Each frame shows the thumbnail at once, then the full-size image once decoded.
@@ -211,7 +288,7 @@ async function showFrame(side, entry) {
   const img = frame.querySelector('img');
   img.hidden = !entry?.thumb;
   img.src = entry?.thumb ?? '';
-  frame.dataset.empty = entry && !entry.thumb ? 'No preview' : !entry && side === 'right' ? 'Only version' : '';
+  frame.dataset.empty = entry && !entry.thumb ? 'No preview' : !entry ? 'Only version' : '';
   if (!entry?.thumb) return;
   let url;
   try {
@@ -231,18 +308,24 @@ async function showFrame(side, entry) {
 $('#pick-left').addEventListener('click', () => pick('left'));
 $('#pick-right').addEventListener('click', () => pick('right'));
 $('#keep-both').addEventListener('click', keepBoth);
+$('#same-piece').addEventListener('click', samePiece);
+$('#different').addEventListener('click', different);
 $('#keep-alone').addEventListener('click', () => decideAlone('keep'));
 $('#reject-alone').addEventListener('click', () => decideAlone('reject'));
 $('#compare-undo').addEventListener('click', undo);
-$('#compare-back').addEventListener('click', () => exit());
+$('#view-families').addEventListener('click', () => exit());
 
 document.addEventListener('keydown', (event) => {
   if ($('#compare').hidden || event.repeat) return;
+  const command = event.metaKey || event.ctrlKey;
+  if (command && event.key !== 'z') return; // leave ⌘S, ⌘D and the like to the browser
   if (event.key === 'ArrowLeft') pick('left');
   else if (event.key === 'ArrowRight') pick('right');
   else if (event.key === 'ArrowDown') keepBoth();
+  else if (event.key === 's') samePiece();
+  else if (event.key === 'd') different();
   else if (event.key === 'Escape') exit();
-  else if ((event.key === 'z' && (event.metaKey || event.ctrlKey)) || event.key === 'Backspace') undo();
+  else if ((event.key === 'z' && command) || event.key === 'Backspace') undo();
   else return;
   event.preventDefault();
 });

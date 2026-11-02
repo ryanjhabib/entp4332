@@ -207,6 +207,21 @@ button:disabled {
   color: var(--color-muted);
 }
 
+/* Families | Compare: the pressed one is the view you're in. */
+.view-toggle {
+  display: flex;
+}
+
+.view-toggle button + button {
+  margin-left: -1px;
+}
+
+.view-toggle button[aria-pressed="true"] {
+  background: var(--color-text);
+  color: var(--color-bg);
+  cursor: default;
+}
+
 /* Compare screen. The top (frames, details, actions) stays pinned while the
    versions grid scrolls underneath; the frames take the height that's left
    once room is kept for the rest of the top and a first row of the grid. */
@@ -296,6 +311,16 @@ button:disabled {
 .version-grid li {
   flex: 0 0 var(--version-size);
   cursor: pointer;
+}
+
+/* Between this family's versions and the next family's, while asking "same piece?". */
+.version-grid .version-divider {
+  flex-basis: 100%;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-line);
+  color: var(--color-muted);
+  font-size: var(--text-s);
+  cursor: default;
 }
 
 .version-thumb {

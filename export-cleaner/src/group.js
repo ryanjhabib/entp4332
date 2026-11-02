@@ -61,7 +61,7 @@ const hasText = (entry) => (entry.words?.size ?? 0) >= MIN_WORDS;
 // How alike two files are. Two files with text: the words they share (the same
 // text in a new layout scores high, a different text in the same template low).
 // Anything else: how alike they look.
-function fileSimilarity(a, b) {
+export function fileSimilarity(a, b) {
   if (hasText(a) && hasText(b)) return sharedWords(a.words, b.words);
   return lookAlike(a.vectors, b.vectors);
 }

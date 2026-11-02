@@ -37,7 +37,10 @@
         <p class="muted" id="file-count"></p>
         <div class="buttons">
           <button id="open-summary" hidden>Review summary</button>
-          <button id="start-comparing" hidden>Start comparing</button>
+          <div class="view-toggle" role="group" aria-label="View">
+            <button aria-pressed="true">Families</button>
+            <button id="view-compare" aria-pressed="false">Compare</button>
+          </div>
         </div>
       </div>
       <form class="settings" id="settings" hidden>
@@ -51,7 +54,10 @@
       <!-- Pinned while the versions grid scrolls underneath. -->
       <div class="compare-top">
         <header class="bar">
-          <button id="compare-back">All families</button>
+          <div class="view-toggle" role="group" aria-label="View">
+            <button id="view-families" aria-pressed="false">Families</button>
+            <button aria-pressed="true">Compare</button>
+          </div>
           <p class="muted" id="compare-where"></p>
         </header>
 
@@ -74,6 +80,8 @@
           </div>
           <div class="compare-side-actions">
             <button id="keep-both">Keep both ↓</button>
+            <button id="same-piece">Same piece (S)</button>
+            <button id="different">Different (D)</button>
             <button id="compare-undo">Undo</button>
           </div>
           <div class="compare-side-actions">

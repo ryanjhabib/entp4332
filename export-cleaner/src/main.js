@@ -91,9 +91,17 @@ function regroup() {
   renderFamilies();
 }
 
-// Comparing until nothing's left leads straight to the summary; leaving early, to the overview.
+// The family the compare stream was last on, to pick up there when switching back.
+let lastCompared = null;
+
+// Reaching the end of the stream leads straight to the summary; switching
+// back to Families, to the overview, showing the family the stream was on.
 function compareFamily(family) {
-  openFamily(state.families, family, (finished) => (finished ? showSummary(state.files) : showOverview()));
+  openFamily(state.families, family, (finished, current) => {
+    lastCompared = current;
+    if (finished) showSummary(state.files);
+    else showOverview(current);
+  });
 }
 
 // The only code that changes anything on disk. Runs from the Apply click,
@@ -149,9 +157,13 @@ function showDone({ moved, failed }) {
   show('done');
 }
 
-function showOverview() {
+// The overview's element for each family, to scroll the right one into view.
+const familyElements = new WeakMap();
+
+function showOverview(focus) {
   renderFamilies();
   show('files');
+  familyElements.get(focus)?.scrollIntoView({ block: 'center' });
 }
 
 function setStatus(progress) {
@@ -162,7 +174,7 @@ function setStatus(progress) {
 function renderLoading() {
   $('#folder-name').textContent = state.dir.name;
   $('#settings').hidden = true;
-  $('#start-comparing').hidden = true;
+  $('#view-compare').disabled = true;
   $('#open-summary').hidden = true;
   setStatus('making previews');
   const grid = document.createElement('ul');
@@ -181,8 +193,7 @@ function renderFamilies() {
     `${decided} decided`,
   ].join(' · ');
   $('#settings').hidden = false;
-  $('#start-comparing').hidden = !nextFamily();
-  $('#start-comparing').textContent = decided ? 'Continue comparing' : 'Start comparing';
+  $('#view-compare').disabled = !nextFamily();
   $('#open-summary').hidden = !decided;
   $('#families').replaceChildren(...state.families.map(renderFamily));
 }
@@ -193,6 +204,7 @@ function renderFamily(entries) {
   family.innerHTML =
     '<div class="family-head"><div><p class="family-dates"></p><p class="muted"></p></div><button>Compare</button></div><ul class="card-row"></ul>';
   family.querySelector('.family-dates').textContent = familyDates(entries);
+  familyElements.set(entries, family);
   const kept = entries.filter((entry) => entry.decision === 'keep').length;
   const rejected = entries.filter((entry) => entry.decision === 'reject').length;
   const bytes = entries.reduce((sum, entry) => sum + entry.file.size, 0);
@@ -232,13 +244,15 @@ function showThumb(entry) {
 
 $('#choose').addEventListener('click', chooseFolder);
 $('#choose-again').addEventListener('click', chooseFolder);
-// The next family with undecided versions to compare; one-file families only once those are done.
+// Where Compare picks up: the family it was last on if that still has versions
+// to decide, otherwise the first family in the overview's order that does.
 function nextFamily() {
   const open = (f) => f.some((entry) => !entry.decision);
-  return state.families.find((f) => f.length > 1 && open(f)) ?? state.families.find(open);
+  if (state.families.includes(lastCompared) && open(lastCompared)) return lastCompared;
+  return state.families.find(open);
 }
 
-$('#start-comparing').addEventListener('click', () => {
+$('#view-compare').addEventListener('click', () => {
   const next = nextFamily();
   if (next) compareFamily(next);
 });
