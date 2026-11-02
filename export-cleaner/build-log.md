@@ -465,3 +465,9 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 ## AI pick shown as a row (2026-11-02)
 
 - When no keyword fits, the closest-meaning type now renders as the only row while typing; stale answers (text changed, field left) are dropped. Enter: hovered row → top row → wait for the model. Checked by real typing: "thesis" → Documents; "thesis about birds" → General (near "a class project or school assignment"; arguably Documents, a phrase-tuning question).
+
+## Essays go to Documents (2026-11-02)
+
+- Ryan: essays are Documents, not General. Added keywords essay, thesis, dissertation, article, writing, research and the phrase "essays, research papers and school writing". Now by keyword: essays, thesis about birds, term paper, book report, writing samples → Documents. Still General via the AI: school assignment, english homework, class project.
+- Leftovers: "cover letter" → Graphic & Type (cover + lettering prefix); "brand deck" lists Graphic & Type first, Documents second (tie, list order).
+- Open question from Ryan: is Documents useful? Right now it only sets Balanced, same as General, so choosing it changes nothing yet.
