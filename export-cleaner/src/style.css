@@ -74,6 +74,8 @@
   --brand-size: 16px;
   --caption-size: 12px;
   --caption-line-height: 1.4;
+  --description-gap: 40px;
+  --description-optical-offset: 2px;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
 
@@ -149,6 +151,15 @@ button {
   font-size: var(--brand-size);
   font-weight: var(--font-weight-medium);
   line-height: var(--intro-line-height);
+  letter-spacing: 0;
+}
+
+.start-description {
+  grid-column: 1 / -1;
+  margin: calc(var(--description-gap) - var(--description-optical-offset)) 0 0;
+  font-size: var(--caption-size);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--caption-line-height);
   letter-spacing: 0;
 }
 
