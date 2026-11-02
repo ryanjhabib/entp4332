@@ -43,9 +43,14 @@
           </div>
         </div>
       </div>
-      <form class="settings" id="settings" hidden>
-        <label>Same family at <input type="number" id="min-similarity" min="50" max="99" value="80" />% alike or more</label>
-      </form>
+      <div class="settings" id="settings" hidden>
+        <span>Grouping</span>
+        <div class="view-toggle" role="group" aria-label="Grouping">
+          <button data-level="loose" aria-pressed="false" title="Catches heavy re-crops and re-grades; may group look-alikes">Loose</button>
+          <button data-level="balanced" aria-pressed="true" title="Suits most folders">Balanced</button>
+          <button data-level="strict" aria-pressed="false" title="For product shoots and same-pose sets">Strict</button>
+        </div>
+      </div>
       <div class="families" id="families"></div>
     </section>
 

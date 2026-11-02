@@ -84,10 +84,16 @@ async function describeImages(files) {
   }
 }
 
+// How alike two files must be to share a family. Balanced suits most folders;
+// Strict suits product shoots, where different items share a pose and backdrop
+// (two different jackets measured 0.87); Loose catches heavier re-crops.
+const LEVELS = { loose: 0.75, balanced: 0.8, strict: 0.88 };
+let level = 'balanced';
+
 // Re-runs the grouping with the current setting. Decisions live on the files,
 // so they survive regrouping.
 function regroup() {
-  state.families = groupFiles(state.files, { minSimilarity: (Number($('#min-similarity').value) || 80) / 100 });
+  state.families = groupFiles(state.files, { minSimilarity: LEVELS[level] });
   renderFamilies();
 }
 
@@ -261,7 +267,11 @@ $('#summary-back').addEventListener('click', showOverview);
 $('#apply').addEventListener('click', apply);
 $('#rescan').addEventListener('click', () => loadFolder(state.dir));
 $('#done-choose').addEventListener('click', chooseFolder);
-// 'change' (Enter, arrows, leaving the box), not every keystroke: regrouping a big folder takes a moment.
-$('#settings').addEventListener('change', regroup);
-$('#settings').addEventListener('submit', (event) => event.preventDefault());
+$('#settings').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-level]');
+  if (!button || button.dataset.level === level) return;
+  level = button.dataset.level;
+  for (const option of $('#settings').querySelectorAll('[data-level]')) option.setAttribute('aria-pressed', option === button);
+  regroup();
+});
 show(isSupported() ? 'start' : 'unsupported');
