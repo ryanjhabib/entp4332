@@ -2,7 +2,7 @@ import './style.css';
 import { $, show, plural, familyDates, exportFormat, formatSize } from './dom.js';
 import { isSupported, pickFolder, readFolder } from './scan.js';
 import { makeThumbnail } from './thumbs.js';
-import { embed } from './embed.js';
+import { describe } from './describe.js';
 import { groupFiles } from './group.js';
 import { openFamily } from './swipe.js';
 import { showSummary } from './summary.js';
@@ -11,7 +11,7 @@ import { TRASH_FOLDER, requestWriteAccess, moveRejected } from './apply.js';
 // Everything the app knows lives here.
 const state = {
   dir: null, // the folder the user picked (a FileSystemDirectoryHandle)
-  // For each design file: { handle, file, name, ext, thumb, vector, card, decision }
+  // For each design file: { handle, file, name, ext, thumb, vectors, words, card, decision }
   files: [],
   families: [], // [[entry, ...], ...], each oldest first, ordered by their oldest file
 };
@@ -72,13 +72,13 @@ async function makeThumbnails(files) {
   await Promise.all(Array.from({ length: THUMB_WORKERS }, work));
 }
 
-// Runs each preview through the image model, one at a time (the model uses
-// the whole GPU). The first time, the model itself downloads first.
+// Runs each file through the image model (and reads PDFs' text), one at a
+// time: the model uses the whole GPU. The first time, the model itself downloads first.
 async function describeImages(files) {
   let done = 0;
   for (const entry of files) {
     if (files !== state.files) return;
-    if (entry.thumb) entry.vector = await embed(entry.thumb, (percent) => setStatus(`loading the image model ${percent}%`));
+    Object.assign(entry, await describe(entry, (percent) => setStatus(`loading the image model ${percent}%`)));
     done += 1;
     setStatus(`comparing images ${done} of ${files.length}`);
   }

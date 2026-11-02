@@ -1,7 +1,9 @@
 // Step 2: a small preview image for every file.
 
+import { withPdf, renderPage } from './pdf.js';
+
 // Longest side of a thumbnail in pixels: sharp at 160 CSS px on a retina screen.
-const SIZE = 320;
+export const THUMB_SIZE = 320;
 
 // Makes one thumbnail. Returns an object URL for an <img>, or null if the
 // file can't be read (corrupt, or a format the browser can't decode).
@@ -70,7 +72,7 @@ async function svgBlob(file) {
 }
 
 function drawScaled(source, width, height) {
-  const scale = SIZE / Math.max(width, height);
+  const scale = THUMB_SIZE / Math.max(width, height);
   const canvas = document.createElement('canvas');
   canvas.width = Math.max(1, Math.round(width * scale));
   canvas.height = Math.max(1, Math.round(height * scale));
@@ -80,34 +82,7 @@ function drawScaled(source, width, height) {
   return canvas;
 }
 
-// pdf.js is large, so it's only downloaded the first time a folder has a PDF.
-let pdfjsReady;
-
-async function loadPdfjs() {
-  const [pdfjs, worker] = await Promise.all([
-    import('pdfjs-dist'),
-    import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
-  ]);
-  pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
-  return pdfjs;
-}
-
-// Renders page 1 of a PDF straight onto a canvas, `size` px on its longest side.
-async function renderPdf(file, size = SIZE) {
-  pdfjsReady ??= loadPdfjs();
-  const pdfjs = await pdfjsReady;
-  const task = pdfjs.getDocument({ data: await file.arrayBuffer() });
-  try {
-    const pdf = await task.promise;
-    const page = await pdf.getPage(1);
-    const { width, height } = page.getViewport({ scale: 1 });
-    const viewport = page.getViewport({ scale: size / Math.max(width, height) });
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.round(viewport.width);
-    canvas.height = Math.round(viewport.height);
-    await page.render({ canvas, viewport }).promise;
-    return canvas;
-  } finally {
-    await task.destroy(); // pdf.js v6: cleanup lives on the loading task
-  }
+// Page 1 of a PDF, `size` px on its longest side.
+function renderPdf(file, size = THUMB_SIZE) {
+  return withPdf(file, (pdf) => renderPage(pdf, 1, size));
 }

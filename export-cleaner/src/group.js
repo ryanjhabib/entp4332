@@ -37,26 +37,76 @@ export function nameStem(name) {
   return GENERIC.has(stem) ? null : stem;
 }
 
+// A PDF with at least this many words is judged by its text: at thumbnail
+// size the image model can't read, so text pages from one template all look alike.
+const MIN_WORDS = 20;
+
+const hasText = (entry) => (entry.words?.size ?? 0) >= MIN_WORDS;
+
+// How alike two files are. Two PDFs with text: the words they share (the same
+// text in a new layout scores high, a different text in the same template low).
+// Anything else: how alike they look.
+function fileSimilarity(a, b) {
+  if (hasText(a) && hasText(b)) return sharedWords(a.words, b.words);
+  return lookAlike(a.vectors, b.vectors);
+}
+
+// One vector each: plain similarity. A PDF's pages against one image: the
+// best-matching page (a PNG of slide 3 matches the deck). Two multi-page
+// PDFs: how well each one's pages are matched in the other, on average,
+// so one shared cover page doesn't make two different decks the same.
+function lookAlike(a, b) {
+  const best = (vector, pages) => Math.max(...pages.map((page) => similarity(vector, page)));
+  if (a.length === 1) return best(a[0], b);
+  if (b.length === 1) return best(b[0], a);
+  const covered = (pages, others) => pages.reduce((sum, page) => sum + best(page, others), 0) / pages.length;
+  return (covered(a, b) + covered(b, a)) / 2;
+}
+
+// Words in both / words in either (0–1).
+function sharedWords(a, b) {
+  let shared = 0;
+  for (const word of a) if (b.has(word)) shared += 1;
+  return shared / (a.size + b.size - shared);
+}
+
 // Two files are in the same family when their similarity (plus NAME_BONUS if
-// their names share a stem) is at least minSimilarity. Chains count too (A looks like B, B looks like C, so A, B
-// and C are one family), which keeps a run of small edits together.
-// Files with no vector (no preview) stay on their own.
+// their names share a stem) is at least minSimilarity. Chains count too (A
+// looks like B, B looks like C, so A, B and C are one family), which keeps a
+// run of small edits together. The strongest links are made first, and a
+// link is skipped if it would put two PDFs whose words say they're different
+// documents in one family (a PNG of a slide looks like every deck made from
+// that template; it joins the one it matches best).
+// Files with nothing to compare (no preview) stay on their own.
 // Returns families as arrays of files, each oldest first, ordered by their oldest file.
 export function groupFiles(files, { minSimilarity }) {
-  // Union-find: each file points towards its family's representative.
-  const parent = files.map((_, i) => i);
-  const root = (i) => (parent[i] === i ? i : (parent[i] = root(parent[i])));
   const stems = files.map((entry) => nameStem(entry.name));
+  const links = [];
   for (let i = 0; i < files.length; i++) {
-    const a = files[i].vector;
-    if (!a) continue;
+    if (!files[i].vectors?.length) continue;
     for (let j = i + 1; j < files.length; j++) {
-      const b = files[j].vector;
-      if (!b) continue;
+      if (!files[j].vectors?.length) continue;
       const bonus = stems[i] && stems[i] === stems[j] ? NAME_BONUS : 0;
-      if (similarity(a, b) + bonus >= minSimilarity) parent[root(j)] = root(i);
+      const score = fileSimilarity(files[i], files[j]) + bonus;
+      if (score >= minSimilarity) links.push({ i, j, score });
     }
   }
+  links.sort((a, b) => b.score - a.score);
+
+  // Union-find: each file points towards its family's representative, which
+  // also keeps the family's PDFs-with-text to check new links against.
+  const parent = files.map((_, i) => i);
+  const texts = files.map((entry) => (hasText(entry) ? [entry] : []));
+  const root = (i) => (parent[i] === i ? i : (parent[i] = root(parent[i])));
+  const differentDocuments = (x, y) =>
+    texts[x].some((a) => texts[y].some((b) => sharedWords(a.words, b.words) < minSimilarity));
+  for (const { i, j } of links) {
+    const [x, y] = [root(i), root(j)];
+    if (x === y || differentDocuments(x, y)) continue;
+    parent[y] = x;
+    texts[x].push(...texts[y]);
+  }
+
   // Files are already oldest first, so families come out in order of their oldest file.
   const families = new Map();
   files.forEach((entry, i) => {
