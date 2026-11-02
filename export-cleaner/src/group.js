@@ -17,6 +17,14 @@ const SAME_MOMENT_BONUS = 0.3;
 const sameOriginal = (a, b) => Boolean(a.shot?.original && a.shot.original === b.shot?.original);
 const sameMoment = (a, b) => Boolean(a.shot && a.shot.moment === b.shot?.moment);
 
+// And when the metadata says they're different photos (different originals,
+// shot at different moments), only near-identical frames still group: two
+// dune photos 8 minutes apart looked 0.82 alike, two frames of one building
+// 2 seconds apart 0.92.
+const DIFFERENT_PHOTOS_PENALTY = 0.08;
+const differentPhotos = (a, b) =>
+  Boolean(a.shot?.original && b.shot?.original && !sameOriginal(a, b) && !sameMoment(a, b));
+
 // The score a same-original link gets: above any looks-based score, so it's made first.
 const SAME_ORIGINAL = 2;
 
@@ -140,7 +148,9 @@ export function groupFiles(files, { minSimilarity }) {
     for (let j = i + 1; j < files.length; j++) {
       if (!files[j].vectors?.length) continue;
       const bonus =
-        (stems[i] && stems[i] === stems[j] ? NAME_BONUS : 0) + (sameMoment(files[i], files[j]) ? SAME_MOMENT_BONUS : 0);
+        (stems[i] && stems[i] === stems[j] ? NAME_BONUS : 0) +
+        (sameMoment(files[i], files[j]) ? SAME_MOMENT_BONUS : 0) -
+        (differentPhotos(files[i], files[j]) ? DIFFERENT_PHOTOS_PENALTY : 0);
       const score = sameOriginal(files[i], files[j]) ? SAME_ORIGINAL : fileSimilarity(files[i], files[j]) + bonus;
       if (score >= minSimilarity) links.push({ i, j, score });
     }
