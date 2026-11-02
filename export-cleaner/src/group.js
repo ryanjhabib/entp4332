@@ -83,9 +83,11 @@ const FILLER = new Set([
 // Filler and junk readings ("uuu": OCR finding letters in texture) left out.
 const keyWords = (words) => [...(words ?? [])].filter((word) => !FILLER.has(word) && !/(.)\1\1/.test(word));
 
-// A word matches another it begins: OCR runs words together ("let me" → "letm")
-// and crops cut them off ("eterr").
-const wordsMatch = (a, b) => a.startsWith(b) || b.startsWith(a);
+// A word matches another it begins (OCR runs words together: "let me" → "letm")
+// or one sharing its first four letters (a crop or misread changes the end:
+// "eterr" for "eternity").
+const wordsMatch = (a, b) =>
+  a.startsWith(b) || b.startsWith(a) || (a.length >= 4 && b.length >= 4 && a.slice(0, 4) === b.slice(0, 4));
 
 function phraseNudge(a, b) {
   const [x, y] = [keyWords(a), keyWords(b)];

@@ -15,6 +15,14 @@ const MAX_PDF_PAGES = 50;
 // Images are read for text at this size: big enough for body text on a slide.
 const OCR_SIZE = 1600;
 
+// Very large exports where the first reading found only a little text (a few
+// words, not a page of them) are read again at this size and the readings
+// combined: at 1600, an 8640px site mock-up's calendar labels were a few pixels
+// tall and only the browser tab's "calendar" was read. Not done for everything:
+// photos read no words and gain nothing but time, and faint text can read worse
+// at full size (a 2293px page read nothing at full size but its words at 1600).
+const OCR_LARGE = 3200;
+
 // Returns { vectors: [Float32Array, ...], words: Set | null, shot: { taken, moment, original } | null,
 // colour: [r, g, b] | null }.
 export async function describe(entry, onDownload) {
@@ -59,7 +67,12 @@ async function averageColour(thumbUrl) {
 // The image's text by OCR, or null if it can't be read (the looks still count).
 async function imageWords(entry) {
   try {
-    return await readImageWords(await renderAt(entry, OCR_SIZE));
+    const words = await readImageWords(await renderAt(entry, OCR_SIZE));
+    const someText = words.size > 0 && words.size < 20;
+    if (someText && Math.max(entry.width ?? 0, entry.height ?? 0) >= OCR_LARGE) {
+      for (const word of await readImageWords(await renderAt(entry, OCR_LARGE))) words.add(word);
+    }
+    return words;
   } catch (error) {
     console.warn(`Couldn't read text in ${entry.name}:`, error);
     return null;
