@@ -27,6 +27,10 @@ export const MEDIA_TYPES = [
 // Words that say nothing about the type ("my product shots").
 const FILLER = new Set(['my', 'the', 'a', 'an', 'of', 'and', 'for', 'some', 'old', 'new', 'from', 'with', 'i', 'im', 'its', 'mostly', 'just']);
 
+// Words that say what the files are, not what they're about, so they win a
+// tie: "brand deck" is a deck before it's branding.
+const FORMATS = new Set(['deck', 'slide', 'pdf']);
+
 // Whether a becomes b with at most one letter added, dropped or changed.
 function oneEditApart(a, b) {
   if (Math.abs(a.length - b.length) > 1) return false;
@@ -56,7 +60,10 @@ export function matchTypes(text) {
   if (!words.length) return text.trim() ? [] : MEDIA_TYPES;
   const fits = MEDIA_TYPES.map((type) => {
     const terms = [...type.label.toLowerCase().match(/[a-z]+/g), ...type.keywords];
-    return words.map((word) => Math.max(...terms.map((term) => fit(word, term))));
+    return words.map((word) => Math.max(...terms.map((term) => {
+      const f = fit(word, term);
+      return f === 1 && FORMATS.has(term) ? 1.25 : f;
+    })));
   });
   const typoOnly = words.map((_, w) => fits.every((type) => type[w] <= 0.5));
   return MEDIA_TYPES
