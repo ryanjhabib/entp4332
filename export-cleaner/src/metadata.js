@@ -8,9 +8,9 @@ const READABLE = ['jpg', 'jpeg', 'tif', 'tiff', 'png', 'avif'];
 
 let exifrReady;
 
-// Returns { taken: Date | null, keys: [...] } or null. Two files sharing any
-// key are the same shot: the same original photo (Lightroom's
-// OriginalDocumentID), or the same capture moment on the same camera.
+// Returns { taken: Date, moment, original } or null. `moment` is the capture
+// moment to the sub-second plus the camera; `original` is Lightroom's
+// OriginalDocumentID, which every export of one original photo shares.
 export async function readShot({ file, ext }) {
   if (!READABLE.includes(ext)) return null;
   exifrReady ??= import('exifr').then((module) => module.default ?? module);
@@ -23,9 +23,11 @@ export async function readShot({ file, ext }) {
   }
   const taken = tags?.DateTimeOriginal instanceof Date ? tags.DateTimeOriginal : null;
   if (!taken) return null; // without a capture time it isn't a photo's metadata
-  const keys = [`taken:${taken.getTime()}.${tags.SubSecTimeOriginal ?? ''}|${tags.Make ?? ''}|${tags.Model ?? ''}`];
-  // Only trusted alongside a capture time: design apps carry an original ID
-  // through "Save As", so a new design started from an old one would share it.
-  if (tags.OriginalDocumentID) keys.push(`original:${tags.OriginalDocumentID}`);
-  return { taken, keys };
+  return {
+    taken,
+    moment: `${taken.getTime()}.${tags.SubSecTimeOriginal ?? ''}|${tags.Make ?? ''}|${tags.Model ?? ''}`,
+    // Only trusted alongside a capture time: design apps carry an original ID
+    // through "Save As", so a new design started from an old one would share it.
+    original: tags.OriginalDocumentID ?? null,
+  };
 }

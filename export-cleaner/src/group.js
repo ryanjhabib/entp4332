@@ -7,12 +7,18 @@ import { similarity } from './embed.js';
 // unrelated images score around 0.2–0.5, far below any threshold.
 const NAME_BONUS = 0.05;
 
-// Photo metadata saying two files are the same shot (see metadata.js) is a much
-// stronger clue, but the looks still count: a same-shot pair still has to look
-// at least 0.5 alike (about a heavy crop) to join at the default 80%.
-const SAME_SHOT_BONUS = 0.3;
+// Photo metadata (see metadata.js). The same original photo (Lightroom's ID)
+// decides on its own: those files are exports of one original, however
+// differently cropped or graded. The same capture moment on the same camera
+// is a strong nudge, but the looks still count: such a pair has to look at
+// least 0.5 alike to join at the default 80%.
+const SAME_MOMENT_BONUS = 0.3;
 
-const sameShot = (a, b) => Boolean(a.shot && b.shot && a.shot.keys.some((key) => b.shot.keys.includes(key)));
+const sameOriginal = (a, b) => Boolean(a.shot?.original && a.shot.original === b.shot?.original);
+const sameMoment = (a, b) => Boolean(a.shot && a.shot.moment === b.shot?.moment);
+
+// The score a same-original link gets: above any looks-based score, so it's made first.
+const SAME_ORIGINAL = 2;
 
 // Edit and copy markers that tools add to the end of a name.
 const SUFFIXES = [
@@ -81,9 +87,10 @@ function sharedWords(a, b) {
   return shared / shorter.size;
 }
 
-// Two files are in the same family when their similarity (plus NAME_BONUS if
-// their names share a stem, SAME_SHOT_BONUS if their metadata says they're the
-// same shot) is at least minSimilarity. Chains count too (A
+// Two files are in the same family when they're exports of the same original
+// photo, or when their similarity (plus NAME_BONUS if their names share a
+// stem, SAME_MOMENT_BONUS if they were shot at the same moment on the same
+// camera) is at least minSimilarity. Chains count too (A
 // looks like B, B looks like C, so A, B and C are one family), which keeps a
 // run of small edits together. The strongest links are made first, and a
 // link is skipped if it would put two files whose words say they're different
@@ -99,8 +106,8 @@ export function groupFiles(files, { minSimilarity }) {
     for (let j = i + 1; j < files.length; j++) {
       if (!files[j].vectors?.length) continue;
       const bonus =
-        (stems[i] && stems[i] === stems[j] ? NAME_BONUS : 0) + (sameShot(files[i], files[j]) ? SAME_SHOT_BONUS : 0);
-      const score = fileSimilarity(files[i], files[j]) + bonus;
+        (stems[i] && stems[i] === stems[j] ? NAME_BONUS : 0) + (sameMoment(files[i], files[j]) ? SAME_MOMENT_BONUS : 0);
+      const score = sameOriginal(files[i], files[j]) ? SAME_ORIGINAL : fileSimilarity(files[i], files[j]) + bonus;
       if (score >= minSimilarity) links.push({ i, j, score });
     }
   }

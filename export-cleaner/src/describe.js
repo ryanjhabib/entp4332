@@ -15,7 +15,7 @@ const MAX_PDF_PAGES = 50;
 // Images are read for text at this size: big enough for body text on a slide.
 const OCR_SIZE = 1600;
 
-// Returns { vectors: [Float32Array, ...], words: Set | null, shot: { taken, keys } | null,
+// Returns { vectors: [Float32Array, ...], words: Set | null, shot: { taken, moment, original } | null,
 // colour: [r, g, b] | null }.
 export async function describe(entry, onDownload) {
   if (!entry.thumb) return { vectors: [], words: null, shot: null, colour: null }; // unreadable file
