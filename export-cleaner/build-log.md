@@ -213,3 +213,8 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - **Fix:** (1) when both files are PDFs with 20+ words, **the words decide**. (2) **Links are made strongest first**, and a link is skipped if it would put two text PDFs whose words say they're different documents into one family. The PNG joins the deck it matches best (1.00 vs 0.99).
 - **Result:** {deck, re-layout, PNG of page 2} and {different document}. The photo test folder was unchanged at 6 correct families.
 - **Known limit:** images of text (PNG/JPG exports of text-heavy slides) have no words, so they're judged by looks alone. The PNG's margin here was thin (1.00 vs 0.99), and two PNGs of different text slides on one template would group. Fix later: **OCR** (reading text from images, e.g. Tesseract.js), run only on images whose best match is a text PDF or another text-like image.
+
+### More file types: AVIF, GIF, TIFF
+- **AVIF and GIF:** Chrome decodes them with `createImageBitmap` (a GIF's first frame), so they're just added to the list.
+- **TIFF:** Chrome can't decode TIFF at all, and it's a common lossless Lightroom export, often 16-bit. **UTIF.js** (Photopea's decoder, MIT, 83 KB, loaded only when a folder has a TIFF) decodes it; `toRGBA8` turns 16-bit channels into 8-bit; if the file holds several images, the largest is used. An `<img>` can't show TIFF either, so the swipe card renders TIFFs at 1600px like PDFs.
+- **Tested** with files made by macOS's `sips` (8-bit TIFF, LZW-compressed TIFF, AVIF, GIF) and a 16-bit RGB TIFF written byte by byte, since `sips` can't make one. Each grouped with its JPG twin. The 16-bit gradient's corners came out as expected (blue channel 20000/65535 → 79/255). TIFF swipe previews took 63–127 ms.
