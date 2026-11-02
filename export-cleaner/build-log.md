@@ -447,3 +447,10 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 
 - General also matches unsorted, junk, mess(y), clutter, dump, leftovers, downloads, desktop, exports, archive, backup, untitled, unknown, idk, dunno, whatever, assorted. Ties now put General after the specific type ("desktop screenshots" → Screenshots · General).
 - 1px `#CCC` line between rows (Ryan: "try"), inside the 40px rows; none above the first row (under the band's 2px line) or after the last. Hover row's line turns `#222`. Measured: rows unchanged at 583.5–903.5px.
+
+## Media type sets the grouping level (2026-11-02)
+
+- Each type carries a level (`media.js`): Balanced for General, Photographs, Graphic & Type, Documents; Strict for Product Images, Screenshots, User Interface; Loose for Mockups. The toggle still overrides. Strict for products is measured (tests 14–15); for screenshots / UI it follows test 20's same-template problem; Loose for mockups is unmeasured.
+- Grouping moved after the type: a scan that finishes first now waits at "Ready" with the bar full, groups when a type is chosen. Mid-scan choice still goes to the loading screen and groups at 98% as before.
+- Checked: bomber flat-lays + "product shots" + Enter → Product Images, Strict, 4 families (jackets apart); Balanced → 3 (fronts merged). Model test folder mid-scan → Strict, 6 families.
+- Test gotcha again: with the browser pane hidden, `requestAnimationFrame` never fires, so the bar stays at `scaleX(0)` and finishing waits. Screenshots drive frames. Not an app bug.

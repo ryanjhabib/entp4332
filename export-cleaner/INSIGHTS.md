@@ -59,6 +59,8 @@ No single setting is right, because **the right rule depends on what's in the im
 | **Graphic / type work** | words (even short phrases), multi-scale looks, inversion | near-blank pages |
 | **Documents / decks** | words, page by page | templates |
 
+**Built first step (2026-11-02):** the start screen's media type now sets the folder's starting level (Product Images / Screenshots / User Interface → Strict, Mockups → Loose, the rest Balanced); the toggle remains. Per-file rules below are still the goal.
+
 **Recommendation:** replace Loose/Balanced/Strict with rules chosen **per file, automatically**, from cues the app already has:
 - **Photo:** EXIF camera data.
 - **Product shot:** a flat backdrop with one centred subject.
