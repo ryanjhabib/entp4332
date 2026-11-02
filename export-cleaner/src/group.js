@@ -82,7 +82,7 @@ function sharedWords(a, b) {
 // documents in one family (an image that looks like several decks made from
 // one template joins the one it matches best).
 // Files with nothing to compare (no preview) stay on their own.
-// Returns families as arrays of files, each oldest first, ordered by their oldest file.
+// Returns families as arrays of files, each oldest first, ordered by look (see orderByLook).
 export function groupFiles(files, { minSimilarity }) {
   const stems = files.map((entry) => nameStem(entry.name));
   const links = [];
@@ -120,5 +120,43 @@ export function groupFiles(files, { minSimilarity }) {
     if (!families.has(key)) families.set(key, []);
     families.get(key).push(entry);
   });
-  return [...families.values()];
+  return orderByLook([...families.values()]);
+}
+
+// How much colour counts when ordering families: a weak tie-breaker after looks.
+const COLOUR_WEIGHT = 0.15;
+
+// Orders the overview so similar families sit side by side: start with the
+// oldest family, then keep stepping to the most alike family not yet placed.
+// Families with nothing to compare (unreadable files) go last.
+function orderByLook(families) {
+  const placed = [];
+  const left = families.map(summarise).filter((summary) => summary.look);
+  let current = left.shift();
+  while (current) {
+    placed.push(current.family);
+    let nearest = 0;
+    for (let k = 1; k < left.length; k++) if (difference(current, left[k]) < difference(current, left[nearest])) nearest = k;
+    current = left.splice(nearest, 1)[0];
+  }
+  return [...placed, ...families.filter((family) => !placed.includes(family))];
+}
+
+// A family's average look (all its files' vectors, scaled to length 1) and average colour.
+function summarise(family) {
+  const vectors = family.flatMap((entry) => entry.vectors ?? []);
+  const colours = family.map((entry) => entry.colour).filter(Boolean);
+  if (!vectors.length) return { family, look: null };
+  const look = new Float32Array(vectors[0].length);
+  for (const vector of vectors) for (let i = 0; i < look.length; i++) look[i] += vector[i];
+  const length = Math.hypot(...look);
+  for (let i = 0; i < look.length; i++) look[i] /= length;
+  const colour = [0, 1, 2].map((c) => colours.reduce((sum, rgb) => sum + rgb[c], 0) / colours.length);
+  return { family, look, colour };
+}
+
+// 0 = identical; unrelated looks score around 0.7–0.9, colour adds up to 0.15.
+function difference(a, b) {
+  const colour = Math.hypot(a.colour[0] - b.colour[0], a.colour[1] - b.colour[1], a.colour[2] - b.colour[2]) / (255 * Math.sqrt(3));
+  return 1 - similarity(a.look, b.look) + COLOUR_WEIGHT * colour;
 }

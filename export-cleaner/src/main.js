@@ -13,7 +13,7 @@ const state = {
   dir: null, // the folder the user picked (a FileSystemDirectoryHandle)
   // For each design file: { handle, file, name, ext, thumb, vectors, words, card, decision }
   files: [],
-  families: [], // [[entry, ...], ...], each oldest first, ordered by their oldest file
+  families: [], // [[entry, ...], ...], each oldest first, similar families side by side
 };
 
 // How many thumbnails are made at once. More doesn't finish sooner,
@@ -171,7 +171,7 @@ function renderLoading() {
   $('#families').replaceChildren(grid);
 }
 
-// Once every file is described: its families, oldest first.
+// Once every file is described: its families, similar ones side by side.
 // The cards made during loading are moved into place, not rebuilt.
 function renderFamilies() {
   const decided = state.files.filter((entry) => entry.decision).length;
