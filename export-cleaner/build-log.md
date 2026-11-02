@@ -331,3 +331,17 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
   - if both carry key words, none match, and there are ≥ 4 between them, **−0.15**.
 - **Result:** graphic folder 25 → 24 families. Eternity and the phone joined, the helvetica pair split, everything else unchanged. Photos, PDFs, OCR, formats, flat-lays and Lightroom test folders were all unchanged.
 - **Still missed:** the full-bleed black calendar, whose text really is different; that's a looks problem (inversion), noted in INSIGHTS.md.
+
+### 15. The black site calendar read only "calendar"
+- **Symptom:** after the phrase rule, the full-bleed black calendar still sat apart from the black calendar inside a browser mock-up. Ryan: "both the blacks are the same, shouldn't it group those 2 at the minimum?"
+- **Cause:** the exports are huge (site mock-ups 8640×10800, full-bleed 6480×8100). Read at 1600px (1/7 size), the mock-up's calendar labels were a few pixels tall, and OCR read only the browser tab's title, "calendar". The new clash rule then scored "calendar" vs "how many more acts…" as different text (−0.15).
+- **Measured:** at 3200 and 4800px, the mock-up reads `calendar how many more acts will you leave behind before your written departure`, the same as the full-bleed version. So it was the same text, not an earlier iteration (Ryan confirmed: a finalised site-media folder).
+- **Dead end 1: read everything at up to 3200px.** That fixed the calendar but broke two earlier wins:
+  - the cropped eternity print read `eterr`, which isn't a prefix of `eternity`;
+  - a faint light-grey page read **nothing** at its full 2293px, though it read its words at 1600.
+
+  It was also 3.5× slower (162 s vs 46 s).
+- **Dead end 2: a second read for every image ≥ 3200px.** It fixed everything, but would re-read every full-size photo, which has no text, for nothing.
+- **Fix:** read at 1600 as before; re-read at 3200 and combine only when the image is ≥ 3200px **and** the first read found 1–19 words. Words sharing their first 4 letters also match.
+- **Result:** graphic folder 23 families in 61 s. All four flagged misses fixed (black calendar joins a 4-file calendar family; eternity; dua phone; helvetica apart). Photos, PDFs, OCR, formats, flat-lays and Lightroom test folders unchanged.
+- **Open, from Ryan:** an *earlier iteration* of a design with *different copy* is still the same project, but the −0.15 clash rule would push it apart. The clash should probably only apply when both images are sparse (mostly empty), which is the low-content guard in INSIGHTS.md.

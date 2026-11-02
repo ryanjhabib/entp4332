@@ -72,7 +72,8 @@ Each pair is then judged by the rules that fit its content, with no setting to t
 - In the Mac app, all of this can run in the background, so slower but more accurate is the right trade.
 
 ## Suggested order for the next work
-1. ~~**Short-text phrase rule**~~ **done** (fixed eternity, the phone and helvetica; the calendar turned out to have different text, so it needs the inversion idea instead).
+1. ~~**Short-text phrase rule**~~ **done**, plus a second, larger OCR read for very large exports with a little text: all four test-16 misses fixed (eternity, phone, helvetica, black calendar; the calendar had the *same* text, just too small to read at 1600px).
+   - **Follow-up from Ryan:** an earlier iteration with *different copy* is still the same project. Limit the −0.15 word-clash penalty to sparse, mostly-empty images (the low-content guard), so dense designs whose copy changed aren't pushed apart.
 2. **Multi-scale (zoomed-crop) matching:** the crop weakness.
 3. **Low-content guard:** stops near-blank pages merging.
 4. **Per-file content type** replacing the three levels.
