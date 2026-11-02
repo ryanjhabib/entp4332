@@ -1,3 +1,37 @@
+@font-face {
+  font-family: "Instrument Sans";
+  src: url('./fonts/instrument-sans.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400 700;
+  font-stretch: 75% 100%;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Instrument Sans";
+  src: url('./fonts/instrument-sans-italic.woff2') format('woff2');
+  font-style: italic;
+  font-weight: 400 700;
+  font-stretch: 75% 100%;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "EB Garamond";
+  src: url('./fonts/eb-garamond.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "EB Garamond";
+  src: url('./fonts/eb-garamond-italic.woff2') format('woff2');
+  font-style: italic;
+  font-weight: 400 800;
+  font-display: swap;
+}
+
 /* Placeholder look: neutral until Ryan's design replaces it.
    Every colour, font and space is a token here, so restyling starts in this block. */
 :root {
@@ -10,6 +44,8 @@
   --color-thumb-bg: #f2f2f2;
 
   --font-sans: system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-instrument-sans: "Instrument Sans", var(--font-sans);
+  --font-eb-garamond: "EB Garamond", Georgia, serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
   --text-s: 13px;
