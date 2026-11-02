@@ -52,3 +52,5 @@ A running record of every kind of folder and file the app has been run on, what 
 - RAW-adjacent Lightroom exports (16-bit TIFFs from a real catalogue)
 - Folders over 1,000 files end to end (time and memory)
 - Screenshots and UI mockups
+
+- 2026-11-02 caption check: new 12px / 500 Garamond description, 16.8px line height, two lines with one explicit break. Checked at 1800×1043 and 375×812; 40px visible wordmark gap on desktop, no overflow.

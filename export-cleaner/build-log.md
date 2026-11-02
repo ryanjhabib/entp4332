@@ -402,3 +402,9 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - **Evidence / fix:** RH Studio's `app/layout.tsx` applies Tailwind's `antialiased` class to the root. Added its Chrome/macOS equivalent, `-webkit-font-smoothing: antialiased`, scoped to this intro. [Rendering property reference](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/font-smooth).
 - **Correction:** briefly tried dropping the caption from 500 to 400 while investigating. Ryan clarified that the Garamond caption must stay Medium 500; restored it before committing. Final weights are intro 400 and caption 500. No fake lighter weight or text stroke was added.
 - **Checked:** separate build passed and Chrome reported intro `400`, caption `500`, smoothing `antialiased`. Visually checked and saved the final desktop screenshot. Saved the intro and rendering fix as separate site commits, with these notes in a separate notes commit. Nothing pushed.
+
+## Small Garamond description under the wordmark (2026-11-02)
+
+- Added Ryan’s exact i / ii copy with one line break, in EB Garamond Medium 500 at 12px, 140% line height (16.8px), zero tracking. The existing 16px caption/wordmark size remains available.
+- Target: 40px visible gap below the wordmark. An initial 40px box margin painted about 42px apart; a 2px font-metric adjustment gives 38px box spacing and 40px visible spacing, measured from the desktop screenshot.
+- Build passed. Chrome checked at 1800×1043 and 375×812; description stays two lines, 33.6px tall, at the 24px grid margin with no horizontal overflow. No app break encountered.
