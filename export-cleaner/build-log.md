@@ -273,3 +273,19 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
     |---|---|---|---|---|
     | 1800×1043 | 603px | 890px | fully visible | frames still at top (94px) |
     | 1440×800 | 360px | 647px | fully visible | frames still at top (94px) |
+- **Versions grid:** 160px versions (was 120px), each with its export date and time underneath (Ryan: the quickest signal for a glance). Frames give up the room: `calc(100vh - 500px)`, 543px on a 1043px-tall window, and the first grid row, dates included, still fits (ends at 1032px).
+
+## One continuous compare stream, and a "Same piece?" check (2026-11-01)
+- **Why (Ryan):** comparing one family at a time meant hunting for sets that are often only 2–10 files. Instead, walk the whole folder in the overview's order (similar families already sit together) and keep going.
+- **The risk it had to handle:** inside a family, "This one" means "the other is a worse version, out". Across two *different* photos it would cull one just for sitting next to a better one.
+- **Design:** inside a family, winner-stays-on as before. **Where a family ends, its final stays on screen and the next family's closest version** (by the same similarity the grouping uses, `fileSimilarity`, now exported from group.js) **comes in beside it**, with only **Same piece (S)** and **Different (D)** offered:
+  - Same piece merges the two families in the shared family list (so the overview shows the merge too), and comparing continues with the next family's other versions queued.
+  - Different starts the next family.
+  - One-file families go straight to the check, which is how a re-edit the grouping missed gets caught.
+  - At the very end of the stream, an undecided lone version gets Keep / Reject; then the summary opens.
+  - While checking, the grid shows this family's versions, a "Next family · dates" divider, then the next family's; clicking one of those swaps which version is being checked.
+- **Undo** snapshots now include the family list and the boundary state, so a merge can be undone too.
+- **Families | Compare toggle** replaces "Start comparing" and "All families". Switching to Families scrolls the overview to the family the stream was on. Switching back resumes there if it still has undecided versions, otherwise at the first family in order that does.
+- **Keys:** ← → pick, ↓ keep both, S same piece, D different, ⌘Z / Backspace undo, Esc to Families. ⌘ shortcuts other than ⌘Z are left to the browser, so ⌘S and ⌘D never trigger a merge.
+- **Tested in Chrome** on the photo test folder: finishing Sonoma brought radial's closest version in for the check; D started radial; S merged radial with the iMac pair (6 → 5 families, comparing continued with 4 versions); ⌘Z restored 6; Families → Compare resumed at the next open family; the purple single got its check and stayed untouched after D; the unreadable file at the end offered Keep / Reject; then the summary showed 9 reject / 4 keep / 1 undecided.
+- **Known gap:** switching to Families *during* a same-piece check and back skips that one check (the stream resumes at the next family with undecided versions).
