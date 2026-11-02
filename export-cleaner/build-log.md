@@ -262,3 +262,14 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - `swipe.js` and its styles were removed; decisions are still `keep` / `reject`, so the summary and Apply are unchanged.
 - **Tested in Chrome** on the photo test folder: winner stayed in place, Keep both replaced the newcomer, filmstrip pull-in and ⌘Z worked, the Sonoma family finished then the next family opened by itself, and after the last multi-file family the summary showed 7 reject / 5 keep / 2 undecided. A one-file family offered Keep / Reject.
 - **Test dead end (again):** a measurement read the frame as 0×0 because the "ready" check matched the previous folder of the same name. That's the lesson from break 8 repeated: wait on something the new load *changes* ("0 decided"), not something already true.
+- **Revised (Ryan):** 75% was meant as "a good chunk", not a hard number. What matters: **everything you act on fits on one screen, and the frames stay pinned** while the versions grid scrolls below.
+  - The top (header, frames, details, actions) is `position: sticky`, with a white background and the body's top padding kept when pinned.
+  - The pick buttons, Keep both and Undo share **one row**, each pick centred under its frame, to save height.
+  - Frame height is `calc(100vh - 440px)`: the window minus the rest of the pinned top (about 290px) and room for the first grid row (about 150px).
+  - The filmstrip became a **wrapping grid** of 120px versions (`--version-size`), matching the overview cards.
+  - Measured with a 30-version test family:
+
+    | Window | Frames | Pinned top | First grid row | After scrolling |
+    |---|---|---|---|---|
+    | 1800×1043 | 603px | 890px | fully visible | frames still at top (94px) |
+    | 1440×800 | 360px | 647px | fully visible | frames still at top (94px) |
