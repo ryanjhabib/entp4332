@@ -190,8 +190,10 @@ function renderFamily(entries) {
   family.innerHTML = '<div class="family-head"><p class="muted"></p><button>Sort</button></div><ul class="card-row"></ul>';
   const kept = entries.filter((entry) => entry.decision === 'keep').length;
   const rejected = entries.filter((entry) => entry.decision === 'reject').length;
+  const bytes = entries.reduce((sum, entry) => sum + entry.file.size, 0);
   family.querySelector('.family-head p').textContent = [
     plural(entries.length, 'file'),
+    formatSize(bytes),
     kept && `${kept} kept`,
     rejected && `${rejected} rejected`,
   ].filter(Boolean).join(' · ');
