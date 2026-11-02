@@ -345,3 +345,10 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - **Fix:** read at 1600 as before; re-read at 3200 and combine only when the image is ≥ 3200px **and** the first read found 1–19 words. Words sharing their first 4 letters also match.
 - **Result:** graphic folder 23 families in 61 s. All four flagged misses fixed (black calendar joins a 4-file calendar family; eternity; dua phone; helvetica apart). Photos, PDFs, OCR, formats, flat-lays and Lightroom test folders unchanged.
 - **Open, from Ryan:** an *earlier iteration* of a design with *different copy* is still the same project, but the −0.15 clash rule would push it apart. The clash should probably only apply when both images are sparse (mostly empty), which is the low-content guard in INSIGHTS.md.
+
+### 16. A text sheet didn't group with its own mock-up
+- **Symptom (Ryan):** `Untitled-28` (a printed text sheet with the crest) and `Untitled-35` (the same sheet among other sheets, in a "MacBook Pro" mock-up) were never grouped, except for the few minutes the slow "re-read everything" version ran.
+- **Cause:** both are 2560×3200 pages of small, dense body text. At 1600px OCR read 80 and 76 words, and the sheet's words were found in the mock-up only **0.46** of the time, so they looked like different documents. At 3200 (full size): 286 and 297 words, overlap **0.97**. Break 15's shortcut (re-read only when 1–19 words were found) skipped exactly these dense pages.
+- **Fix:** re-read any 3200px+ image whose first reading found *any* words. Photos and plain scans with no text still skip it.
+- **Result:** the sheet and mock-up group; all four test-16 fixes hold; 22 families in **70 s** (the "re-read everything" version took 162 s, because plain scans without text no longer get a second read). Earlier test folders unchanged.
+- **Lesson:** the same piece shown inside a mock-up, or among other sheets, is everyday designer output, not an edge case. Full-size text reading is what makes it work for text-heavy pieces. For mock-ups of *images* without text, that's the multi-scale (zoomed-crop) matching in INSIGHTS.md.

@@ -73,6 +73,7 @@ Each pair is then judged by the rules that fit its content, with no setting to t
 
 ## Suggested order for the next work
 1. ~~**Short-text phrase rule**~~ **done**, plus a second, larger OCR read for very large exports with a little text: all four test-16 misses fixed (eternity, phone, helvetica, black calendar; the calendar had the *same* text, just too small to read at 1600px).
+   - Large exports (3200px+) with any text are re-read at full size, which also groups a text sheet with its mock-up (word overlap 0.46 → 0.97). **Mock-ups and "in context" shots are core designer output**, not an edge case.
    - **Follow-up from Ryan:** an earlier iteration with *different copy* is still the same project. Limit the −0.15 word-clash penalty to sparse, mostly-empty images (the low-content guard), so dense designs whose copy changed aren't pushed apart.
 2. **Multi-scale (zoomed-crop) matching:** the crop weakness.
 3. **Low-content guard:** stops near-blank pages merging.
