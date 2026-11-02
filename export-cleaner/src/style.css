@@ -309,7 +309,13 @@ button {
   cursor: pointer;
 }
 
+/* A line between rows; the dark row covers the one above it. */
+.describe-list li + li {
+  border-top: 1px solid var(--color-band-line);
+}
+
 .describe-list li[aria-selected="true"] {
+  border-color: var(--color-row-active);
   background: var(--color-row-active);
   color: var(--color-surface);
 }
