@@ -454,3 +454,10 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - Grouping moved after the type: a scan that finishes first now waits at "Ready" with the bar full, groups when a type is chosen. Mid-scan choice still goes to the loading screen and groups at 98% as before.
 - Checked: bomber flat-lays + "product shots" + Enter → Product Images, Strict, 4 families (jackets apart); Balanced → 3 (fronts merged). Model test folder mid-scan → Strict, 6 families.
 - Test gotcha again: with the browser pane hidden, `requestAnimationFrame` never fires, so the bar stays at `scaleX(0)` and finishing waits. Screenshots drive frames. Not an app bug.
+
+## On-computer AI fallback for the media type (2026-11-02)
+
+- When typed text fits no keyword, Enter runs `Xenova/all-MiniLM-L6-v2` (q8, 23.5 MB: 22.8 MB model + tokenizer) via Transformers.js on WebAssembly and picks the type with the closest `about` phrase (cosine on mean-pooled, normalised vectors). Keywords still go first; General if the model fails to load. The model starts loading as soon as the list comes up empty, so it's usually ready by Enter. A second Enter while it's thinking is ignored.
+- Tuning (Node, same library): one sentence per type got 15/20 sensible; several short phrases per type, best phrase wins, got all 25 of the then-tested phrases plus 9/10 unseen ones (e.g. "my cat" → Photographs, "packaging design" → Mockups, "restaurant branding" → Graphic & Type; "letterhead" → Documents is debatable).
+- Chrome, during a live scan (DINOv2 on WebGPU alongside): "spring collection lookbook" → Photographs in 4.4 s including the first download; thesis → Documents, tiktok → Screenshots. The scan finished normally, 6 families. Console errors seen were Tesseract's existing "Image too small to scale" OCR noise.
+- Known: gibberish still gets a type ("zzz" → Graphic & Type). A minimum-similarity cut-off falling back to General would fix it; not added.

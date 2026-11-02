@@ -22,6 +22,7 @@ This is a source review, not a runtime network audit. Recheck it when the releva
 | --- | --- | --- |
 | Folder access | `src/scan.js` opens a user-selected folder read-only. The intro also accepts one dropped directory using `getAsFileSystemHandle()` and sends it through the existing `readFolder` / analysis pipeline. Files and multiple dropped items are rejected. Loaded runs ignore additional drops and suppress default file navigation. `src/main.js` requests write access at Apply. | Native Finder drag still needs end-to-end verification; synthetic drop/picker routing passed. Desktop permissions and folder watching are future work. |
 | Image analysis | `src/embed.js` runs `onnx-community/dinov2-small` through Transformers.js using WebGPU or local WebAssembly execution. | Verify the actual outgoing requests and exact downloaded model revision. |
+| Media type description | `src/media.js` matches the start screen's typed description against local keyword lists. If none fit, it runs `Xenova/all-MiniLM-L6-v2` (quantised, 23.5 MB) through Transformers.js on local WebAssembly to pick the closest type. The model downloads from Hugging Face the first time and is cached; the typed text is processed in the page and kept in memory (`state.description`) only. | Verify the outgoing requests on a cold cache and the exact model revision. |
 | Text and PDFs | `src/ocr.js` uses a Tesseract.js worker; `src/pdf.js` passes local file bytes to pdf.js. | Audit library requests and storage as well as our wrapper code. |
 | Training and uploads | No training/fine-tuning step or file-upload path was found in the app source checked. | This does not establish the behaviour of every dependency or future deployment. |
 | Scan state | `src/main.js` holds file handles, previews, extracted information, families, and decisions in memory. No app-level save-progress database was found. | Inspect browser/worker storage before making claims about retention. Memory use is not a promise that the OS never writes temporary data. |
@@ -42,6 +43,8 @@ Review each model or processing library along these separate dimensions:
 2. **What is transmitted:** include file contents and derived data, not just full originals.
 3. **What is retained or reused:** logs, backups, human access, retention periods, and training/fine-tuning terms.
 4. **Permission to distribute/use it commercially:** check the exact model weights, conversion, libraries, attribution/notice requirements, and any restrictions.
+
+The media-type text model, `sentence-transformers/all-MiniLM-L6-v2`, is listed under Apache 2.0; the app uses the Xenova ONNX conversion, whose notices also still need documenting.
 
 DINOv2's upstream model is listed under Apache 2.0. The app uses the ONNX Community conversion, whose exact assets and applicable notices still need to be documented before distribution. Upstream licensing is not a completed review of everything bundled with the app.
 
@@ -103,6 +106,7 @@ Reviewed on 2026-11-02; recheck terms when choosing or updating a dependency/pro
 - [Transformers.js: hosted defaults and local model/resource configuration](https://huggingface.co/docs/transformers.js/custom_usage)
 - [Model conversion used by the app: ONNX Community DINOv2 small](https://huggingface.co/onnx-community/dinov2-small)
 - [Upstream DINOv2 small model information](https://huggingface.co/facebook/dinov2-small) and [upstream licence](https://github.com/facebookresearch/dinov2/blob/main/LICENSE)
+- [Model conversion used for media-type matching: Xenova all-MiniLM-L6-v2](https://huggingface.co/Xenova/all-MiniLM-L6-v2) and [upstream model](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)
 - [Tesseract.js project and documentation](https://github.com/naptha/tesseract.js)
 - [FTC guidance: privacy by design and truthful app claims](https://www.ftc.gov/business-guidance/resources/marketing-your-mobile-app-get-it-right-start)
 
