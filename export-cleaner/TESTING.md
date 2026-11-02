@@ -46,6 +46,10 @@ A running record of every kind of folder and file the app has been run on, what 
 - **Drop helper:** Node assertions passed for synchronous handle capture before awaiting, valid-directory acceptance, no items, string-only items, multiple files, unavailable handle API, a file handle, and a null handle.
 - **Limits:** no real user folder was used or moved. Full native Finder drag remains a manual check. Save progress is still not implemented; these changes do not preserve a loaded run across HTML/JavaScript reloads. The connected user tab was already on the start screen with zero loaded cards before this work.
 
+## Describe field and home-screen scan (2026-11-02)
+
+- Chrome at 1728×1009 (Figma frame size), 900×800, 700×800, 375×812 with the `modelTest()` folder through the real select button. Measurements and keyword checks are in `build-log.md`. Not yet tried with a real folder or the native picker.
+
 ## Kinds of content still untested
 - Figma exports (frames, components, variants)
 - Real multi-page client PDFs and slide decks

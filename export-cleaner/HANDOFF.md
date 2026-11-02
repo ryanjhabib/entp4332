@@ -17,7 +17,7 @@ A Chrome web app (class project, ENTP 4332) that helps designers and photographe
 ## How it works
 **Intro UI update (2026-11-02):** the start screen now says Syca, with “To start, drag or select a folder”, a native picker on italic/underlined select, and whole-intro folder dropping. Five stretch columns, 24px margins, 12px gutters, 36px Garamond Regular intro, 16px Medium brand/caption, `#EEEEEE` backdrop and a centered 2px white rule. Garamond uses antialiased rendering, matching RH Studio; the caption stays weight 500. Font files are bundled locally. See `TESTING.md` for measured layouts and input-test limits. Save progress remains unbuilt; CSS hot updates generally retain state, but HTML/JavaScript reloads can reset it.
 
-**The flow:** choose/drop folder → one loading screen (read files → thumbnails → model preparation → describe each file → group) → overview (Families) ⇄ Compare stream → Summary → Apply → Done.
+**The flow:** choose/drop folder → the scan starts on the start screen (the white rule is its progress bar) → describe the media type (`src/media.js`; stored, not used for grouping yet) → one loading screen for the rest of the scan (read files → thumbnails → model preparation → describe each file → group) → overview (Families) ⇄ Compare stream → Summary → Apply → Done.
 
 | File | Job |
 |---|---|
