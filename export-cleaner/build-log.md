@@ -437,3 +437,8 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - **Grey line hidden by the list:** the list started at the band's bottom edge (581.5px) and covered the 2px `#CCC` line. Now it starts under the line: line 581.5–583.5, first row from 583.5 (at 1728×1009). Moved 2px, the line's full thickness; Ryan suggested 1px, which would have left half the line covered.
 - **Rows one step smaller, darker:** 44 → 40px rows, text `#AAA` → `#333`. Hover row stays `#222` / white. Eight rows run 583.5–903.5px. Cap centred: 14.9px above, 14.5px below.
 - **Smarter search (still local):** plurals ("images" → image), shared words (Photographs and Product Images both carry image / photo / shot), one-letter typos for 5+ letter words ("photgraph"), filler words ignored. Ranking: exact or plural 1, start of a word 0.75, typo 0.5, summed over the typed words; a typo only counts when the word matches nothing exactly. Dead end: first version let any keyword begin a typed word, so "app" ranked Mockups (apparel) first and "edits" matched editorial as a typo; fixed with the plural limit (≤ 2 extra letters) and the tiers.
+
+## One green, whole-number sizes (2026-11-02)
+
+- `--color-select` `#97A084`, `--color-progress` and `--color-caret` `#95A081` merged into `--color-accent: #95A081` (Ryan's Figma value; the other was a screenshot sample, 2–3/255 off per channel). Chrome: rgb(149, 160, 129) on select, its underline, both progress fills and the caret.
+- Home folder size rounds to whole numbers ("5 mb", "27 gb"); `formatSize(bytes, decimals = 1)` keeps the done screen at one decimal. Note: 1.4 GB shows as "1 gb" on the home screen.
