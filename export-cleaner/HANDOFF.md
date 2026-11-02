@@ -2,6 +2,8 @@
 
 State of the app at the hand-over from Claude Code to Codex. Read this, then `INSIGHTS.md` (what to improve and why), `TESTING.md` (what's been tested) and `build-log.md` (every decision and break, with numbers).
 
+Ongoing privacy and personal-data requirements, current evidence, and unfinished verification are in [`PRIVACY.md`](PRIVACY.md). Revisit it when changing data handling or dependencies and before public releases; it also records a monthly review cadence during active development.
+
 ## What it is
 A Chrome web app (class project, ENTP 4332) that helps designers and photographers **find the final** among their exports. It opens a folder and groups every version of the same piece (re-edits months apart, crops, re-layouts, PDF/PNG twins) into families. Then it lets you compare versions side by side, keep the final, and move rejects into a `_to_delete` folder. **Positioning (Ryan's decision): finding the final comes first; freeing space is secondary.** Long term it becomes a paid Mac app (Tauri wrapping this UI) that runs in the background, watches export folders and can open Downloads. The web app is the free demo. Files never leave the computer.
 

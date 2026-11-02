@@ -2,6 +2,8 @@
 
 Start with `HANDOFF.md` (state, file map, how to run and test), then `INSIGHTS.md` (what to improve next), `TESTING.md` and `build-log.md`.
 
+Read `PRIVACY.md` before work that affects models/dependencies, network requests, caching or saved progress, diagnostics, accounts/payments, desktop permissions, folder watching, or cloud features. Keep its evidence and open checks current when those behaviours change, and review it before public releases. It also records the monthly review cadence while the product is actively being developed.
+
 ## About Ryan
 - Designer and photographer, not a programmer. He designs in Figma and you build. Build what he describes faithfully; offer suggestions as suggestions, not changes already made.
 - When he asks "what do you think", give one clear recommendation and the reason.
