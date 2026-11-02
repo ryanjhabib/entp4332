@@ -48,35 +48,41 @@
 
     <!-- Compare: two versions side by side; the winner stays, the next version takes the loser's place. -->
     <section class="screen" id="compare" hidden>
-      <header class="bar">
-        <button id="compare-back">All families</button>
-        <p class="muted" id="compare-where"></p>
-      </header>
+      <!-- Pinned while the versions grid scrolls underneath. -->
+      <div class="compare-top">
+        <header class="bar">
+          <button id="compare-back">All families</button>
+          <p class="muted" id="compare-where"></p>
+        </header>
 
-      <div class="compare-sides">
-        <div class="compare-side">
-          <div class="compare-frame" id="frame-left"><img alt="" /></div>
-          <div class="compare-caption" id="caption-left"></div>
-          <div class="compare-actions">
+        <div class="compare-sides">
+          <div class="compare-side">
+            <div class="compare-frame" id="frame-left"><img alt="" /></div>
+            <div class="compare-caption" id="caption-left"></div>
+          </div>
+          <div class="compare-side">
+            <div class="compare-frame" id="frame-right"><img alt="" /></div>
+            <div class="compare-caption" id="caption-right"></div>
+          </div>
+        </div>
+
+        <div class="compare-actions">
+          <div class="compare-side-actions">
             <button id="pick-left">← This one</button>
             <button id="keep-alone">Keep</button>
             <button id="reject-alone">Reject</button>
           </div>
-        </div>
-        <div class="compare-side">
-          <div class="compare-frame" id="frame-right"><img alt="" /></div>
-          <div class="compare-caption" id="caption-right"></div>
-          <div class="compare-actions">
+          <div class="compare-side-actions">
+            <button id="keep-both">Keep both ↓</button>
+            <button id="compare-undo">Undo</button>
+          </div>
+          <div class="compare-side-actions">
             <button id="pick-right">This one →</button>
           </div>
         </div>
       </div>
 
-      <div class="compare-actions">
-        <button id="keep-both">Keep both ↓</button>
-        <button id="compare-undo">Undo</button>
-      </div>
-      <ul class="filmstrip" id="filmstrip"></ul>
+      <ul class="version-grid" id="version-grid"></ul>
     </section>
 
     <section class="screen" id="summary" hidden>

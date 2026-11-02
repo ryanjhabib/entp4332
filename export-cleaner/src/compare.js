@@ -29,7 +29,7 @@ export function openFamily(allFamilies, entries, exit) {
 
 // The newest version starts on the left (most likely the final), the next
 // newest on the right; the rest wait their turn, newest first. Versions
-// already out stay out: click one in the filmstrip to bring it back.
+// already out stay out: click one in the versions grid to bring it back.
 function startFamily(entries) {
   family = entries;
   const contenders = entries.filter((entry) => entry.decision !== 'reject').reverse();
@@ -80,7 +80,7 @@ function afterChoice() {
   else exit(true);
 }
 
-// Brings any version in as the newcomer; one that was out comes back undecided.
+// Clicking a version in the grid brings it in as the newcomer; one that was out comes back undecided.
 function challengeWith(entry) {
   if (entry === slots.left || entry === slots.right) return;
   snapshot();
@@ -128,7 +128,7 @@ function render() {
   $('#keep-alone').hidden = pair;
   $('#reject-alone').hidden = pair;
   $('#compare-undo').disabled = !history.length;
-  renderFilmstrip();
+  renderVersions();
 }
 
 // The details under a frame. A detail that differs from the other side is
@@ -176,8 +176,8 @@ function ratio(width, height) {
   return match ? `${match[0]}:${match[1]}` : `${r.toFixed(1)}:1`;
 }
 
-function renderFilmstrip() {
-  $('#filmstrip').replaceChildren(
+function renderVersions() {
+  $('#version-grid').replaceChildren(
     ...family.map((entry) => {
       const item = document.createElement('li');
       const onScreen = entry === slots.left || entry === slots.right;
