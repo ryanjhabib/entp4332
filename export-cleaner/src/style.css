@@ -140,6 +140,7 @@ button {
   background: var(--color-bg);
   color: var(--color-intro-text);
   font-family: var(--font-eb-garamond);
+  -webkit-font-smoothing: antialiased;
 }
 
 .start-brand {
