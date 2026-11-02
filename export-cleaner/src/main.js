@@ -17,7 +17,7 @@ const state = {
   // For each design file: { handle, file, name, ext, thumb, width, height, vectors, words, shot, colour, card, decision }
   files: [],
   families: [], // [[entry, ...], ...], each oldest first, similar families side by side
-  mediaType: null, // the chosen MEDIA_TYPES entry (not used for grouping yet)
+  mediaType: null, // the chosen MEDIA_TYPES entry; sets the grouping level
   description: '', // what was typed to find it
 };
 
@@ -68,6 +68,7 @@ let typeChosen = null; // resolves a finished scan's wait for a type
 setUpMediaField($('#describe-input'), $('#describe-list'), (type, text) => {
   state.mediaType = type;
   state.description = text;
+  setLevel(type.level);
   if (typeChosen) typeChosen();
   else if (scanning) show('loading');
 });
@@ -119,11 +120,17 @@ async function loadFolder(dir) {
   // Let the final scan update paint before synchronous grouping begins.
   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   if (files !== state.files) return;
+  if (!state.mediaType) {
+    // Grouping follows the type's level, so a finished scan waits for one, bar full.
+    await finishLoading();
+    scanning = false;
+    await new Promise((resolve) => { typeChosen = resolve; });
+    typeChosen = null;
+    if (files !== state.files) return;
+  }
   regroup();
   await finishLoading();
-  if (files !== state.files) return;
   scanning = false;
-  if (!state.mediaType) await new Promise((resolve) => { typeChosen = resolve; });
   if (files === state.files) show('files');
 }
 
@@ -164,8 +171,14 @@ async function describeImages(files) {
 // How alike two files must be to share a family. Balanced suits most folders;
 // Strict suits product shoots, where different items share a pose and backdrop
 // (two different jackets measured 0.87); Loose catches heavier re-crops.
+// Each media type starts the folder at one of these (see media.js).
 const LEVELS = { loose: 0.75, balanced: 0.8, strict: 0.88 };
 let level = 'balanced';
+
+function setLevel(name) {
+  level = name;
+  for (const option of $('#settings').querySelectorAll('[data-level]')) option.setAttribute('aria-pressed', option.dataset.level === name);
+}
 
 // Re-runs the grouping with the current setting. Decisions live on the files,
 // so they survive regrouping.
@@ -332,8 +345,7 @@ $('#done-choose').addEventListener('click', chooseFolder);
 $('#settings').addEventListener('click', (event) => {
   const button = event.target.closest('[data-level]');
   if (!button || button.dataset.level === level) return;
-  level = button.dataset.level;
-  for (const option of $('#settings').querySelectorAll('[data-level]')) option.setAttribute('aria-pressed', option === button);
+  setLevel(button.dataset.level);
   regroup();
 });
 show(isSupported() ? 'start' : 'unsupported');

@@ -1,15 +1,17 @@
 // The media types on the start screen. Typing narrows the list by these
-// keywords, all matched here on the computer. Not used for grouping yet.
+// keywords, all matched here on the computer. Each type sets the grouping
+// level the folder starts at (see LEVELS in main.js); the overview's
+// Loose / Balanced / Strict toggle still overrides it.
 
 export const MEDIA_TYPES = [
-  { id: 'general', label: 'General', keywords: ['mixed', 'everything', 'all', 'misc', 'random', 'various', 'assorted', 'stuff', 'files', 'folder', 'anything', 'unsorted', 'junk', 'mess', 'messy', 'clutter', 'dump', 'leftovers', 'downloads', 'desktop', 'exports', 'archive', 'backup', 'untitled', 'unknown', 'idk', 'dunno', 'whatever'] },
-  { id: 'photographs', label: 'Photographs', keywords: ['photo', 'photography', 'photographer', 'image', 'picture', 'pic', 'camera', 'raw', 'jpeg', 'jpg', 'lightroom', 'shoot', 'shot', 'portrait', 'landscape', 'street', 'film', 'analog', 'edit', 'grade', 'wedding', 'event', 'travel', 'dslr', 'iphone'] },
-  { id: 'mockups', label: 'Mockups', keywords: ['mock', 'scene', 'presentation', 'render', 'packaging', 'apparel', 'tee', 'shirt', 'hoodie', 'merch', 'device', 'billboard', 'signage'] },
-  { id: 'graphic', label: 'Graphic & Type', keywords: ['design', 'typography', 'font', 'lettering', 'poster', 'logo', 'brand', 'branding', 'identity', 'illustration', 'flyer', 'cover', 'album', 'print', 'social', 'instagram', 'post', 'artwork', 'vector', 'svg', 'icon'] },
-  { id: 'documents', label: 'Documents', keywords: ['doc', 'pdf', 'deck', 'slide', 'presentation', 'report', 'resume', 'cv', 'paper', 'text', 'pitch', 'proposal', 'invoice', 'brochure', 'booklet', 'zine', 'magazine', 'layout', 'editorial'] },
-  { id: 'screenshots', label: 'Screenshots', keywords: ['screen', 'capture', 'grab', 'reference', 'inspiration', 'moodboard', 'website', 'saved'] },
-  { id: 'product', label: 'Product Images', keywords: ['image', 'picture', 'photo', 'shot', 'ecommerce', 'shop', 'store', 'shopify', 'catalog', 'flatlay', 'packshot', 'listing', 'item', 'still', 'amazon', 'etsy'] },
-  { id: 'interface', label: 'User Interface', keywords: ['ui', 'ux', 'app', 'web', 'website', 'site', 'figma', 'wireframe', 'dashboard', 'screen', 'mobile', 'prototype', 'landing'] },
+  { id: 'general', label: 'General', level: 'balanced', keywords: ['mixed', 'everything', 'all', 'misc', 'random', 'various', 'assorted', 'stuff', 'files', 'folder', 'anything', 'unsorted', 'junk', 'mess', 'messy', 'clutter', 'dump', 'leftovers', 'downloads', 'desktop', 'exports', 'archive', 'backup', 'untitled', 'unknown', 'idk', 'dunno', 'whatever'] },
+  { id: 'photographs', label: 'Photographs', level: 'balanced', keywords: ['photo', 'photography', 'photographer', 'image', 'picture', 'pic', 'camera', 'raw', 'jpeg', 'jpg', 'lightroom', 'shoot', 'shot', 'portrait', 'landscape', 'street', 'film', 'analog', 'edit', 'grade', 'wedding', 'event', 'travel', 'dslr', 'iphone'] },
+  { id: 'mockups', label: 'Mockups', level: 'loose', keywords: ['mock', 'scene', 'presentation', 'render', 'packaging', 'apparel', 'tee', 'shirt', 'hoodie', 'merch', 'device', 'billboard', 'signage'] },
+  { id: 'graphic', label: 'Graphic & Type', level: 'balanced', keywords: ['design', 'typography', 'font', 'lettering', 'poster', 'logo', 'brand', 'branding', 'identity', 'illustration', 'flyer', 'cover', 'album', 'print', 'social', 'instagram', 'post', 'artwork', 'vector', 'svg', 'icon'] },
+  { id: 'documents', label: 'Documents', level: 'balanced', keywords: ['doc', 'pdf', 'deck', 'slide', 'presentation', 'report', 'resume', 'cv', 'paper', 'text', 'pitch', 'proposal', 'invoice', 'brochure', 'booklet', 'zine', 'magazine', 'layout', 'editorial'] },
+  { id: 'screenshots', label: 'Screenshots', level: 'strict', keywords: ['screen', 'capture', 'grab', 'reference', 'inspiration', 'moodboard', 'website', 'saved'] },
+  { id: 'product', label: 'Product Images', level: 'strict', keywords: ['image', 'picture', 'photo', 'shot', 'ecommerce', 'shop', 'store', 'shopify', 'catalog', 'flatlay', 'packshot', 'listing', 'item', 'still', 'amazon', 'etsy'] },
+  { id: 'interface', label: 'User Interface', level: 'strict', keywords: ['ui', 'ux', 'app', 'web', 'website', 'site', 'figma', 'wireframe', 'dashboard', 'screen', 'mobile', 'prototype', 'landing'] },
 ];
 
 // Words that say nothing about the type ("my product shots").
