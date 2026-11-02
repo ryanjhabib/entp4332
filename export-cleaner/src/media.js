@@ -96,9 +96,10 @@ export async function closestType(text) {
 }
 
 // The describe field: focusing it opens the whole list and typing narrows it.
-// Nothing is pre-selected: the dark row is only where the pointer (or the
-// arrow keys) are. Enter takes that row, otherwise the best keyword match,
-// otherwise the closest meaning (General if the model can't load).
+// When no keyword fits, the closest meaning appears as the only row. Nothing
+// is pre-selected: the dark row is only where the pointer (or the arrow keys)
+// are. Enter takes that row, otherwise the top row, otherwise (the model is
+// still loading) waits for the closest meaning (General if it can't load).
 // onChoose(type, text) reports the choice.
 export function setUpMediaField(input, list, onChoose) {
   let shown = [];
@@ -141,8 +142,13 @@ export function setUpMediaField(input, list, onChoose) {
     render(MEDIA_TYPES);
   });
   input.addEventListener('input', () => {
-    render(matchTypes(input.value));
-    if (!shown.length) loadMeaning().catch(() => {}); // get it ready before Enter
+    const text = input.value;
+    render(matchTypes(text));
+    if (shown.length) return;
+    closestType(text).then((type) => {
+      // Dropped if the text has changed since, or the field was left.
+      if (input.value === text && document.activeElement === input) render([type]);
+    }).catch(() => {});
   });
   input.addEventListener('blur', () => render([]));
   input.addEventListener('keydown', (event) => {
@@ -153,7 +159,7 @@ export function setUpMediaField(input, list, onChoose) {
       highlight(active < 0 ? (step > 0 ? 0 : shown.length - 1) : (active + step + shown.length) % shown.length);
     } else if (event.key === 'Enter') {
       event.preventDefault();
-      const type = shown[active] ?? matchTypes(input.value)[0];
+      const type = shown[active] ?? shown[0];
       if (type) choose(type);
       else if (!thinking) {
         thinking = true;
