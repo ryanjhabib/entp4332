@@ -60,10 +60,42 @@ const hasText = (entry) => (entry.words?.size ?? 0) >= MIN_WORDS;
 
 // How alike two files are. Two files with text: the words they share (the same
 // text in a new layout scores high, a different text in the same template low).
-// Anything else: how alike they look.
+// Anything else: how alike they look, nudged by any short text they carry.
 export function fileSimilarity(a, b) {
   if (hasText(a) && hasText(b)) return sharedWords(a.words, b.words);
-  return lookAlike(a.vectors, b.vectors);
+  return lookAlike(a.vectors, b.vectors) + phraseNudge(a.words, b.words);
+}
+
+// Short text (type posters, captions, a phone mock-up's words) is too little
+// for the full word comparison but distinctive enough to count: four identical
+// words on two zooms of one print are near-proof they're the same piece.
+const PHRASE_MATCH = 0.25; // most of the shorter text is in the other
+const PHRASE_CLASH = 0.15; // both carry words, and not one matches
+
+// Words that say nothing about which piece it is.
+const FILLER = new Set([
+  'the', 'and', 'you', 'your', 'are', 'that', 'this', 'for', 'with', 'from', 'was', 'were', 'but', 'not', 'all',
+  'any', 'can', 'has', 'have', 'had', 'our', 'his', 'her', 'its', 'they', 'them', 'their', 'who', 'what', 'when',
+  'how', 'why', 'will', 'would', 'there', 'here', 'into', 'out', 'more', 'most', 'some', 'than', 'then', 'also',
+  'just', 'only', 'very', 'about', 'over', 'she', 'him',
+]);
+
+// Filler and junk readings ("uuu": OCR finding letters in texture) left out.
+const keyWords = (words) => [...(words ?? [])].filter((word) => !FILLER.has(word) && !/(.)\1\1/.test(word));
+
+// A word matches another it begins: OCR runs words together ("let me" → "letm")
+// and crops cut them off ("eterr").
+const wordsMatch = (a, b) => a.startsWith(b) || b.startsWith(a);
+
+function phraseNudge(a, b) {
+  const [x, y] = [keyWords(a), keyWords(b)];
+  if (!x.length || !y.length) return 0;
+  const [shorter, longer] = x.length <= y.length ? [x, y] : [y, x];
+  const found = shorter.filter((word) => longer.some((other) => wordsMatch(word, other))).length;
+  if (!found) return shorter.length + longer.length >= 4 ? -PHRASE_CLASH : 0;
+  // A couple of words inside a much longer text could match by chance.
+  const comparable = longer.length <= 3 * shorter.length + 3;
+  return shorter.length >= 2 && found / shorter.length >= 0.8 && comparable ? PHRASE_MATCH : 0;
 }
 
 // One vector each: plain similarity. A PDF's pages against one image: the
