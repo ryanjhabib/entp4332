@@ -191,3 +191,25 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - **Stem:** lower case, extension off, then edit/copy markers stripped from the end, repeatedly: ` (1)`, ` copy 2`, `-Edit-2`, `_v3`, `_final` / `_new` / `_old` / `_export(ed)`. A trailing `-2` is stripped only when a 3+ digit camera number is left (`DSC01234-2` → `dsc01234`), so `Untitled-501` and `Untitled-502` stay different photos. Generic names (`untitled`, `image`, `photo`, `frame`…) aren't a clue.
 - **Tested:** `DSC01234`, `-Edit`, `-Edit-2` and `-2` all → `dsc01234`; `poster_v3 copy 2.png` and `poster_final.pdf` → `poster`. At 80%, a 0.77 pair joined only with matching stems; 0.74 with matching stems and 0.40 with matching stems stayed separate.
 - **Known gap:** `Frame 12-1` (if Figma names duplicates that way) doesn't match `Frame 12`. The rule is kept conservative on purpose.
+
+### PDFs: every page, and their words
+- **Every page is described (up to 50),** not just page 1. Comparing a PDF with an image uses its best-matching page, so a PNG export of slide 3 matches the deck. Comparing two multi-page PDFs averages how well each one's pages are found in the other, so one shared cover page doesn't make two decks the same.
+- **pdf.js reads every word** (3+ letters, lower case). Two PDFs that both have 20+ words are compared by **shared words / words in either** (Jaccard similarity), not by looks.
+- `pdf.js` is now its own module (`withPdf`, `renderPage`, `readWords`), shared by thumbnails, the swipe preview and describing. A PDF whose pages or text can't be read falls back to its thumbnail.
+
+### 12. Different documents from one template grouped together
+- **Symptom:** a test folder with a 3-page "brand review" deck, the same text re-laid out (landscape, 2 pages, new colours), a *different* 3-page document built on the same template, and a PNG of the deck's page 2 came out as **one family of four**.
+- **Measured:**
+
+  | Pair | Look-alike | Shared words |
+  |---|---|---|
+  | deck ↔ re-layout | 0.90 | 1.00 |
+  | deck ↔ different document, same template | **1.00** | 0.04 |
+  | deck ↔ PNG of page 2 | 1.00 | – |
+  | different document ↔ PNG of deck page 2 | **0.99** | – |
+
+- **Cause:** the model sees a 224px version of each page. At that size body text is texture, not words, so text-heavy pages from one template look identical. The first version took the *better* of looks and words, so the looks won.
+- **Dead end:** using words for PDF↔PDF pairs alone wasn't enough. The PNG still looked 0.99 like the wrong document, and because families chain, it would have linked the two documents through itself.
+- **Fix:** (1) when both files are PDFs with 20+ words, **the words decide**. (2) **Links are made strongest first**, and a link is skipped if it would put two text PDFs whose words say they're different documents into one family. The PNG joins the deck it matches best (1.00 vs 0.99).
+- **Result:** {deck, re-layout, PNG of page 2} and {different document}. The photo test folder was unchanged at 6 correct families.
+- **Known limit:** images of text (PNG/JPG exports of text-heavy slides) have no words, so they're judged by looks alone. The PNG's margin here was thin (1.00 vs 0.99), and two PNGs of different text slides on one template would group. Fix later: **OCR** (reading text from images, e.g. Tesseract.js), run only on images whose best match is a text PDF or another text-like image.
