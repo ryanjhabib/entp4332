@@ -461,3 +461,7 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - Tuning (Node, same library): one sentence per type got 15/20 sensible; several short phrases per type, best phrase wins, got all 25 of the then-tested phrases plus 9/10 unseen ones (e.g. "my cat" → Photographs, "packaging design" → Mockups, "restaurant branding" → Graphic & Type; "letterhead" → Documents is debatable).
 - Chrome, during a live scan (DINOv2 on WebGPU alongside): "spring collection lookbook" → Photographs in 4.4 s including the first download; thesis → Documents, tiktok → Screenshots. The scan finished normally, 6 families. Console errors seen were Tesseract's existing "Image too small to scale" OCR noise.
 - Known: gibberish still gets a type ("zzz" → Graphic & Type). A minimum-similarity cut-off falling back to General would fix it; not added.
+
+## AI pick shown as a row (2026-11-02)
+
+- When no keyword fits, the closest-meaning type now renders as the only row while typing; stale answers (text changed, field left) are dropped. Enter: hovered row → top row → wait for the model. Checked by real typing: "thesis" → Documents; "thesis about birds" → General (near "a class project or school assignment"; arguably Documents, a phrase-tuning question).
