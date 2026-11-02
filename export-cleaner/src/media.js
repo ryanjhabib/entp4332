@@ -2,7 +2,7 @@
 // keywords, all matched here on the computer. Not used for grouping yet.
 
 export const MEDIA_TYPES = [
-  { id: 'general', label: 'General', keywords: ['mixed', 'everything', 'all', 'misc', 'random', 'various', 'stuff', 'files', 'folder', 'anything'] },
+  { id: 'general', label: 'General', keywords: ['mixed', 'everything', 'all', 'misc', 'random', 'various', 'assorted', 'stuff', 'files', 'folder', 'anything', 'unsorted', 'junk', 'mess', 'messy', 'clutter', 'dump', 'leftovers', 'downloads', 'desktop', 'exports', 'archive', 'backup', 'untitled', 'unknown', 'idk', 'dunno', 'whatever'] },
   { id: 'photographs', label: 'Photographs', keywords: ['photo', 'photography', 'photographer', 'image', 'picture', 'pic', 'camera', 'raw', 'jpeg', 'jpg', 'lightroom', 'shoot', 'shot', 'portrait', 'landscape', 'street', 'film', 'analog', 'edit', 'grade', 'wedding', 'event', 'travel', 'dslr', 'iphone'] },
   { id: 'mockups', label: 'Mockups', keywords: ['mock', 'scene', 'presentation', 'render', 'packaging', 'apparel', 'tee', 'shirt', 'hoodie', 'merch', 'device', 'billboard', 'signage'] },
   { id: 'graphic', label: 'Graphic & Type', keywords: ['design', 'typography', 'font', 'lettering', 'poster', 'logo', 'brand', 'branding', 'identity', 'illustration', 'flyer', 'cover', 'album', 'print', 'social', 'instagram', 'post', 'artwork', 'vector', 'svg', 'icon'] },
@@ -35,7 +35,8 @@ function fit(word, term) {
   return [n - 1, n, n + 1].some((length) => oneEditApart(word, term.slice(0, length))) ? 0.5 : 0;
 }
 
-// Types that fit what was typed, best first; ties keep the list's order.
+// Types that fit what was typed, best first; ties keep the list's order,
+// except that General, the catch-all, goes after a specific type.
 // A word only counts as a typo when it matches nothing as typed, so
 // "edits" finds edit, not editorial. Empty text lists every type.
 export function matchTypes(text) {
@@ -49,7 +50,7 @@ export function matchTypes(text) {
   return MEDIA_TYPES
     .map((type, t) => ({ type, score: fits[t].reduce((sum, f, w) => sum + (f > 0.5 || typoOnly[w] ? f : 0), 0) }))
     .filter(({ score }) => score)
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => b.score - a.score || (a.type.id === 'general') - (b.type.id === 'general'))
     .map(({ type }) => type);
 }
 
