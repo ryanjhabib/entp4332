@@ -328,3 +328,9 @@ code {
   margin: 0 0 var(--space-5);
   font-size: var(--text-s);
 }
+
+/* The space-saving number: the first thing on the Summary and Done screens. */
+.headline {
+  font-size: var(--text-l);
+  font-weight: 600;
+}

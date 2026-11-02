@@ -1,5 +1,5 @@
 import './style.css';
-import { $, show, plural, sessionLabel, timeFormat } from './dom.js';
+import { $, show, plural, sessionLabel, timeFormat, formatSize } from './dom.js';
 import { isSupported, pickFolder, readFolder } from './scan.js';
 import { makeThumbnail } from './thumbs.js';
 import { groupFiles } from './group.js';
@@ -105,6 +105,9 @@ async function apply() {
 
 function showDone({ moved, failed }) {
   const kept = state.files.length - moved.length - failed.length;
+  const bytes = moved.reduce((sum, { entry }) => sum + entry.file.size, 0);
+  $('#done-space').hidden = !moved.length;
+  $('#done-space').textContent = `${formatSize(bytes)} is now in ${TRASH_FOLDER}. Delete that folder in Finder to free it.`;
   $('#done-result').textContent =
     `Moved ${plural(moved.length, 'file')} into ${TRASH_FOLDER} inside “${state.dir.name}”. ` +
     `${plural(kept, 'other file')} ${kept === 1 ? 'wasn’t' : 'weren’t'} touched.`;
