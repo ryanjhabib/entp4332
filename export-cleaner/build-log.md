@@ -246,3 +246,19 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - **Tested:** the three real exports group, as they'd look alike anyway. A heavy re-crop (the centre 40%, square, contrasty B&W) with the original's metadata spliced in is read as the same shot, but looks only **0.47** like the original, so 0.47 + 0.3 = 0.77 stays under 80% by design. The same crop without metadata has no key.
 - **Changed (Ryan's call, on my recommendation): the original-photo ID now decides on its own.** It's written by the tool that made the exports and means "exported from this exact original", so a hard crop or a re-grade, the versions most easily forgotten, shouldn't have to pass a looks test. A same-original link scores 2 (above any looks score) so it's made first; the text "different documents" check still applies. The capture-moment match stays a +0.3 nudge. Shot data is now `{ taken, moment, original }`.
 - **Tested:** the heavy B&W re-crop (looks 0.47) now joins `Untitled-501`, as does the same crop without metadata (identical looks). The three exports are still one family, and the photo test folder is unchanged at 6 families.
+
+## The compare screen replaces swiping (2026-11-01)
+- **Why (Ryan):** swiping made it a keep/delete app, but the main job is **comparing versions to find the final**. Deleting is secondary.
+- **Layout:** two frames side by side, each **75vh** tall (`--compare-frame-height`); details under each frame; pick buttons; Keep both and Undo; a filmstrip of every version in the family (72px, `--filmstrip-size`). Measured at 1800×1043: frames 860×782 (75%); the page is 1228px tall, so the filmstrip sits about 185px below the fold. Left as Ryan specified, for his Figma pass.
+- **"Winner stays on":**
+  - the newest export starts on the left (most likely the final), the next newest on the right;
+  - picking one (← / → or "This one") keeps it **where it is**; the other is out (rejected) and the next version takes its slot, so nothing jumps sides;
+  - **Keep both** (↓) keeps both and replaces the newcomer (for versions you need, like a 4:5 post and a 9:16 story);
+  - clicking any filmstrip version brings it in as the newcomer, and one that was out comes back undecided;
+  - when a side is left empty the family is done, and the next family with 2+ versions and undecided files opens; after the last, the summary.
+- **Details under each frame:** name; export date/time; shot date (from EXIF); pixel size with its aspect ratio ("1080 × 1350 · 4:5", or a PDF's page count); file size and format. Anything different from the other side is bold; exports on the same day count as the same. Pixel size is recorded when the thumbnail is made (`makeThumbnail` now returns `{ thumb, width, height }`).
+- **One-file families** are skipped by "Start comparing" until every multi-file family is done; opened directly, they show "Only version" with Keep / Reject.
+- **Undo** (button, ⌘Z, Backspace) restores a snapshot from before each choice, across families. Esc returns to the overview.
+- `swipe.js` and its styles were removed; decisions are still `keep` / `reject`, so the summary and Apply are unchanged.
+- **Tested in Chrome** on the photo test folder: winner stayed in place, Keep both replaced the newcomer, filmstrip pull-in and ⌘Z worked, the Sonoma family finished then the next family opened by itself, and after the last multi-file family the summary showed 7 reject / 5 keep / 2 undecided. A one-file family offered Keep / Reject.
+- **Test dead end (again):** a measurement read the frame as 0×0 because the "ready" check matched the previous folder of the same name. That's the lesson from break 8 repeated: wait on something the new load *changes* ("0 decided"), not something already true.
