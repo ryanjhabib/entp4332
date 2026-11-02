@@ -72,6 +72,9 @@ Each pair is then judged by the rules that fit its content, with no setting to t
 - **A "describe how to group" prompt** ("group by product; colourways together; front and back separate") is the same judge with the user's instructions added. It's powerful for designers, and a natural paid feature.
 - In the Mac app, all of this can run in the background, so slower but more accurate is the right trade.
 
+## Photo metadata as evidence *against* (from test 18)
+Lightroom exports carry an original-photo ID and a capture moment. When both differ, the files are certainly different shots, so they now need to look nearly identical to group (−0.08). This splits minimal compositions that merely look alike (two dune photos: big plain areas of sand and sky, 0.82, the photo version of "near-blank pages look alike"), while keeping near-identical frames shot seconds apart (0.92) together, which Ryan wants.
+
 ## Frames of the same scene (from test 17)
 Ryan's view: different frames of one scene (shot seconds apart, slightly different angle or aspect) are **separate photos** and fine apart, as long as they're easy to compare. Today they sit side by side through look-ordering. If culling bursts becomes a goal, the capture-time gap (seconds) is a reliable signal for a *soft* "same moment" link: shown together, not merged.
 

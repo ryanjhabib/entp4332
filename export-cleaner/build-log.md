@@ -352,3 +352,10 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - **Fix:** re-read any 3200px+ image whose first reading found *any* words. Photos and plain scans with no text still skip it.
 - **Result:** the sheet and mock-up group; all four test-16 fixes hold; 22 families in **70 s** (the "re-read everything" version took 162 s, because plain scans without text no longer get a second read). Earlier test folders unchanged.
 - **Lesson:** the same piece shown inside a mock-up, or among other sheets, is everyday designer output, not an edge case. Full-size text reading is what makes it work for text-heavy pieces. For mock-ups of *images* without text, that's the multi-scale (zoomed-crop) matching in INSIGHTS.md.
+
+### 17. Two different dune photos grouped (colour documentary set)
+- **Symptom (Ryan, test 18):** `Untitled-144` and `-147`, two different photos of people on a dune, grouped; a third (`151`) didn't.
+- **Measured:** looks 0.82 (just over Balanced's 0.80). Metadata: different originals, shot 8 minutes apart. For contrast: `1469` / `1470`, two near-identical frames 2 s apart (Ryan wants these grouped), 0.92; exports of one photo, 0.99.
+- **Cause:** mostly-plain compositions (sand and sky) look alike to the model, the photo version of the near-blank-pages problem. The metadata already said these were different shots, but only ever counted *for* grouping.
+- **Fix:** different original IDs **and** different capture moments → −0.08. Dunes 0.74 (apart); building frames 0.84 (together); same-photo exports unaffected.
+- **Tested:** the documentary subset gives the expected families; Lightroom, metadata re-crop, photos, flat-lays and OCR test folders unchanged.
