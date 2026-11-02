@@ -18,13 +18,35 @@
     </section>
 
     <section class="screen" id="start" hidden>
-      <h1 class="start-brand">Syca</h1>
-      <p class="start-description">i. helps you find and compare the different versions of your work,<br />ii. and tend to everything you made along the way.</p>
+      <header class="entry-header">
+        <h1 class="start-brand">Syca</h1>
+        <p class="start-description">i. helps you find and compare the different versions of your work,<br />ii. and tend to everything you made along the way.</p>
+      </header>
       <div class="start-prompt">
         <p class="start-intro">To start, drag or <button id="choose" type="button">select</button> a folder</p>
         <p class="start-status" id="start-status" role="status" hidden></p>
       </div>
       <div class="start-rule" aria-hidden="true"></div>
+    </section>
+
+    <section class="screen" id="loading" aria-label="Scanning your folder" hidden>
+      <div class="loading-top">
+        <p class="loading-percent" id="loading-percent" aria-hidden="true">0%</p>
+        <div class="loading-meta">
+          <p class="loading-phase"><span id="loading-phase">Opening your folder</span><span id="loading-dots" aria-hidden="true">.</span></p>
+          <p id="loading-eta">Estimating time remaining</p>
+          <button class="loading-retry" id="loading-retry" hidden>Choose another folder</button>
+        </div>
+      </div>
+      <div class="start-rule loading-track" id="loading-progress" role="progressbar" aria-label="Folder scan progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="loading-fill" id="loading-fill"></div>
+      </div>
+      <div class="loading-below">
+        <div class="loading-fact">
+          <p class="loading-fact-label">Did you know?</p>
+          <p class="loading-fact-text" id="loading-fact">A bat’s wing, a dolphin’s flipper, and a human hand share the same underlying skeletal plan.</p>
+        </div>
+      </div>
     </section>
 
     <section class="screen" id="files" hidden>

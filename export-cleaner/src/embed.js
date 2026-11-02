@@ -26,6 +26,11 @@ function loadModel(onDownload) {
   return modelReady;
 }
 
+// Prepare the same cached model before the per-file scan, with download progress.
+export function prepareModel(onDownload = () => {}) {
+  return loadModel(onDownload);
+}
+
 // Returns the image's numbers, scaled to length 1 so comparing two is a plain dot product.
 export async function embed(imageUrl, onDownload) {
   const extract = await loadModel(onDownload);

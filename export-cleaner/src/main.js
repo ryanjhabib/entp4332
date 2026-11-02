@@ -7,6 +7,8 @@ import { groupFiles } from './group.js';
 import { openFamily } from './compare.js';
 import { showSummary } from './summary.js';
 import { TRASH_FOLDER, requestWriteAccess, moveRejected } from './apply.js';
+import { prepareModel } from './embed.js';
+import { startLoading, updateLoading, startScan, scannedFile, finishLoading, failLoading } from './loading.js';
 
 // Everything the app knows lives here.
 const state = {
@@ -33,6 +35,10 @@ async function chooseFolder() {
 }
 
 function showFolderError(error) {
+  if (!$('#loading').hidden) {
+    failLoading(error.message);
+    return;
+  }
   const status = $('#start').hidden ? $('#file-count') : $('#start-status');
   status.hidden = false;
   status.textContent = error.message;
@@ -70,29 +76,31 @@ document.addEventListener('drop', async (event) => {
 // Reads the folder fresh, makes previews and groups them. Used for a newly
 // picked folder and to rescan the same one after applying.
 async function loadFolder(dir) {
+  startLoading();
   // Free the previous folder's thumbnails before replacing them.
   for (const entry of state.files) if (entry.thumb) URL.revokeObjectURL(entry.thumb);
   const files = await readFolder(dir);
   state.dir = dir;
   state.files = files;
   state.families = [];
-  renderLoading();
-  show('files');
+  $('#families').replaceChildren();
   await makeThumbnails(files);
   if (files !== state.files) return; // another folder was picked meanwhile
-  try {
-    await describeImages(files);
-  } catch (error) {
-    console.error(error);
-    $('#file-count').textContent = `Couldn’t load the image model, so files can’t be grouped: ${error.message}`;
-    return;
-  }
+  await describeImages(files);
+  if (files !== state.files) return;
+  updateLoading(98, 'Gathering your versions');
+  for (const entry of files) { renderCard(entry); showThumb(entry); }
+  // Let the final scan update paint before synchronous grouping begins.
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   if (files !== state.files) return;
   regroup();
+  await finishLoading();
+  if (files === state.files) show('files');
 }
 
 // Fills in each card's thumbnail, a few files at a time.
 async function makeThumbnails(files) {
+  updateLoading(0, 'Getting the full picture');
   const queue = [...files];
   let done = 0;
   const work = async () => {
@@ -100,9 +108,8 @@ async function makeThumbnails(files) {
     while (queue.length && files === state.files) {
       const entry = queue.shift();
       Object.assign(entry, await makeThumbnail(entry));
-      showThumb(entry);
       done += 1;
-      setStatus(`previews ${done} of ${files.length}`);
+      updateLoading(10 * done / Math.max(1, files.length));
     }
   };
   await Promise.all(Array.from({ length: THUMB_WORKERS }, work));
@@ -111,12 +118,17 @@ async function makeThumbnails(files) {
 // Runs each file through the image model and reads its text (a PDF's, or an
 // image's by OCR), one at a time: the model uses the whole GPU. The first time, the model itself downloads first.
 async function describeImages(files) {
+  if (files.some(entry => entry.thumb)) {
+    updateLoading(10, 'Getting ready to scan');
+    await prepareModel(percent => updateLoading(10 + percent * 0.05));
+  }
+  startScan();
   let done = 0;
   for (const entry of files) {
     if (files !== state.files) return;
-    Object.assign(entry, await describe(entry, (percent) => setStatus(`loading the image model ${percent}%`)));
+    Object.assign(entry, await describe(entry, () => {}));
     done += 1;
-    setStatus(`looking at each file ${done} of ${files.length}`);
+    scannedFile(done, files.length);
   }
 }
 
@@ -208,26 +220,10 @@ function showOverview(focus) {
   familyElements.get(focus)?.scrollIntoView({ block: 'center' });
 }
 
-function setStatus(progress) {
-  $('#file-count').textContent = `${plural(state.files.length, 'design file')} · ${progress}`;
-}
-
-// While previews are made: one flat grid of cards, oldest first.
-function renderLoading() {
-  $('#folder-name').textContent = state.dir.name;
-  $('#settings').hidden = true;
-  $('#view-compare').disabled = true;
-  $('#open-summary').hidden = true;
-  setStatus('making previews');
-  const grid = document.createElement('ul');
-  grid.className = 'thumb-grid';
-  grid.append(...state.files.map(renderCard));
-  $('#families').replaceChildren(grid);
-}
-
 // Once every file is described: its families, similar ones side by side.
 // The cards made during loading are moved into place, not rebuilt.
 function renderFamilies() {
+  $('#folder-name').textContent = state.dir.name;
   const decided = state.files.filter((entry) => entry.decision).length;
   $('#file-count').textContent = [
     plural(state.files.length, 'design file'),
@@ -286,6 +282,7 @@ function showThumb(entry) {
 
 $('#choose').addEventListener('click', chooseFolder);
 $('#choose-again').addEventListener('click', chooseFolder);
+$('#loading-retry').addEventListener('click', chooseFolder);
 // Where Compare picks up: the family it was last on if that still has versions
 // to decide, otherwise the first family in the overview's order that does.
 function nextFamily() {
@@ -301,7 +298,7 @@ $('#view-compare').addEventListener('click', () => {
 $('#open-summary').addEventListener('click', () => showSummary(state.files));
 $('#summary-back').addEventListener('click', showOverview);
 $('#apply').addEventListener('click', apply);
-$('#rescan').addEventListener('click', () => loadFolder(state.dir));
+$('#rescan').addEventListener('click', () => openFolder(state.dir));
 $('#done-choose').addEventListener('click', chooseFolder);
 $('#settings').addEventListener('click', (event) => {
   const button = event.target.closest('[data-level]');

@@ -37,14 +37,14 @@
 :root {
   --color-bg: #eeeeee;
   --color-surface: #ffffff;
-  --color-text: #111111;
-  --color-muted: #6b6b6b;
+  --color-text: #333333;
+  --color-muted: #aaaaaa;
   --color-line: #e2e2e2;
   --color-keep: #1f7a3a;
   --color-reject: #b3261e;
   --color-thumb-bg: #f2f2f2;
-  --color-intro-text: #333333;
   --color-select: #97a084;
+  --color-progress: #95a081;
 
   --font-sans: system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
   --font-instrument-sans: "Instrument Sans", var(--font-sans);
@@ -78,9 +78,14 @@
   --description-optical-offset: 2px;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
+  --loading-above-gap: 24px;
+  --loading-below-gap: 36px;
+  --loading-percent-optical-offset: 4px;
+  --loading-sans-optical-offset: 1px;
+  --loading-fact-optical-offset: 2px;
+  --fact-size: 32px;
 
   --radius: 4px;
-  --thumb-size: 160px;
   --family-thumb-size: 120px;
   /* the window minus the rest of the pinned top (~290px) and a first row of the grid with dates (~210px) */
   --compare-frame-height: calc(100vh - 500px);
@@ -131,7 +136,8 @@ button {
 }
 
 /* The intro owns the full viewport; the other app screens retain their layout. */
-#start {
+#start,
+#loading {
   position: fixed;
   inset: 0;
   display: grid;
@@ -140,9 +146,13 @@ button {
   align-content: start;
   padding: var(--grid-margin);
   background: var(--color-bg);
-  color: var(--color-intro-text);
+  color: var(--color-text);
   font-family: var(--font-eb-garamond);
   -webkit-font-smoothing: antialiased;
+}
+
+.entry-header {
+  display: contents;
 }
 
 .start-brand {
@@ -213,6 +223,103 @@ button {
   font-size: var(--caption-size);
   font-weight: var(--font-weight-medium);
   line-height: var(--caption-line-height);
+}
+
+.loading-top,
+.loading-below {
+  position: absolute;
+  right: var(--grid-margin);
+  left: var(--grid-margin);
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+  column-gap: var(--grid-gutter);
+}
+
+.loading-top {
+  bottom: calc(50% + var(--intro-rule-width) / 2 + var(--loading-above-gap));
+  align-items: end;
+}
+
+.loading-percent {
+  grid-column: 1;
+  margin: 0;
+  font-size: var(--intro-size);
+  font-style: normal;
+  font-weight: var(--font-weight-regular);
+  line-height: var(--intro-line-height);
+  font-variant-numeric: lining-nums tabular-nums;
+  transform: translateY(var(--loading-percent-optical-offset));
+}
+
+.loading-meta {
+  grid-column: 2 / 4;
+  font-family: var(--font-instrument-sans);
+  font-size: var(--caption-size);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--caption-line-height);
+  transform: translateY(var(--loading-sans-optical-offset));
+}
+
+.loading-meta p {
+  margin: 0;
+}
+
+.loading-phase {
+  color: var(--color-muted);
+}
+
+#loading-dots {
+  display: inline-block;
+  width: 3ch;
+}
+
+.loading-retry {
+  margin-top: var(--space-2);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-decoration: underline;
+}
+
+.loading-fill {
+  width: 100%;
+  height: 100%;
+  background: var(--color-progress);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.loading-below {
+  top: calc(50% + var(--intro-rule-width) / 2 + var(--loading-below-gap) - var(--loading-fact-optical-offset));
+}
+
+.loading-fact {
+  grid-column: 4;
+}
+
+.loading-fact-label {
+  margin: 0 0 var(--space-5);
+  font-size: var(--brand-size);
+  font-style: italic;
+  font-weight: var(--font-weight-medium);
+  line-height: var(--intro-line-height);
+}
+
+.loading-fact-text {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--fact-size);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--intro-line-height);
+}
+
+@media (max-width: 1200px) {
+  .loading-fact { grid-column: 4 / -1; }
+}
+
+@media (max-width: 600px) {
+  .loading-meta { grid-column: 2 / -1; }
+  .loading-fact { grid-column: 2 / -1; }
 }
 
 button:disabled {
@@ -291,15 +398,6 @@ button:disabled {
 
 .card-row li {
   width: var(--family-thumb-size);
-}
-
-.thumb-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--thumb-size), 1fr));
-  gap: var(--space-5) var(--space-4);
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
 /* A square box; the image sits inside it absolutely, so a tall image
