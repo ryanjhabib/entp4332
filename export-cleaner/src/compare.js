@@ -10,7 +10,8 @@
 // Where a family ends, its final is checked against the closest version of the
 // next family: "Same piece" merges the two families and the comparing goes
 // on; "Different" starts the next family. That catches the versions the
-// grouping missed, one-file families included.
+// grouping missed, one-file families included. The opposite fix, "Not the
+// same", splits the newcomer off into a family of its own.
 //
 // Choices are stored on each file as entry.decision = 'keep' | 'reject';
 // nothing on disk changes.
@@ -25,6 +26,7 @@ const slots = { left: null, right: null }; // the version on each side, or null
 let newcomer = 'right'; // the side most recently filled: "keep both" replaces it
 let queue = []; // versions still to take a turn, next first
 let boundary = null; // the next family, while asking whether it's the same piece
+let apart = new Set(); // versions split off with "Not the same": not asked about again
 let history = []; // undo: a snapshot from before each choice
 let onExit = () => {};
 
@@ -34,6 +36,7 @@ export function openFamily(allFamilies, entries, exit) {
   families = allFamilies;
   onExit = exit;
   history = [];
+  apart = new Set();
   show('compare');
   startFamily(entries);
 }
@@ -63,6 +66,7 @@ function snapshot() {
     newcomer,
     queue: [...queue],
     boundary,
+    apart: new Set(apart),
     decisions: family.map((entry) => entry.decision),
   });
 }
@@ -88,6 +92,21 @@ function keepBoth() {
   afterChoice();
 }
 
+// Not the same piece: the newcomer leaves this family for one of its own,
+// placed right after it, and the next version comes in. The stream visits it
+// next without asking "same piece?" about it again.
+function notTheSame() {
+  if (boundary || !slots.left || !slots.right) return;
+  snapshot();
+  const entry = slots[newcomer];
+  const rest = family.filter((member) => member !== entry);
+  families.splice(families.indexOf(family), 1, rest, [entry]);
+  family = rest;
+  apart.add(entry);
+  slots[newcomer] = queue.shift() ?? null;
+  afterChoice();
+}
+
 // A lone version at the very end of the stream, with no neighbour left.
 function decideAlone(decision) {
   snapshot();
@@ -101,7 +120,7 @@ function decideAlone(decision) {
 function afterChoice() {
   if (slots.left && slots.right) return render();
   const next = families.slice(families.indexOf(family) + 1).find((f) => contending(f).some((entry) => !entry.decision));
-  if (next) return askSamePiece(next);
+  if (next) return next.every((entry) => apart.has(entry)) ? startFamily(next) : askSamePiece(next);
   if (!(slots.left ?? slots.right).decision) return render();
   exit(true);
 }
@@ -165,6 +184,7 @@ function undo() {
   newcomer = step.newcomer;
   queue = step.queue;
   boundary = step.boundary;
+  apart = step.apart;
   render();
 }
 
@@ -192,6 +212,8 @@ function render() {
   $('#pick-left').hidden = !comparing;
   $('#pick-right').hidden = !comparing;
   $('#keep-both').hidden = !comparing;
+  $('#not-the-same').hidden = !comparing;
+  $('#not-the-same').title = comparing ? `Moves ${slots[newcomer].name} into a family of its own` : '';
   $('#same-piece').hidden = !boundary;
   $('#different').hidden = !boundary;
   $('#keep-alone').hidden = pair;
@@ -308,6 +330,7 @@ async function showFrame(side, entry) {
 $('#pick-left').addEventListener('click', () => pick('left'));
 $('#pick-right').addEventListener('click', () => pick('right'));
 $('#keep-both').addEventListener('click', keepBoth);
+$('#not-the-same').addEventListener('click', notTheSame);
 $('#same-piece').addEventListener('click', samePiece);
 $('#different').addEventListener('click', different);
 $('#keep-alone').addEventListener('click', () => decideAlone('keep'));
@@ -322,6 +345,7 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'ArrowLeft') pick('left');
   else if (event.key === 'ArrowRight') pick('right');
   else if (event.key === 'ArrowDown') keepBoth();
+  else if (event.key === 'n') notTheSame();
   else if (event.key === 's') samePiece();
   else if (event.key === 'd') different();
   else if (event.key === 'Escape') exit();
