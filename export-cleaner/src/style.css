@@ -45,6 +45,10 @@
   --color-thumb-bg: #f2f2f2;
   --color-select: #97a084;
   --color-progress: #95a081;
+  --color-band: #e5e5e5;
+  --color-band-line: #cccccc;
+  --color-row-active: #222222;
+  --color-caret: #95a081;
 
   --font-sans: system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
   --font-instrument-sans: "Instrument Sans", var(--font-sans);
@@ -84,6 +88,8 @@
   --loading-sans-optical-offset: 1px;
   --loading-fact-optical-offset: 2px;
   --fact-size: 32px;
+  --describe-band-height: 76px;
+  --describe-row-height: 44px;
 
   --radius: 4px;
   --family-thumb-size: 120px;
@@ -178,9 +184,15 @@ button {
   right: var(--grid-margin);
   bottom: calc(50% + var(--intro-rule-width) / 2 + var(--intro-gap) + var(--intro-optical-offset));
   left: var(--grid-margin);
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+  column-gap: var(--grid-gutter);
+  align-items: end;
 }
 
 .start-intro {
+  grid-row: 1;
+  grid-column: 1 / -1;
   margin: 0;
   font-size: var(--intro-size);
   font-weight: var(--font-weight-regular);
@@ -223,6 +235,89 @@ button {
   font-size: var(--caption-size);
   font-weight: var(--font-weight-medium);
   line-height: var(--caption-line-height);
+}
+
+.start-folder {
+  grid-row: 1;
+  grid-column: 3 / -1;
+  font-family: var(--font-instrument-sans);
+  font-size: var(--caption-size);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--caption-line-height);
+}
+
+.start-folder p {
+  margin: 0;
+}
+
+.start-estimate {
+  color: var(--color-muted);
+}
+
+/* The describe field sits in a band directly under the rule; its list opens below. */
+.describe {
+  position: absolute;
+  top: calc(50% + var(--intro-rule-width) / 2);
+  right: 0;
+  left: 0;
+}
+
+.describe-input {
+  display: block;
+  width: 100%;
+  height: var(--describe-band-height);
+  margin: 0;
+  padding: 0 var(--grid-margin);
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  background: var(--color-band);
+  box-shadow: 0 var(--intro-rule-width) 0 var(--color-band-line);
+  color: var(--color-text);
+  caret-color: var(--color-caret);
+  font-family: var(--font-eb-garamond);
+  font-size: var(--intro-size);
+  font-weight: var(--font-weight-regular);
+  letter-spacing: 0;
+}
+
+.describe-input::placeholder {
+  color: var(--color-muted);
+  opacity: 1;
+}
+
+.describe-input::selection {
+  background: var(--color-band-line);
+}
+
+/* While the list is open its first row covers the band's bottom line. */
+.describe-input[aria-expanded="true"] {
+  box-shadow: none;
+}
+
+.describe-list {
+  max-height: calc(50vh - var(--intro-rule-width) / 2 - var(--describe-band-height));
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.describe-list li {
+  display: flex;
+  align-items: center;
+  height: var(--describe-row-height);
+  padding: 0 var(--grid-margin);
+  color: var(--color-muted);
+  font-size: var(--brand-size);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--intro-line-height);
+  cursor: pointer;
+}
+
+.describe-list li[aria-selected="true"] {
+  background: var(--color-row-active);
+  color: var(--color-surface);
 }
 
 .loading-top,
@@ -315,6 +410,13 @@ button {
 
 @media (max-width: 1200px) {
   .loading-fact { grid-column: 4 / -1; }
+  /* The intro runs past column 2 here, so the folder details move a column over. */
+  .start-folder { grid-column: 4 / -1; }
+}
+
+/* Below this the intro reaches column 4, so the folder details go under it. */
+@media (max-width: 760px) {
+  .start-folder { grid-row: auto; grid-column: 1 / -1; margin-top: var(--space-3); }
 }
 
 @media (max-width: 600px) {

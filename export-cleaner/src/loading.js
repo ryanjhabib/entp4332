@@ -1,4 +1,4 @@
-import { $, show } from './dom.js';
+import { $ } from './dom.js';
 
 const FACTS = [
   'A bat’s wing, a dolphin’s flipper, and a human hand share the same underlying skeletal plan.',
@@ -24,10 +24,16 @@ let message = 0;
 let finish = null;
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
+// The start screen's rule and estimate line show the same progress until the
+// loading screen takes over.
 function paint() {
   $('#loading-percent').textContent = `${Math.floor(displayed)}%`;
-  $('#loading-fill').style.transform = `scaleX(${displayed / 100})`;
+  for (const fill of document.querySelectorAll('.loading-fill')) fill.style.transform = `scaleX(${displayed / 100})`;
   $('#loading-progress').setAttribute('aria-valuenow', Math.floor(displayed));
+}
+
+function showEta(text) {
+  $('#loading-eta').textContent = $('#start-estimate').textContent = text;
 }
 
 function tick(now) {
@@ -66,12 +72,11 @@ export function startLoading() {
   message = 0;
   phase = 'Opening your folder';
   $('#loading-phase').textContent = phase;
-  $('#loading-eta').textContent = 'Estimating time remaining';
+  showEta('Estimating time remaining');
   $('#loading-retry').hidden = true;
   $('#loading-dots').textContent = reducedMotion.matches ? '...' : '.';
   $('#loading-fact').textContent = FACTS[0];
   paint();
-  show('loading');
   let dots = 1;
   if (!reducedMotion.matches) timers.push(setInterval(() => {
     dots = dots % 3 + 1;
@@ -100,14 +105,14 @@ export function scannedFile(done, total) {
   updateLoading(15 + 83 * done / Math.max(1, total));
   if (done < 2) return;
   const seconds = (performance.now() - scanStarted) / done * (total - done) / 1000;
-  $('#loading-eta').textContent = seconds < 60
+  showEta(seconds < 60
     ? 'Less than a minute remains'
-    : `Approximately ${Math.ceil(seconds / 60)} min. ${Math.ceil(seconds / 60) === 1 ? 'remains' : 'remain'}`;
+    : `Approximately ${Math.ceil(seconds / 60)} min. ${Math.ceil(seconds / 60) === 1 ? 'remains' : 'remain'}`);
 }
 
 export async function finishLoading() {
   scanStarted = 0;
-  $('#loading-eta').textContent = 'Ready';
+  showEta('Ready');
   updateLoading(100, 'Your versions are ready');
   if (displayed < 100) await new Promise(resolve => { finish = resolve; });
   stopLoading();
@@ -118,6 +123,6 @@ export function failLoading(message) {
   scanStarted = 0;
   $('#loading-phase').textContent = 'Couldn’t finish scanning';
   $('#loading-dots').textContent = '';
-  $('#loading-eta').textContent = message;
+  showEta(message);
   $('#loading-retry').hidden = false;
 }

@@ -8,6 +8,7 @@ import { openFamily } from './compare.js';
 import { showSummary } from './summary.js';
 import { TRASH_FOLDER, requestWriteAccess, moveRejected } from './apply.js';
 import { prepareModel } from './embed.js';
+import { setUpMediaField } from './media.js';
 import { startLoading, updateLoading, startScan, scannedFile, finishLoading, failLoading } from './loading.js';
 
 // Everything the app knows lives here.
@@ -16,6 +17,8 @@ const state = {
   // For each design file: { handle, file, name, ext, thumb, width, height, vectors, words, shot, colour, card, decision }
   files: [],
   families: [], // [[entry, ...], ...], each oldest first, similar families side by side
+  mediaType: null, // the chosen MEDIA_TYPES entry (not used for grouping yet)
+  description: '', // what was typed to find it
 };
 
 // How many thumbnails are made at once. More doesn't finish sooner,
@@ -49,9 +52,25 @@ async function openFolder(dir) {
   try {
     await loadFolder(dir);
   } catch (error) {
-    showFolderError(error);
+    // Shown on the loading screen, or in the start screen's estimate line.
+    scanning = false;
+    failLoading(error.message);
   }
 }
+
+// The scan starts as soon as a folder is picked. Until a media type is
+// chosen it runs on the start screen, with the rule as its progress bar;
+// choosing one moves to the loading screen, or straight to the families if
+// the scan has already finished.
+let scanning = false;
+let typeChosen = null; // resolves a finished scan's wait for a type
+
+setUpMediaField($('#describe-input'), $('#describe-list'), (type, text) => {
+  state.mediaType = type;
+  state.description = text;
+  if (typeChosen) typeChosen();
+  else if (scanning) show('loading');
+});
 
 // Anywhere on the intro accepts a folder; loaded runs cannot be replaced by a drop.
 document.addEventListener('dragover', (event) => {
@@ -77,9 +96,16 @@ document.addEventListener('drop', async (event) => {
 // picked folder and to rescan the same one after applying.
 async function loadFolder(dir) {
   startLoading();
+  show(state.mediaType ? 'loading' : 'start');
+  scanning = true;
+  typeChosen = null;
+  $('#start-folder-name').textContent = dir.name;
+  $('#start-folder').hidden = false;
   // Free the previous folder's thumbnails before replacing them.
   for (const entry of state.files) if (entry.thumb) URL.revokeObjectURL(entry.thumb);
   const files = await readFolder(dir);
+  const bytes = files.reduce((sum, entry) => sum + entry.file.size, 0);
+  $('#start-folder-name').textContent = `${dir.name} (${formatSize(bytes).toLowerCase()})`;
   state.dir = dir;
   state.files = files;
   state.families = [];
@@ -95,6 +121,9 @@ async function loadFolder(dir) {
   if (files !== state.files) return;
   regroup();
   await finishLoading();
+  if (files !== state.files) return;
+  scanning = false;
+  if (!state.mediaType) await new Promise((resolve) => { typeChosen = resolve; });
   if (files === state.files) show('files');
 }
 
