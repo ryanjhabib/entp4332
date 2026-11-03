@@ -42,7 +42,8 @@ function showEta(text) {
 
 function tick(now) {
   frame = 0;
-  const elapsed = reducedMotion.matches ? 1 : Math.min(1, (now - tweenStarted) / PROGRESS_DURATION);
+  // A frame's time can be a moment before the tween started: never step back.
+  const elapsed = reducedMotion.matches ? 1 : Math.min(1, Math.max(0, (now - tweenStarted) / PROGRESS_DURATION));
   displayed = elapsed === 1 ? target : from + (target - from) * elapsed;
   paint();
   if (elapsed < 1) frame = requestAnimationFrame(tick);
