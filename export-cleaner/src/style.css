@@ -554,6 +554,7 @@ button:disabled {
   flex-wrap: wrap;
   grid-column: 4 / -1;
   gap: var(--space-3) var(--space-5);
+  margin-top: var(--page-links-gap);
 }
 
 .setting {
@@ -569,9 +570,18 @@ button:disabled {
   font-weight: var(--font-weight-medium);
 }
 
+/* Families: the folder's links, with the settings centred on the same line. */
+.page-bar {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  column-gap: var(--grid-gutter);
+  align-items: center;
+}
+
 .page-links {
   display: flex;
   flex-wrap: wrap;
+  grid-column: 1 / 4;
   gap: var(--space-4) var(--compare-link-gap);
   margin-top: var(--page-links-gap);
 }
