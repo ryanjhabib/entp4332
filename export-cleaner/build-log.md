@@ -476,3 +476,7 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 
 - "brand deck" tied Graphic & Type (brand) with Documents (deck) and list order put Graphic first. `FORMATS` (deck, slide, pdf) now score 1.25 on an exact or plural match, so the format word wins a tie. Only brand deck(s) / brand slides / client brand deck / brand pdf changed in a 23-phrase before/after diff. Chrome: "brand decks" → Documents, Graphic & Type.
 - Ryan floated renaming Documents to Decks; not changed (it now also holds essays).
+
+## General renamed Mixed (2026-11-02)
+
+- Ryan picked "Mixed" over General / Random ("random" reads like the grouping is random; "Mixed Media" means one artwork in art). id and label are now `mixed`; "general" joined its keywords. Older entries above still say General.
