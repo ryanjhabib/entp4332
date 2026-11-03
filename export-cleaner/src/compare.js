@@ -223,11 +223,14 @@ function render() {
 }
 
 // The details under a frame. A detail that differs from the other side is
-// marked, since that difference is often the answer.
+// marked, since that difference is often the answer. The shot date only
+// shows when one side has one (design exports never do).
 function renderCaption(caption, entry, other) {
   if (!entry) return caption.replaceChildren();
-  const mine = details(entry);
-  const theirs = other ? details(other) : null;
+  const noShot = !entry.shot?.taken && !other?.shot?.taken;
+  const shown = ([key]) => !(noShot && key === 'shot');
+  const mine = details(entry).filter(shown);
+  const theirs = other ? details(other).filter(shown) : null;
   caption.replaceChildren(
     ...mine.map(([key, text, compareBy = text], i) => {
       const line = document.createElement('span');
