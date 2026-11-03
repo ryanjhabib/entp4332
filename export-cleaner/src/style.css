@@ -92,7 +92,10 @@
   --describe-row-height: 40px;
 
   --radius: 4px;
-  --family-thumb-size: 120px;
+  /* Families and Summary: a full-width grid of cells (main.js reads this). */
+  --families-columns: 8;
+  --cell-inset: 12px; /* inside a cell, around its thumbnails and text */
+  --page-links-gap: 40px; /* the page's counts to its links */
   /* the window minus the rest of the pinned top (~290px) and a first row of the grid with dates (~210px) */
   /* Compare, from the Figma at 1728 × 1009 (see #compare). */
   --compare-toggle-width: 237px; /* each half of Families | Sort */
@@ -141,7 +144,6 @@
 
 body {
   margin: 0;
-  padding: var(--space-6);
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
@@ -489,125 +491,222 @@ button:disabled {
   gap: var(--space-4);
 }
 
+/* Screens not yet in the Figma's language. */
+#summary,
+#done,
+#unsupported {
+  padding: var(--space-6);
+}
+
+/* Families (main.js) in Sort's design language: the same header, the
+   folder's name and counts where Sort's frames start, Grouping and Show on
+   the right half, the page's links as Sort's are, then a full-width grid
+   of cells: a set spans a column per version with no lines between them,
+   a solo takes one. Sets first, then solos; the grid packs them densely. */
+.page {
+  min-height: 100vh;
+  padding: 0 var(--grid-margin);
+  color: var(--color-text);
+  font-family: var(--font-eb-garamond);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The header stays at the top while the grid scrolls under it. */
+.page-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0 calc(-1 * var(--grid-margin));
+  padding: var(--grid-margin) var(--grid-margin) 0;
+  background: var(--color-bg);
+}
+
+.page-top {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  column-gap: var(--grid-gutter);
+  align-items: start;
+  margin-top: var(--space-5);
+}
+
+.page-intro {
+  grid-column: 1 / 4;
+}
+
+.page-title {
+  margin: 0;
+  font-size: var(--intro-size);
+  font-weight: var(--font-weight-regular);
+  line-height: 1;
+  text-box: trim-both cap alphabetic;
+}
+
+.page-meta {
+  margin: var(--compare-info-gap) 0 0;
+  color: var(--color-sans-muted);
+  font-family: var(--font-instrument-sans);
+  font-size: var(--caption-size);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--caption-line-height);
+  text-box: trim-both cap alphabetic;
+}
+
 .settings {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2) var(--space-3);
-  margin-bottom: var(--space-6);
-  font-size: var(--text-s);
+  grid-column: 4 / -1;
+  gap: var(--space-3) var(--space-5);
 }
 
-/* Families sit side by side and wrap; a one-file family is a small box. */
-.families {
+.setting {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.setting-label {
+  color: var(--color-sans-muted);
+  font-family: var(--font-instrument-sans);
+  font-size: var(--caption-size);
+  font-weight: var(--font-weight-medium);
+}
+
+.page-links {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
-  gap: var(--space-4);
+  gap: var(--space-4) var(--compare-link-gap);
+  margin-top: var(--page-links-gap);
 }
 
-.family {
-  padding: var(--space-3);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius);
-}
-
-.family-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin-bottom: var(--space-2);
-}
-
-.family-head p {
-  margin: 0;
-}
-
-.family-head button {
-  padding: var(--space-1) var(--space-3);
-  font-size: var(--text-s);
-}
-
-/* Decisions on the overview: kept outlined green, rejected faded and outlined red. */
-.card-row li[data-decision="keep"] .thumb {
-  outline: 2px solid var(--color-keep);
-}
-
-.card-row li[data-decision="reject"] .thumb {
-  outline: 2px solid var(--color-reject);
-}
-
-.card-row li[data-decision="reject"] img {
-  opacity: 0.4;
-}
-
+.families,
 .card-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--families-columns), minmax(0, 1fr));
+  margin: var(--compare-actions-height) calc(-1 * var(--grid-margin)) 0;
   padding: 0;
+  border-top: 1px solid var(--color-muted);
   list-style: none;
 }
 
-.card-row li {
-  width: var(--family-thumb-size);
+.families {
+  grid-auto-flow: row dense;
 }
 
-/* A square box; the image sits inside it absolutely, so a tall image
-   can't stretch the square taller. */
+.family,
+.card-row > li {
+  border-right: 1px solid var(--color-muted);
+  border-bottom: 1px solid var(--color-muted);
+}
+
+.family {
+  display: grid;
+  grid-template-columns: repeat(var(--slots), minmax(0, 1fr));
+  align-content: start;
+  cursor: pointer;
+  transition: background-color var(--hover-fade) var(--ease-fade);
+}
+
+@media (hover: hover) {
+  .family:hover {
+    background: var(--color-thumb-bg);
+  }
+}
+
+.family:focus-visible {
+  outline: 1px solid var(--color-text);
+  outline-offset: -4px;
+}
+
+/* In a set, its versions sit straight in the cell's columns. */
+.family .card-row {
+  display: contents;
+}
+
+.family .card-row > li {
+  border: 0;
+}
+
+.family-head {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: var(--cell-inset) var(--cell-inset) 0;
+  color: var(--color-sans-muted);
+  font-family: var(--font-instrument-sans);
+  font-size: var(--caption-size);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--caption-line-height);
+}
+
+.family-dates {
+  color: var(--color-text);
+}
+
+/* A file: its thumbnail in a 3:2 box at the top left (sized to its shape,
+   --ratio from main.js), then its name and export date. */
+.card-row > li {
+  min-width: 0;
+  padding: var(--cell-inset);
+}
+
 .thumb {
   position: relative;
   display: grid;
   place-items: center;
-  aspect-ratio: 1;
-  background: var(--color-thumb-bg);
+  aspect-ratio: 3 / 2;
+  container-type: size;
   color: var(--color-sans-muted);
-  font-size: var(--text-s);
+  font-family: var(--font-instrument-sans);
+  font-size: var(--caption-size);
 }
 
 .thumb img {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+  top: 0;
+  left: 0;
+  width: min(100cqw, 100cqh * var(--ratio, 1));
+  height: min(100cqh, 100cqw / var(--ratio, 1));
+}
+
+.thumb.blends img {
+  outline: 1px solid var(--color-band-line);
+  outline-offset: -1px;
+}
+
+.card-row > li[data-decision="reject"] img {
+  opacity: 0.35;
 }
 
 .card-name,
 .card-time {
   margin: 0;
-  font-size: var(--text-s);
+  font-family: var(--font-instrument-sans);
+  font-size: var(--caption-size);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--caption-line-height);
   white-space: nowrap;
 }
 
 .card-name {
-  margin-top: var(--space-2);
+  margin-top: var(--cell-inset);
+  color: var(--color-text);
 }
 
 .card-time {
   overflow: hidden;
+  color: var(--color-sans-muted);
   text-overflow: ellipsis;
 }
 
-.card-time {
-  color: var(--color-sans-muted);
+@media (max-width: 1399px) {
+  :root { --families-columns: 6; }
 }
 
-/* Families | Compare: the pressed one is the view you're in. */
-.view-toggle {
-  display: flex;
+@media (max-width: 999px) {
+  :root { --families-columns: 4; }
 }
 
-.view-toggle button + button {
-  margin-left: -1px;
-}
-
-.view-toggle button[aria-pressed="true"] {
-  background: var(--color-text);
-  color: var(--color-surface);
-  cursor: default;
+@media (max-width: 699px) {
+  :root { --families-columns: 2; }
 }
 
 /* Compare screen, from the Figma (frame 134, 1728 × 1009). The halves and
@@ -639,7 +738,8 @@ button:disabled {
   display: flex;
 }
 
-.compare-toggle button {
+.compare-toggle button,
+.small-toggle button {
   width: var(--compare-toggle-width);
   height: var(--compare-toggle-height);
   padding: 0;
@@ -652,7 +752,18 @@ button:disabled {
   line-height: 1;
 }
 
-.compare-toggle button[aria-pressed="true"] {
+/* Families' Grouping and Show: the same, sized to their words. */
+.small-toggle {
+  display: flex;
+}
+
+.small-toggle button {
+  width: auto;
+  padding: 0 var(--space-4);
+}
+
+.compare-toggle button[aria-pressed="true"],
+.small-toggle button[aria-pressed="true"] {
   background: var(--color-row-active);
   color: var(--color-surface);
   font-style: italic;
@@ -846,7 +957,8 @@ button:disabled {
   display: contents;
 }
 
-.compare-actions button {
+.compare-actions button,
+.page-links button {
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -862,7 +974,8 @@ button:disabled {
   text-box: trim-both cap alphabetic;
 }
 
-.compare-actions button:disabled {
+.compare-actions button:disabled,
+.page-links button:disabled {
   color: var(--color-muted);
   cursor: default;
 }
@@ -1050,12 +1163,6 @@ code {
 /* The space-saving number: the first thing on the Summary and Done screens. */
 .headline {
   font-size: var(--text-l);
-  font-weight: 600;
-}
-
-.family-dates {
-  margin: 0;
-  font-size: var(--text-s);
   font-weight: 600;
 }
 

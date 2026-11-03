@@ -318,7 +318,7 @@ const PAGE_GREY = 238;
 const EDGE_NEAR = 20;
 const EDGE_SHARE = 0.5;
 
-async function blendsIn(entry) {
+export async function blendsIn(entry) {
   if (entry.blends === undefined) {
     const bitmap = await createImageBitmap(await (await fetch(entry.thumb)).blob());
     const ctx = new OffscreenCanvas(32, 32).getContext('2d', { willReadFrequently: true });

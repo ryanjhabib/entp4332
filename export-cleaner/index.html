@@ -57,37 +57,43 @@
       </div>
     </section>
 
-    <section class="screen" id="files" hidden>
-      <header class="bar">
-        <h1 id="folder-name"></h1>
-        <div class="buttons">
-          <button id="forget" title="Clears the saved scan and choices for this folder; the files aren’t touched">Forget this folder</button>
-          <button id="choose-again">Choose another folder</button>
+    <!-- Families: the folder's sets (to sort) then solos (to keep or delete), in Sort's design language. -->
+    <section class="screen page" id="files" hidden>
+      <header class="compare-head page-head">
+        <div class="compare-toggle" role="group" aria-label="View">
+          <button type="button" aria-pressed="true">Families</button>
+          <button id="view-compare" type="button" aria-pressed="false">Sort</button>
         </div>
+        <p class="compare-brand">Syca</p>
       </header>
-      <div class="bar">
-        <p class="muted" id="file-count"></p>
-        <div class="buttons">
-          <button id="open-summary" hidden>Review summary</button>
-          <div class="view-toggle" role="group" aria-label="View">
-            <button aria-pressed="true">Families</button>
-            <button id="view-compare" aria-pressed="false">Sort</button>
+      <div class="page-top">
+        <div class="page-intro">
+          <h1 class="page-title" id="folder-name"></h1>
+          <p class="page-meta" id="file-count"></p>
+        </div>
+        <div class="settings" id="settings" hidden>
+          <div class="setting">
+            <span class="setting-label">Grouping</span>
+            <div class="small-toggle" role="group" aria-label="Grouping">
+              <button type="button" data-level="loose" aria-pressed="false" title="Catches heavy re-crops and re-grades; may group look-alikes">Loose</button>
+              <button type="button" data-level="balanced" aria-pressed="true" title="Suits most folders">Balanced</button>
+              <button type="button" data-level="strict" aria-pressed="false" title="For product shoots and same-pose sets">Strict</button>
+            </div>
+          </div>
+          <div class="setting">
+            <span class="setting-label">Show</span>
+            <div class="small-toggle" role="group" aria-label="Show">
+              <button type="button" data-show="all" aria-pressed="true">All</button>
+              <button type="button" data-show="sets" aria-pressed="false" title="Families of two or more versions, to compare">Sets</button>
+              <button type="button" data-show="solos" aria-pressed="false" title="Files on their own, to keep or delete">Solos</button>
+            </div>
           </div>
         </div>
       </div>
-      <div class="settings" id="settings" hidden>
-        <span>Grouping</span>
-        <div class="view-toggle" role="group" aria-label="Grouping">
-          <button data-level="loose" aria-pressed="false" title="Catches heavy re-crops and re-grades; may group look-alikes">Loose</button>
-          <button data-level="balanced" aria-pressed="true" title="Suits most folders">Balanced</button>
-          <button data-level="strict" aria-pressed="false" title="For product shoots and same-pose sets">Strict</button>
-        </div>
-        <span>Show</span>
-        <div class="view-toggle" role="group" aria-label="Show">
-          <button data-show="all" aria-pressed="true">All</button>
-          <button data-show="sets" aria-pressed="false" title="Families of two or more versions, to compare">Sets</button>
-          <button data-show="solos" aria-pressed="false" title="Files on their own, to keep or delete">Solos</button>
-        </div>
+      <div class="page-links">
+        <button id="open-summary" type="button" hidden>Review summary</button>
+        <button id="choose-again" type="button">Choose another folder</button>
+        <button id="forget" type="button" title="Clears the saved scan and choices for this folder; the files aren’t touched">Forget this folder</button>
       </div>
       <div class="families" id="families"></div>
     </section>

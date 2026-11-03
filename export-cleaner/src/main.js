@@ -4,7 +4,7 @@ import { isSupported, pickFolder, droppedFolder, readFolder } from './scan.js';
 import { makeThumbnail } from './thumbs.js';
 import { describe } from './describe.js';
 import { groupFiles } from './group.js';
-import { openFamily } from './compare.js';
+import { openFamily, blendsIn } from './compare.js';
 import { showSummary } from './summary.js';
 import { TRASH_FOLDER, requestWriteAccess, moveRejected } from './apply.js';
 import { prepareModel } from './embed.js';
@@ -339,6 +339,9 @@ function showOverview(focus) {
 let showing = 'all';
 const setsThenSolos = () => [...state.families.filter((f) => f.length > 1), ...state.families.filter((f) => f.length === 1)];
 
+// The grid's column count, from style.css (--families-columns, by window width).
+const gridColumns = () => parseInt(getComputedStyle(document.documentElement).getPropertyValue('--families-columns'), 10);
+
 function renderFamilies() {
   $('#folder-name').textContent = state.dir.name;
   const decided = state.files.filter((entry) => entry.decision).length;
@@ -353,26 +356,46 @@ function renderFamilies() {
   $('#view-compare').disabled = !nextFamily();
   $('#open-summary').hidden = !decided;
   const shown = setsThenSolos().filter((f) => showing === 'all' || (showing === 'sets') === (f.length > 1));
-  $('#families').replaceChildren(...shown.map(renderFamily));
+  const columns = gridColumns();
+  $('#families').replaceChildren(...shown.map((entries) => renderFamily(entries, columns)));
 }
 
-function renderFamily(entries) {
+// A set's cell spans a column per version (wrapping past the grid's width),
+// so a change of column count re-lays the grid.
+for (const query of ['(max-width: 1399px)', '(max-width: 999px)', '(max-width: 699px)']) {
+  matchMedia(query).addEventListener('change', () => {
+    if (!$('#files').hidden) renderFamilies();
+  });
+}
+
+// One cell per family: a set spans a column per version (its versions side
+// by side, no lines between them), a solo takes one. Clicking it sorts it.
+function renderFamily(entries, columns) {
   const family = document.createElement('div');
   family.className = 'family';
-  family.innerHTML =
-    '<div class="family-head"><div><p class="family-dates"></p><p class="muted"></p></div><button>Compare</button></div><ul class="card-row"></ul>';
+  const span = Math.min(entries.length, columns);
+  family.style.gridColumn = `span ${span}`;
+  family.style.setProperty('--slots', span);
+  family.role = 'button';
+  family.tabIndex = 0;
+  family.title = entries.length > 1 ? 'Sort this set' : 'Keep or delete';
+  family.innerHTML = '<p class="family-head"><span class="family-dates"></span><span class="family-counts"></span></p><ul class="card-row"></ul>';
   family.querySelector('.family-dates').textContent = familyDates(entries);
   familyElements.set(entries, family);
   const kept = entries.filter((entry) => entry.decision === 'keep').length;
   const rejected = entries.filter((entry) => entry.decision === 'reject').length;
   const bytes = entries.reduce((sum, entry) => sum + entry.file.size, 0);
-  family.querySelector('.family-head .muted').textContent = [
-    plural(entries.length, 'file'),
+  family.querySelector('.family-counts').textContent = [
+    '',
+    entries.length > 1 ? plural(entries.length, 'version') : 'solo',
     formatSize(bytes),
     kept && `${kept} kept`,
-    rejected && `${rejected} rejected`,
-  ].filter(Boolean).join(' · ');
-  family.querySelector('.family-head button').addEventListener('click', () => compareFamily(entries));
+    rejected && `${rejected} out`,
+  ].filter((part) => part !== 0).join(' · ');
+  family.addEventListener('click', () => compareFamily(entries));
+  family.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') compareFamily(entries);
+  });
   for (const entry of entries) entry.card.dataset.decision = entry.decision ?? '';
   family.querySelector('.card-row').append(...entries.map((entry) => entry.card));
   return family;
@@ -388,6 +411,8 @@ function renderCard(entry) {
   return card;
 }
 
+// The thumbnail in a 3:2 box at its top left, sized to its own shape; a
+// pale one gets the edge line, as in Sort.
 function showThumb(entry) {
   const box = entry.card.querySelector('.thumb');
   if (!entry.thumb) {
@@ -395,9 +420,11 @@ function showThumb(entry) {
     return;
   }
   const img = document.createElement('img');
+  img.addEventListener('load', () => img.style.setProperty('--ratio', img.naturalWidth / img.naturalHeight));
   img.src = entry.thumb;
   img.alt = '';
   box.replaceChildren(img);
+  blendsIn(entry).then((blends) => box.classList.toggle('blends', blends));
 }
 
 $('#choose').addEventListener('click', chooseFolder);
