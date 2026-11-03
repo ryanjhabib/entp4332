@@ -93,8 +93,20 @@
   --radius: 4px;
   --family-thumb-size: 120px;
   /* the window minus the rest of the pinned top (~290px) and a first row of the grid with dates (~210px) */
-  --compare-frame-height: calc(100vh - 500px);
-  --version-size: 160px;
+  /* Compare, from the Figma at 1728 × 1009 (see #compare). */
+  --compare-toggle-width: 237px; /* each half of Summary | Compare */
+  --compare-toggle-height: 28px;
+  --compare-info-gap: 20px; /* frame to the details */
+  --compare-info-height: 149px; /* details top to the actions' capitals */
+  --compare-row-step: 46px; /* one details row to the next */
+  --compare-text-inset: 8px; /* details text below its line */
+  --compare-pick-top: 57px;
+  --compare-actions-height: 44px; /* actions' capitals to the strip */
+  --compare-link-size: 24px;
+  --strip-cell-width: 144px;
+  --strip-cell-height: 120px; /* Figma 144, made shorter */
+  --strip-thumb-inset: 12px; /* above and below a 96px thumbnail */
+  --strip-date-height: 24px; /* Figma 20 */
 }
 
 [hidden] {
@@ -569,45 +581,329 @@ button:disabled {
   cursor: default;
 }
 
-/* Compare screen. The top (frames, details, actions) stays pinned while the
-   versions grid scrolls underneath; the frames take the height that's left
-   once room is kept for the rest of the top and a first row of the grid. */
-.compare-top {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  margin-top: calc(-1 * var(--space-6)); /* sits flush in the body's top padding... */
-  padding-top: var(--space-6); /* ...and keeps that space once pinned */
+/* Compare screen, from the Figma (frame 134, 1728 × 1009). The halves and
+   the actions follow a 6-column grid, the details under each frame a
+   24-column one (12 per half); both share the 24px margin and 12px gutter.
+   Text is trimmed to its capitals and baseline (text-box), so Figma's
+   distances, which measure from the letters, apply as they are. It all
+   fits the window: the frames take the height the fixed rows leave. */
+#compare {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) var(--compare-actions-height) auto;
+  padding: var(--grid-margin) var(--grid-margin) 0;
   background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-eb-garamond);
+  -webkit-font-smoothing: antialiased;
+}
+
+.compare-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+}
+
+/* Summary | Compare: the dark one is where you are. */
+.compare-toggle {
+  display: flex;
+}
+
+.compare-toggle button {
+  width: var(--compare-toggle-width);
+  height: var(--compare-toggle-height);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--color-band);
+  color: var(--color-text);
+  font-size: var(--brand-size);
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+}
+
+.compare-toggle button[aria-pressed="true"] {
+  background: var(--color-row-active);
+  color: var(--color-surface);
+  font-style: italic;
+  cursor: default;
+}
+
+.compare-brand {
+  margin: 0;
+  font-size: var(--brand-size);
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+  text-box: trim-both cap alphabetic;
 }
 
 .compare-sides {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-4);
-  margin-top: var(--space-4);
+  column-gap: var(--grid-gutter);
+  min-height: 0;
+  margin-top: var(--space-5);
+}
+
+.compare-side {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) var(--compare-info-height);
+  row-gap: var(--compare-info-gap);
+  min-height: 0;
 }
 
 .compare-frame {
   position: relative;
   display: grid;
   place-items: center;
-  height: var(--compare-frame-height);
-  background: var(--color-thumb-bg);
+  min-height: 0;
   color: var(--color-sans-muted);
-  font-size: var(--text-s);
+  font-family: var(--font-instrument-sans);
+  font-size: var(--caption-size);
 }
 
 .compare-frame::after {
   content: attr(data-empty);
 }
 
+/* Pinned to the frame's top left, like the grid, rather than centred. */
 .compare-frame img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
+  object-position: left top;
+}
+
+/* Under each frame: where it sits in its family, Pick, and its details.
+   Each piece is placed by its capitals from the top, as in the Figma. */
+.compare-info {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--grid-gutter);
+}
+
+.compare-info > * {
+  position: absolute;
+  left: 0;
+  margin: 0;
+  text-box: trim-both cap alphabetic;
+}
+
+.compare-index {
+  grid-column: 1 / 3;
+  top: 0;
+  font-size: var(--intro-size);
+  font-weight: var(--font-weight-regular);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.compare-pick {
+  grid-column: 1 / 3;
+  top: var(--compare-pick-top);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-accent);
+  font: inherit;
+  font-size: var(--intro-size);
+  line-height: 1;
+  text-decoration: underline;
+  text-decoration-thickness: from-font;
+  text-underline-position: from-font;
+}
+
+/* Two rows, each under a line: name and size | shape; when | dates.
+   A value that differs from the other side is dark. */
+.compare-details {
+  grid-column: 3 / 9;
+  top: 0;
+  right: 0;
+  height: 100%;
+  color: var(--color-sans-muted);
+  font-family: var(--font-instrument-sans);
+  font-size: var(--caption-size);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--caption-line-height);
+  text-box: none;
+}
+
+.compare-details::before,
+.compare-details::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  left: 0;
+  border-top: 1px solid var(--color-band-line);
+}
+
+.compare-details::before {
+  top: 0;
+}
+
+.compare-details::after {
+  top: var(--compare-row-step);
+}
+
+.compare-details p {
+  position: absolute;
+  top: var(--compare-text-inset);
+  left: 0;
+  width: calc(50% - var(--grid-gutter) / 2);
+  margin: 0;
+  text-box: trim-both cap alphabetic;
+}
+
+.compare-details p:nth-child(even) {
+  left: calc(50% + var(--grid-gutter) / 2);
+}
+
+.compare-details p:nth-child(n + 3) {
+  top: calc(var(--compare-row-step) + var(--compare-text-inset));
+}
+
+.compare-details span {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.compare-details .name,
+.compare-details .differs {
+  color: var(--color-text);
+}
+
+/* The links for this step: the first ends on column 5, the last on the
+   margin, and the middle one sits centred between them. */
+.compare-actions {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  column-gap: var(--grid-gutter);
+  align-items: start;
+}
+
+.compare-actions-first {
+  display: flex; /* not a line of text, which would push the link down */
+  grid-column: 1 / 6;
+  justify-self: end;
+}
+
+.compare-actions-end {
+  display: flex;
+  grid-column: 6;
+  margin-left: calc(-1 * var(--grid-gutter)); /* starts where column 5 ends */
+}
+
+.compare-actions-end > :not(#compare-undo) {
+  margin: 0 auto;
+}
+
+.compare-actions button {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--compare-link-size);
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: underline;
+  text-decoration-thickness: from-font;
+  text-underline-position: from-font;
+  text-box: trim-both cap alphabetic;
+}
+
+.compare-actions button:disabled {
+  color: var(--color-muted);
+  cursor: default;
+}
+
+/* The family's versions in one row, edge to edge, scrolling sideways. */
+.compare-strip {
+  position: relative;
+  margin: 0 calc(-1 * var(--grid-margin));
+  border-top: 1px solid var(--color-muted);
+}
+
+.compare-strip::after {
+  content: "";
+  position: absolute;
+  top: var(--strip-cell-height);
+  right: 0;
+  left: 0;
+  border-top: 1px solid var(--color-muted);
+  pointer-events: none;
+}
+
+.version-grid {
+  display: flex;
+  overflow-x: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.version-grid li {
+  flex: 0 0 var(--strip-cell-width);
+  cursor: pointer;
+}
+
+.version-thumb {
+  position: relative;
+  height: var(--strip-cell-height);
+}
+
+.version-grid li + li .version-thumb {
+  border-left: 1px solid var(--color-muted);
+}
+
+.version-grid img {
+  position: absolute;
+  inset: var(--strip-thumb-inset) 0;
+  width: 100%;
+  height: calc(100% - 2 * var(--strip-thumb-inset));
+  object-fit: contain;
+}
+
+.version-grid li[data-state="out"] img {
+  opacity: 0.35;
+}
+
+/* When each version was exported. */
+.version-date {
+  height: var(--strip-date-height);
+  margin: 0;
+  padding-top: var(--space-2);
+  color: var(--color-sans-muted);
+  font-family: var(--font-instrument-sans);
+  font-size: var(--caption-size);
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  text-box: trim-both cap alphabetic;
+}
+
+/* Before the next family's versions, while asking "same piece?". */
+.version-grid .version-divider {
+  display: grid;
+  place-items: center;
+  height: var(--strip-cell-height);
+  padding: 0 var(--space-3);
+  border-left: 1px solid var(--color-muted);
+  color: var(--color-sans-muted);
+  font-family: var(--font-instrument-sans);
+  font-size: var(--caption-size);
+  font-weight: var(--font-weight-medium);
+  text-align: center;
+  cursor: default;
 }
 
 /* Space in compare: one version at a time, filling the screen. */
@@ -630,103 +926,6 @@ button:disabled {
 .flick-caption {
   color: var(--color-sans-muted);
   font-size: var(--text-s);
-}
-
-/* Details under each frame; what differs from the other side is darker and bold. */
-.compare-caption {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  margin-top: var(--space-3);
-  color: var(--color-sans-muted);
-  font-size: var(--text-s);
-}
-
-.compare-caption .name,
-.compare-caption .differs {
-  color: var(--color-text);
-}
-
-.compare-caption .differs {
-  font-weight: 600;
-}
-
-/* One row: the left pick under the left frame, the right pick under the right,
-   Keep both and Undo between them. */
-.compare-actions {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-4) 0;
-  border-bottom: 1px solid var(--color-line);
-}
-
-.compare-side-actions {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-3);
-}
-
-.version-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin: var(--space-4) 0 0;
-  padding: var(--space-1);
-  list-style: none;
-}
-
-.version-grid li {
-  flex: 0 0 var(--version-size);
-  cursor: pointer;
-}
-
-/* Between this family's versions and the next family's, while asking "same piece?". */
-.version-grid .version-divider {
-  flex-basis: 100%;
-  padding-top: var(--space-2);
-  border-top: 1px solid var(--color-line);
-  color: var(--color-sans-muted);
-  font-size: var(--text-s);
-  cursor: default;
-}
-
-.version-thumb {
-  position: relative;
-  aspect-ratio: 1;
-  background: var(--color-thumb-bg);
-}
-
-.version-grid img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.version-grid li[data-state="on-screen"] .version-thumb {
-  outline: 2px solid var(--color-text);
-}
-
-.version-grid li[data-state="out"] img {
-  opacity: 0.35;
-}
-
-/* When each version was exported: the quickest way to read their order. */
-.version-date {
-  margin: var(--space-1) 0 0;
-  color: var(--color-sans-muted);
-  font-size: var(--text-s);
-}
-
-.version-grid .mark {
-  position: absolute;
-  top: var(--space-1);
-  right: var(--space-1);
-  font-size: var(--text-s);
-  font-weight: 600;
 }
 
 /* Summary screen */

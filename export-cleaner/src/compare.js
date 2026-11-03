@@ -204,15 +204,10 @@ function exit(finished = false) {
 
 function render() {
   const pair = Boolean(slots.left && slots.right);
-  const left = queue.length + (pair && !boundary ? 1 : 0);
-  $('#compare-where').textContent =
-    `${familyDates(family)} · family ${families.indexOf(family) + 1} of ${families.length} · ` +
-    `${family.length} version${family.length > 1 ? 's' : ''} · ` +
-    (boundary ? 'same piece as the next family?' : left ? `${left} left to compare` : 'nothing left to compare');
   for (const side of ['left', 'right']) {
     const other = slots[side === 'left' ? 'right' : 'left'];
     showFrame(side, slots[side]);
-    renderCaption($(`#caption-${side}`), slots[side], other);
+    renderInfo(side, slots[side], other);
   }
   const comparing = pair && !boundary;
   $('#pick-left').hidden = !comparing;
@@ -229,43 +224,61 @@ function render() {
   onChange();
 }
 
-// The details under a frame. A detail that differs from the other side is
-// marked, since that difference is often the answer. The shot date only
-// shows when one side has one (design exports never do).
-function renderCaption(caption, entry, other) {
-  if (!entry) return caption.replaceChildren();
-  const noShot = !entry.shot?.taken && !other?.shot?.taken;
-  const shown = ([key]) => !(noShot && key === 'shot');
-  const mine = details(entry).filter(shown);
-  const theirs = other ? details(other).filter(shown) : null;
-  caption.replaceChildren(
-    ...mine.map(([key, text, compareBy = text], i) => {
-      const line = document.createElement('span');
-      line.textContent = text;
-      if (key === 'name') line.className = 'name';
-      else if (theirs && compareBy !== (theirs[i][2] ?? theirs[i][1])) line.className = 'differs';
-      return line;
-    }),
+// Under a frame: where the version sits in its family ("2/5") and its
+// details. A detail that differs from the other side is dark, since that
+// difference is often the answer. The shot date only shows when one side
+// has one (design exports never do).
+function renderInfo(side, entry, other) {
+  $(`#info-${side}`).hidden = !entry;
+  if (!entry) return;
+  const group = boundary?.includes(entry) ? boundary : family;
+  $(`#index-${side}`).textContent = `${group.indexOf(entry) + 1}/${group.length}`;
+  const mine = details(entry);
+  const theirs = other && details(other);
+  const line = (key, text = mine[key][0]) => {
+    const span = document.createElement('span');
+    span.textContent = text;
+    if (key === 'name') span.className = 'name';
+    else if (theirs && mine[key][1] !== theirs[key][1]) span.className = 'differs';
+    return span;
+  };
+  const block = (...lines) => {
+    const p = document.createElement('p');
+    p.append(...lines);
+    return p;
+  };
+  const shot = Boolean(entry.shot?.taken || other?.shot?.taken);
+  $(`#details-${side}`).replaceChildren(
+    block(line('name'), line('size')),
+    block(line('ratio'), line('pixels')),
+    block(line('label', 'Exported'), ...(shot ? [line('label', 'Shot')] : [])),
+    block(line('exported'), ...(shot ? [line('shot')] : [])),
   );
 }
 
-// [key, text shown, value compared with the other side (defaults to the text)]
+// { key: [text shown, value compared with the other side] }
 function details(entry) {
   const exported = entry.file.lastModified;
-  return [
-    ['name', entry.name],
-    ['exported', `Exported ${exportFormat.format(exported)}`, dayFormat.format(exported)], // same day counts as same
-    ['shot', entry.shot?.taken ? `Shot ${dayFormat.format(entry.shot.taken)}` : 'No shot date'],
-    ['shape', shape(entry)],
-    ['size', `${formatSize(entry.file.size)} · ${entry.ext.toUpperCase()}`],
-  ];
+  const [ratioText, pixels] = shape(entry);
+  return {
+    name: [entry.name, entry.name],
+    size: [formatSize(entry.file.size), entry.file.size],
+    ratio: [ratioText, ratioText],
+    pixels: [pixels, pixels],
+    label: ['', ''],
+    exported: [exportFormat.format(exported), dayFormat.format(exported)], // same day counts as same
+    shot: entry.shot?.taken ? [shotFormat.format(entry.shot.taken), shotFormat.format(entry.shot.taken)] : ['No shot date', ''],
+  };
 }
 
-// "1080 × 1350 · 4:5", or for a PDF its page count.
+// "Dec 5, 2039 at 3:23 PM"
+const shotFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+
+// ["4:5", "1080 × 1350"], or for a PDF its page count.
 function shape(entry) {
-  if (entry.ext === 'pdf') return `${entry.vectors?.length || 1} page${entry.vectors?.length > 1 ? 's' : ''}`;
-  if (!entry.width) return 'Size unknown';
-  return `${entry.width} × ${entry.height} · ${ratio(entry.width, entry.height)}`;
+  if (entry.ext === 'pdf') return [`${entry.vectors?.length || 1} page${entry.vectors?.length > 1 ? 's' : ''}`, 'PDF'];
+  if (!entry.width) return ['Size unknown', ''];
+  return [ratio(entry.width, entry.height), `${entry.width} × ${entry.height}`];
 }
 
 const RATIOS = [[1, 1], [4, 5], [5, 4], [2, 3], [3, 2], [3, 4], [4, 3], [9, 16], [16, 9], [1, 2], [2, 1]];
@@ -294,14 +307,13 @@ function versionItem(entry) {
   const onScreen = entry === slots.left || entry === slots.right;
   item.dataset.state = onScreen ? 'on-screen' : entry.decision === 'reject' ? 'out' : '';
   item.title = entry.name;
-  item.innerHTML = '<div class="version-thumb"><span class="mark"></span></div><p class="version-date"></p>';
+  item.innerHTML = '<div class="version-thumb"></div><p class="version-date"></p>';
   if (entry.thumb) {
     const img = document.createElement('img');
     img.src = entry.thumb;
     img.alt = '';
     item.firstChild.prepend(img);
   }
-  item.querySelector('.mark').textContent = { keep: '✓', reject: '✕' }[entry.decision] ?? '';
   item.querySelector('.version-date').textContent = exportFormat.format(entry.file.lastModified);
   item.addEventListener('click', () => challengeWith(entry));
   return item;

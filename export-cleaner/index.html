@@ -88,47 +88,49 @@
 
     <!-- Compare: two versions side by side; the winner stays, the next version takes the loser's place. -->
     <section class="screen" id="compare" hidden>
-      <!-- Pinned while the versions grid scrolls underneath. -->
-      <div class="compare-top">
-        <header class="bar">
-          <div class="view-toggle" role="group" aria-label="View">
-            <button id="view-families" aria-pressed="false">Families</button>
-            <button aria-pressed="true">Compare</button>
-          </div>
-          <p class="muted" id="compare-where"></p>
-        </header>
+      <header class="compare-head">
+        <div class="compare-toggle" role="group" aria-label="View">
+          <button id="view-families" type="button" aria-pressed="false">Summary</button>
+          <button type="button" aria-pressed="true">Compare</button>
+        </div>
+        <p class="compare-brand">Syca</p>
+      </header>
 
-        <div class="compare-sides">
-          <div class="compare-side">
-            <div class="compare-frame" id="frame-left"><img alt="" /></div>
-            <div class="compare-caption" id="caption-left"></div>
-          </div>
-          <div class="compare-side">
-            <div class="compare-frame" id="frame-right"><img alt="" /></div>
-            <div class="compare-caption" id="caption-right"></div>
+      <div class="compare-sides">
+        <div class="compare-side">
+          <div class="compare-frame" id="frame-left"><img alt="" /></div>
+          <div class="compare-info" id="info-left">
+            <p class="compare-index" id="index-left"></p>
+            <button class="compare-pick" id="pick-left" type="button">Pick</button>
+            <div class="compare-details" id="details-left"></div>
           </div>
         </div>
-
-        <div class="compare-actions">
-          <div class="compare-side-actions">
-            <button id="pick-left">← This one</button>
-            <button id="keep-alone">Keep</button>
-            <button id="reject-alone">Reject</button>
-          </div>
-          <div class="compare-side-actions">
-            <button id="keep-both">Keep both ↓</button>
-            <button id="not-the-same">Not the same (N)</button>
-            <button id="same-piece">Same piece (S)</button>
-            <button id="different">Different (D)</button>
-            <button id="compare-undo">Undo</button>
-          </div>
-          <div class="compare-side-actions">
-            <button id="pick-right">This one →</button>
+        <div class="compare-side">
+          <div class="compare-frame" id="frame-right"><img alt="" /></div>
+          <div class="compare-info" id="info-right">
+            <p class="compare-index" id="index-right"></p>
+            <button class="compare-pick" id="pick-right" type="button">Pick</button>
+            <div class="compare-details" id="details-right"></div>
           </div>
         </div>
       </div>
 
-      <ul class="version-grid" id="version-grid"></ul>
+      <!-- Which links show depends on the step: a pair, "same piece?", or a last lone version. -->
+      <div class="compare-actions">
+        <div class="compare-actions-first">
+          <button id="not-the-same" type="button">These are different</button>
+          <button id="different" type="button">Different</button>
+          <button id="reject-alone" type="button">Reject</button>
+        </div>
+        <div class="compare-actions-end">
+          <button id="keep-both" type="button">Keep both</button>
+          <button id="same-piece" type="button">Same piece</button>
+          <button id="keep-alone" type="button">Keep</button>
+          <button id="compare-undo" type="button">Undo</button>
+        </div>
+      </div>
+
+      <div class="compare-strip"><ul class="version-grid" id="version-grid"></ul></div>
 
       <!-- Space: the versions full size in one place; scrolling flicks through them. -->
       <div class="flick" id="flick" hidden>
