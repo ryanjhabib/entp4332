@@ -118,7 +118,7 @@ async function loadFolder(dir) {
   typeChosen = null;
   $('#start-folder-name').textContent = dir.name;
   $('#start-folder').hidden = false;
-  if (!free) throw new Error(`“${dir.name}” is already open in another Syca tab.`);
+  if (!free) throw new Error(`“${dir.name}” is already open in another Export Cleaner tab.`);
   sessionStorage.setItem(TAB_KEY, record.id);
   // Free the previous folder's thumbnails before replacing them.
   for (const entry of state.files) if (entry.thumb) URL.revokeObjectURL(entry.thumb);
