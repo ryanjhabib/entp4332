@@ -822,6 +822,13 @@ button:disabled {
   text-box: trim-both cap alphabetic;
 }
 
+/* Hover: the serif buttons turn italic. */
+.compare-toggle button:hover,
+.compare-pick:hover,
+.compare-actions button:not(:disabled):hover {
+  font-style: italic;
+}
+
 .compare-actions button:disabled {
   color: var(--color-muted);
   cursor: default;
