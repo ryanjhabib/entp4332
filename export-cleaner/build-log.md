@@ -486,3 +486,7 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - Compare hides "No shot date" when neither side has one (design exports never do); one-sided still shows, bold.
 - Space in compare opens the flick preview (Ryan: like Finder's Space preview / camera roll). Full-screen overlay, one canvas; scroll or arrows step oldest→newest, 40px per step, max one per wheel event. Versions fit the screen centred; thumbnails first, then each rendered at screen size via `renderAt`, nearest first. Space/Escape close. Includes the next family during "same piece?". Not yet: choosing from inside it, touch/swipe, zoom.
 - Memory note: each version is held at screen size while open (about 8–25 MB per version on a retina screen); freed on close.
+
+## Loading facts (2026-11-03)
+
+- Four facts added to the 20s rotation after the bat-wing one: Brassica varieties, fungi closer to animals, octopus/human eyes, euphorbias vs cacti. Skipped chitin, prestin and the genetic code as too technical. Longest stays 3–4 lines on desktop, 4–6 at 375px (bottom 694px of 812). Rotation observed at 20.5s.
