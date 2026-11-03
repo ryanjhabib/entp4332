@@ -4,9 +4,9 @@
 // anything clickable, a 20px upright line over text fields, and a 170px +
 // over a compare frame (click: the versions full size), which folds to a −
 // there (click: back). MSW's Safari workarounds aren't needed: the app is
-// Chrome only and has no page fades.
+// Chrome only. In screen fades it stays on top, live (style.css).
 
-const CLICKABLE = 'a[href], button:not(:disabled), [role="button"], [role="option"], label';
+const CLICKABLE = 'a[href], button:not(:disabled), [role="button"], [role="option"], label, .clears > li';
 const TEXT_FIELD = 'input[type="text"], textarea';
 
 // 'zoom' and 'zoomed' come from a data-cursor attribute.

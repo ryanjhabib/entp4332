@@ -265,7 +265,7 @@ function compareFamily(family) {
   openFamily(state.families, family, (finished, current) => {
     lastCompared = current;
     saveProgress();
-    if (finished) showSummary(state.files);
+    if (finished) showSummary(state.files, saveProgress);
     else showOverview(current);
   }, saveProgress);
 }
@@ -406,7 +406,7 @@ $('#view-compare').addEventListener('click', () => {
   const next = nextFamily();
   if (next) compareFamily(next);
 });
-$('#open-summary').addEventListener('click', () => showSummary(state.files));
+$('#open-summary').addEventListener('click', () => showSummary(state.files, saveProgress));
 $('#summary-back').addEventListener('click', showOverview);
 $('#apply').addEventListener('click', apply);
 $('#rescan').addEventListener('click', () => openFolder(state.dir));
