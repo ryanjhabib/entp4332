@@ -704,8 +704,10 @@ button:disabled {
   height: min(100cqh, 100cqw / var(--ratio, 1));
 }
 
-/* A picture whose edge is near the page's grey gets a line to show where it ends. */
-.compare-frame.blends img {
+/* A picture whose edge is near the page's grey gets a line to show where it
+   ends (the strip's too; the full-size view draws its own). */
+.compare-frame.blends img,
+.version-grid .blends img {
   outline: 1px solid var(--color-band-line);
   outline-offset: -1px;
 }
@@ -891,18 +893,22 @@ button:disabled {
 .version-thumb {
   position: relative;
   height: var(--strip-cell-height);
+  container-type: size;
 }
 
 .version-grid li + li .version-thumb {
   border-left: 1px solid var(--color-muted);
 }
 
+/* As big as fits between the insets, centred, sized to its own shape
+   (--ratio, from compare.js) so an edge line sits on the picture. */
 .version-grid img {
   position: absolute;
-  inset: var(--strip-thumb-inset) 0;
-  width: 100%;
-  height: calc(100% - 2 * var(--strip-thumb-inset));
-  object-fit: contain;
+  top: 50%;
+  left: 50%;
+  width: min(100cqw, (100cqh - 2 * var(--strip-thumb-inset)) * var(--ratio, 1));
+  height: min(100cqh - 2 * var(--strip-thumb-inset), 100cqw / var(--ratio, 1));
+  translate: -50% -50%;
 }
 
 .version-grid li[data-state="out"] img {

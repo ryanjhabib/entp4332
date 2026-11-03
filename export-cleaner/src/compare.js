@@ -309,9 +309,11 @@ function versionItem(entry) {
   item.innerHTML = '<div class="version-thumb"></div><p class="version-date"></p>';
   if (entry.thumb) {
     const img = document.createElement('img');
+    img.addEventListener('load', () => img.style.setProperty('--ratio', img.naturalWidth / img.naturalHeight));
     img.src = entry.thumb;
     img.alt = '';
     item.firstChild.prepend(img);
+    blendsIn(entry).then((blends) => item.classList.toggle('blends', blends));
   }
   item.querySelector('.version-date').textContent = exportFormat.format(entry.file.lastModified);
   item.addEventListener('click', () => challengeWith(entry));
@@ -455,6 +457,7 @@ async function loadFlick(current) {
     img.src = entry.thumb;
     await img.decode().catch(() => {});
     current.thumbs[i] = img;
+    await blendsIn(entry);
   }));
   if (flick !== current) return;
   drawFlick();
@@ -486,8 +489,16 @@ function drawFlick() {
     const width = picture.naturalWidth ?? picture.width;
     const height = picture.naturalHeight ?? picture.height;
     const scale = Math.min(flickCanvas.width / width, flickCanvas.height / height);
+    const [x, y, w, h] = [(flickCanvas.width - width * scale) / 2, (flickCanvas.height - height * scale) / 2, width * scale, height * scale];
     ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(picture, (flickCanvas.width - width * scale) / 2, (flickCanvas.height - height * scale) / 2, width * scale, height * scale);
+    ctx.drawImage(picture, x, y, w, h);
+    if (entry.blends) {
+      // The pale edge's line, as in the frames: 1px, inside the picture.
+      const line = devicePixelRatio;
+      ctx.strokeStyle = getComputedStyle(flickCanvas).getPropertyValue('--color-band-line');
+      ctx.lineWidth = line;
+      ctx.strokeRect(x + line / 2, y + line / 2, w - line, h - line);
+    }
   }
   $('#flick-caption').textContent = [
     `${index + 1} of ${entries.length}`,
