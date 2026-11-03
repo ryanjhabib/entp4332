@@ -853,7 +853,7 @@ button:disabled {
   background: transparent;
   color: var(--color-accent);
   font: inherit;
-  font-size: var(--intro-size);
+  font-size: var(--compare-link-size);
   line-height: 1;
   text-decoration: underline;
   text-decoration-thickness: from-font;
