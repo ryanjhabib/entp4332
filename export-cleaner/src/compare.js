@@ -159,16 +159,19 @@ function different() {
 }
 
 // Clicking a version in the grid brings it in as the newcomer; one that was
-// out comes back undecided. While asking "same piece?", only the next
-// family's versions can be swapped in, to check a different one.
+// out comes back undecided. While asking "same piece?", a next-family version
+// swaps in to check a different one, and one of this family's goes back to
+// comparing it against the final (the way to reopen a choice once Undo is gone).
 function challengeWith(entry) {
   if (entry === slots.left || entry === slots.right) return;
-  if (boundary && !boundary.includes(entry)) return;
+  const reopen = boundary && family.includes(entry);
+  if (boundary && !reopen && !boundary.includes(entry)) return;
   snapshot();
   if (entry.decision === 'reject') entry.decision = undefined;
   queue = queue.filter((waiting) => waiting !== entry);
   const side = slots.left && slots.right ? newcomer : slots.left ? 'right' : 'left';
   if (slots[side] && !boundary) queue.unshift(slots[side]);
+  if (reopen) boundary = null; // the next family's version just leaves the screen
   slots[side] = entry;
   newcomer = side;
   render();
