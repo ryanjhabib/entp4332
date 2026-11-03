@@ -497,10 +497,10 @@ document.addEventListener('keydown', (event) => {
   }
   if (event.repeat) return;
   if (command && event.key !== 'z') return; // leave ⌘S, ⌘D and the like to the browser
+  // No key decides which version wins: arrows read as moving around (they do
+  // step through versions when zoomed), and picking by them by accident
+  // rejected files. Picking is the Pick links' job.
   if (event.key === ' ') openFlick();
-  else if (event.key === 'ArrowLeft') pick('left');
-  else if (event.key === 'ArrowRight') pick('right');
-  else if (event.key === 'ArrowDown') keepBoth();
   else if (event.key === 'n') notTheSame();
   else if (event.key === 'Escape') exit();
   else if ((event.key === 'z' && command) || event.key === 'Backspace') undo();
