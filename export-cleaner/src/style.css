@@ -107,9 +107,9 @@
   --compare-link-gap: 66px; /* Figma 65.6–65.8 */
   --zoom-info-gap: 49px; /* zoomed frame to its details */
   --zoom-info-height: 140px; /* details top to the window's bottom */
-  --strip-cell-width: 144px;
-  --strip-cell-height: 120px; /* Figma 144, made shorter */
-  --strip-thumb-inset: 12px; /* above and below a 96px thumbnail */
+  --strip-cell-width: 120px; /* Figma 144; the longest date is 96px */
+  --strip-cell-height: 60px; /* Figma 144, then 120, halved */
+  --strip-thumb-inset: 6px; /* above and below a 48px thumbnail */
   --strip-date-height: 24px; /* Figma 20 */
   /* The + cursor (cursor.js), as on Mercy Stays Warm: in general, over
      anything clickable, over text fields (an upright line), and over a
