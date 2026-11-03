@@ -8,7 +8,8 @@ import { openFamily } from './compare.js';
 import { showSummary } from './summary.js';
 import { TRASH_FOLDER, requestWriteAccess, moveRejected } from './apply.js';
 import { prepareModel } from './embed.js';
-import { setUpMediaField } from './media.js';
+import { MEDIA_TYPES, setUpMediaField } from './media.js';
+import { getFolder, folderRecord, saveFolder, savedFiles, saveFile, pruneFiles, forgetFolder, forgetStale, claimFolder } from './store.js';
 import { startLoading, updateLoading, startScan, scannedFile, finishLoading, failLoading } from './loading.js';
 
 // Everything the app knows lives here.
@@ -19,7 +20,12 @@ const state = {
   families: [], // [[entry, ...], ...], each oldest first, similar families side by side
   mediaType: null, // the chosen MEDIA_TYPES entry; sets the grouping level
   description: '', // what was typed to find it
+  record: null, // this folder's saved progress (see store.js)
 };
+
+// Which folder this tab has open, so a refresh can pick it up again. Per tab:
+// each tab can have a different folder open.
+const TAB_KEY = 'syca-folder';
 
 // How many thumbnails are made at once. More doesn't finish sooner,
 // it just holds more full-size images in memory at the same moment.
@@ -69,6 +75,7 @@ setUpMediaField($('#describe-input'), $('#describe-list'), (type, text) => {
   state.mediaType = type;
   state.description = text;
   setLevel(type.level);
+  saveProgress();
   if (typeChosen) typeChosen();
   else if (scanning) show('loading');
 });
@@ -93,28 +100,47 @@ document.addEventListener('drop', async (event) => {
   }
 });
 
-// Reads the folder fresh, makes previews and groups them. Used for a newly
-// picked folder and to rescan the same one after applying.
+// Reads the folder, makes previews and groups them. Used for a newly picked
+// folder, to rescan the same one after applying, and to resume after a
+// refresh. Files scanned before (same name, size and date) reuse what was
+// saved, so only new or changed files are scanned; if none are, the saved
+// families come back as they were, merges and splits included.
 async function loadFolder(dir) {
   startLoading();
+  const record = await folderRecord(dir);
+  const free = await claimFolder(record.id);
+  if (free && !state.mediaType && record.typeId) restoreType(record);
   show(state.mediaType ? 'loading' : 'start');
   scanning = true;
   typeChosen = null;
   $('#start-folder-name').textContent = dir.name;
   $('#start-folder').hidden = false;
+  if (!free) throw new Error(`“${dir.name}” is already open in another Syca tab.`);
+  sessionStorage.setItem(TAB_KEY, record.id);
   // Free the previous folder's thumbnails before replacing them.
   for (const entry of state.files) if (entry.thumb) URL.revokeObjectURL(entry.thumb);
   const files = await readFolder(dir);
   const bytes = files.reduce((sum, entry) => sum + entry.file.size, 0);
   $('#start-folder-name').textContent = `${dir.name} (${formatSize(bytes, 0).toLowerCase()})`;
+  const saved = await savedFiles(record.id);
+  const todo = files.filter((entry) => {
+    const row = saved.get(entry.name);
+    if (row?.size !== entry.file.size || row.lastModified !== entry.file.lastModified) return true;
+    const { thumb, width, height, vectors, words, shot, colour } = row;
+    Object.assign(entry, { thumb: thumb && URL.createObjectURL(thumb), width, height, vectors, words, shot, colour });
+    entry.decision = record.decisions[entry.name];
+    return false;
+  });
   state.dir = dir;
+  state.record = record;
   state.files = files;
   state.families = [];
   $('#families').replaceChildren();
-  await makeThumbnails(files);
+  await makeThumbnails(files, todo);
   if (files !== state.files) return; // another folder was picked meanwhile
-  await describeImages(files);
+  await describeImages(files, todo);
   if (files !== state.files) return;
+  pruneFiles(record.id, new Set(files.map((entry) => entry.name))).catch((error) => console.warn('Couldn’t tidy saved files:', error));
   updateLoading(98, 'Gathering your versions');
   for (const entry of files) { renderCard(entry); showThumb(entry); }
   // Let the final scan update paint before synchronous grouping begins.
@@ -128,16 +154,54 @@ async function loadFolder(dir) {
     typeChosen = null;
     if (files !== state.files) return;
   }
-  regroup();
+  const families = !todo.length && level === record.level && savedFamilies(record, files);
+  if (families) {
+    state.families = families;
+    renderFamilies();
+    saveProgress();
+  } else regroup();
   await finishLoading();
   scanning = false;
   if (files === state.files) show('files');
 }
 
-// Fills in each card's thumbnail, a few files at a time.
-async function makeThumbnails(files) {
+// The saved families, when every file is still in one of them.
+function savedFamilies(record, files) {
+  const byName = new Map(files.map((entry) => [entry.name, entry]));
+  const families = record.families.map((names) => names.map((name) => byName.get(name)));
+  const placed = families.flat();
+  return placed.length === files.length && placed.every(Boolean) ? families : null;
+}
+
+// The media type and grouping level the folder was last seen with.
+function restoreType(record) {
+  const type = MEDIA_TYPES.find((option) => option.id === record.typeId);
+  if (!type) return;
+  state.mediaType = type;
+  state.description = record.description ?? '';
+  $('#describe-input').value = type.label;
+  setLevel(record.level ?? type.level);
+}
+
+// Saves the type, level, families and choices: after the scan and every
+// choice, so a refresh loses nothing.
+function saveProgress() {
+  const { record } = state;
+  if (!record) return;
+  Object.assign(record, {
+    typeId: state.mediaType?.id,
+    description: state.description,
+    level,
+    families: state.families.map((family) => family.map((entry) => entry.name)),
+    decisions: Object.fromEntries(state.files.filter((entry) => entry.decision).map((entry) => [entry.name, entry.decision])),
+  });
+  saveFolder(record).catch((error) => console.warn('Couldn’t save progress:', error));
+}
+
+// Fills in the thumbnails of files not seen before, a few at a time.
+async function makeThumbnails(files, todo) {
   updateLoading(0, 'Getting the full picture');
-  const queue = [...files];
+  const queue = [...todo];
   let done = 0;
   const work = async () => {
     // Stop early if the user has picked another folder meanwhile.
@@ -145,26 +209,28 @@ async function makeThumbnails(files) {
       const entry = queue.shift();
       Object.assign(entry, await makeThumbnail(entry));
       done += 1;
-      updateLoading(10 * done / Math.max(1, files.length));
+      updateLoading(10 * done / Math.max(1, todo.length));
     }
   };
   await Promise.all(Array.from({ length: THUMB_WORKERS }, work));
 }
 
-// Runs each file through the image model and reads its text (a PDF's, or an
+// Runs each new file through the image model and reads its text (a PDF's, or an
 // image's by OCR), one at a time: the model uses the whole GPU. The first time, the model itself downloads first.
-async function describeImages(files) {
-  if (files.some(entry => entry.thumb)) {
+// Each file is saved as soon as it's done, so a refresh mid-scan keeps the work.
+async function describeImages(files, todo) {
+  if (todo.some(entry => entry.thumb)) {
     updateLoading(10, 'Getting ready to scan');
     await prepareModel(percent => updateLoading(10 + percent * 0.05));
   }
   startScan();
   let done = 0;
-  for (const entry of files) {
+  for (const entry of todo) {
     if (files !== state.files) return;
     Object.assign(entry, await describe(entry, () => {}));
+    await saveFile(state.record.id, entry).catch((error) => console.warn(`Couldn’t save ${entry.name}:`, error));
     done += 1;
-    scannedFile(done, files.length);
+    scannedFile(done, todo.length);
   }
 }
 
@@ -185,6 +251,7 @@ function setLevel(name) {
 function regroup() {
   state.families = groupFiles(state.files, { minSimilarity: LEVELS[level] });
   renderFamilies();
+  saveProgress();
 }
 
 // The family the compare stream was last on, to pick up there when switching back.
@@ -195,9 +262,10 @@ let lastCompared = null;
 function compareFamily(family) {
   openFamily(state.families, family, (finished, current) => {
     lastCompared = current;
+    saveProgress();
     if (finished) showSummary(state.files);
     else showOverview(current);
-  });
+  }, saveProgress);
 }
 
 // The only code that changes anything on disk. Runs from the Apply click,
@@ -341,6 +409,12 @@ $('#open-summary').addEventListener('click', () => showSummary(state.files));
 $('#summary-back').addEventListener('click', showOverview);
 $('#apply').addEventListener('click', apply);
 $('#rescan').addEventListener('click', () => openFolder(state.dir));
+// Drops this folder's saved scan and choices, then starts over (files untouched).
+$('#forget').addEventListener('click', async () => {
+  await forgetFolder(state.record.id);
+  sessionStorage.removeItem(TAB_KEY);
+  location.reload();
+});
 $('#done-choose').addEventListener('click', chooseFolder);
 $('#settings').addEventListener('click', (event) => {
   const button = event.target.closest('[data-level]');
@@ -348,4 +422,26 @@ $('#settings').addEventListener('click', (event) => {
   setLevel(button.dataset.level);
   regroup();
 });
+// After a refresh, the folder this tab had open comes back. Chrome still
+// allows reading it while it has a tab open on the site; once Chrome has
+// been closed it asks again, which needs a click.
+async function resume() {
+  await forgetStale();
+  const id = sessionStorage.getItem(TAB_KEY);
+  const record = id && (await getFolder(id));
+  if (!record) return;
+  if ((await record.handle.queryPermission({ mode: 'read' })) === 'granted') return openFolder(record.handle);
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'start-resume';
+  button.textContent = `Resume ${record.name}`;
+  button.addEventListener('click', async () => {
+    if ((await record.handle.requestPermission({ mode: 'read' })) === 'granted') openFolder(record.handle);
+  });
+  $('#start-estimate').textContent = 'Saved in this tab';
+  $('#start-folder-name').replaceChildren(button);
+  $('#start-folder').hidden = false;
+}
+
 show(isSupported() ? 'start' : 'unsupported');
+if (isSupported()) resume().catch((error) => console.warn('Couldn’t resume:', error));

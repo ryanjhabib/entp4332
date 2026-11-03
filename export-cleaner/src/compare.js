@@ -29,12 +29,15 @@ let boundary = null; // the next family, while asking whether it's the same piec
 let apart = new Set(); // versions split off with "Not the same": not asked about again
 let history = []; // undo: a snapshot from before each choice
 let onExit = () => {};
+let onChange = () => {};
 
 // Opens the stream at a family. history is kept until the user leaves, so
-// Undo can step back across families and merges.
-export function openFamily(allFamilies, entries, exit) {
+// Undo can step back across families and merges. change() is called after
+// every choice (to save progress).
+export function openFamily(allFamilies, entries, exit, change) {
   families = allFamilies;
   onExit = exit;
+  onChange = change;
   history = [];
   apart = new Set();
   show('compare');
@@ -223,6 +226,7 @@ function render() {
   $('#reject-alone').hidden = pair;
   $('#compare-undo').disabled = !history.length;
   renderVersions();
+  onChange();
 }
 
 // The details under a frame. A detail that differs from the other side is
