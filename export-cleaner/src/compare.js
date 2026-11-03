@@ -16,7 +16,7 @@
 // Choices are stored on each file as entry.decision = 'keep' | 'reject';
 // nothing on disk changes.
 
-import { $, show, familyDates, exportFormat, dayFormat, formatSize } from './dom.js';
+import { $, show, familyDates, exportFormat, dayFormat, formatSize, cssTime } from './dom.js';
 import { makePreview, renderAt } from './thumbs.js';
 import { loopLine, loopOnHover } from './loop.js';
 import { fileSimilarity } from './group.js';
@@ -405,7 +405,7 @@ let flick = null; // { entries, index, thumbs, pictures, scrolled }
 function openFlick(start = slots.left ?? slots.right) {
   const entries = boundary ? [...family, ...boundary] : family;
   document.activeElement?.blur(); // so Space can't also press a button
-  $('#flick').hidden = false;
+  fadeFlick(true);
   sizeFlick();
   flick = { entries, index: entries.indexOf(start), thumbs: [], pictures: [], scrolled: 0 };
   drawFlick();
@@ -414,7 +414,30 @@ function openFlick(start = slots.left ?? slots.right) {
 
 function closeFlick() {
   flick = null;
-  $('#flick').hidden = true;
+  fadeFlick(false);
+}
+
+// Opening and closing fade over --screen-fade, as changing screen does; a
+// reversal mid-fade carries on from the opacity it had reached.
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+let flickFade = null;
+
+function fadeFlick(open) {
+  const overlay = $('#flick');
+  const from = flickFade ? getComputedStyle(overlay).opacity : Number(!open);
+  flickFade?.cancel();
+  flickFade = null;
+  overlay.hidden = false;
+  if (reducedMotion.matches) {
+    overlay.hidden = !open;
+    return;
+  }
+  const fade = overlay.animate([{ opacity: from }, { opacity: Number(open) }], { duration: cssTime(overlay, '--screen-fade'), easing: 'ease' });
+  flickFade = fade;
+  fade.finished.then(() => {
+    flickFade = null;
+    if (!open) overlay.hidden = true;
+  }).catch(() => {}); // cancelled by a reversal
 }
 
 function sizeFlick() {

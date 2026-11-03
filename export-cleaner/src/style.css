@@ -120,6 +120,8 @@
   /* Hover fades, as on Eternitie: also the loop's ease back (loop.js). */
   --hover-fade: 350ms;
   --ease-fade: ease;
+  /* Changing screen and opening the full-size view, as on Mercy Stays Warm. */
+  --screen-fade: 400ms;
 }
 
 [hidden] {
@@ -163,6 +165,10 @@ button {
   background: var(--color-surface);
   color: var(--color-text);
   cursor: pointer;
+  transition:
+    color var(--hover-fade) var(--ease-fade),
+    background-color var(--hover-fade) var(--ease-fade),
+    border-color var(--hover-fade) var(--ease-fade);
 }
 
 /* The intro owns the full viewport; the other app screens retain their layout. */
@@ -847,13 +853,6 @@ button:disabled {
   text-box: trim-both cap alphabetic;
 }
 
-/* Hover: the serif buttons turn italic. */
-.compare-toggle button:hover,
-.compare-pick:hover,
-.compare-actions button:not(:disabled):hover {
-  font-style: italic;
-}
-
 .compare-actions button:disabled {
   color: var(--color-muted);
   cursor: default;
@@ -1145,6 +1144,69 @@ code {
 
 @media (prefers-reduced-motion: reduce) {
   .loop-line {
+    transition: none;
+  }
+}
+
+/* Buttons: italic under the pointer. */
+@media (hover: hover) {
+  button:not(:disabled):hover {
+    font-style: italic;
+  }
+}
+
+/* Changing screen (dom.js show): the new screen fades in over the old,
+   which holds solid for the first half so nothing shared dips. The cursor
+   stays on top, live and unfaded. */
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-old(root) {
+  animation: var(--screen-fade) ease both screen-under;
+}
+
+::view-transition-new(root) {
+  animation: var(--screen-fade) ease both screen-in;
+}
+
+.cursor-layer {
+  view-transition-name: cursor;
+}
+
+::view-transition-group(cursor) {
+  z-index: 1000;
+  animation: none;
+}
+
+::view-transition-old(cursor) {
+  display: none;
+}
+
+::view-transition-new(cursor) {
+  animation: none;
+  mix-blend-mode: difference;
+}
+
+@keyframes screen-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes screen-under {
+  0%,
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button {
     transition: none;
   }
 }

@@ -1,3 +1,5 @@
+import { cssTime } from './dom.js';
+
 // Text too long for its line, as on Eternitie's directory (LoopText in
 // marksmenconnectdemo): the line fades out over its last 2em, and while its
 // host (the compare details, a family card) is hovered it loops left like a
@@ -41,9 +43,7 @@ export function loopLine(text, className = '') {
 
 // The hover fade's duration and easing, from the page's tokens.
 function fadeTiming(element) {
-  const style = getComputedStyle(element);
-  const fade = style.getPropertyValue('--hover-fade').trim();
-  return { duration: parseFloat(fade) * (fade.endsWith('ms') ? 1 : 1000), easing: style.getPropertyValue('--ease-fade').trim() };
+  return { duration: cssTime(element, '--hover-fade'), easing: getComputedStyle(element).getPropertyValue('--ease-fade').trim() };
 }
 
 // One loop: the text plus the gap to its copy (the copy's left padding).

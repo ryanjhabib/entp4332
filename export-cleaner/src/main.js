@@ -328,8 +328,7 @@ const familyElements = new WeakMap();
 
 function showOverview(focus) {
   renderFamilies();
-  show('files');
-  familyElements.get(focus)?.scrollIntoView({ block: 'center' });
+  show('files').then(() => familyElements.get(focus)?.scrollIntoView({ block: 'center' }));
 }
 
 // Once every file is described: its families, similar ones side by side.

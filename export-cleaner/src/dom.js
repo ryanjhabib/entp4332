@@ -2,9 +2,28 @@
 
 export const $ = (selector) => document.querySelector(selector);
 
-// Shows one screen and hides the rest.
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+
+// Changes screen. As on Mercy Stays Warm, the new screen fades in over the
+// old one, which holds and fades only in the second half (a view
+// transition; timing in style.css, --screen-fade). The first screen just
+// appears. Resolves once the new screen is showing.
 export function show(id) {
-  for (const screen of document.querySelectorAll('.screen')) screen.hidden = screen.id !== id;
+  const swap = () => {
+    for (const screen of document.querySelectorAll('.screen')) screen.hidden = screen.id !== id;
+  };
+  const current = document.querySelector('.screen:not([hidden])');
+  if (!current || current.id === id || !document.startViewTransition || reducedMotion.matches) {
+    swap();
+    return Promise.resolve();
+  }
+  return document.startViewTransition(swap).updateCallbackDone;
+}
+
+// A CSS time token in ms ("400ms", or ".4s" once the build has minified it).
+export function cssTime(element, name) {
+  const time = getComputedStyle(element).getPropertyValue(name).trim();
+  return parseFloat(time) * (time.endsWith('ms') ? 1 : 1000);
 }
 
 export const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
