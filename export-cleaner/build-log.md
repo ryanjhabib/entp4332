@@ -529,3 +529,9 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 
 - Renamed the views Families | Sort. Rebuilt Families, Summary, Done and the unsupported screen in Sort's language (header, 36px Garamond title at y 76, 12px sans counts, 24px Garamond links 66px apart, small toggles in the header-toggle style, full-width #AAA cell grid: 8 / 6 / 4 / 2 columns at ≥1400 / ≥1000 / ≥700 / below; sets span a column per version, solos one cell, packed densely). Ryan asked for a base to refine; no Figma for these yet.
 - Audit fixes: progress bar clamp, caught skipped-fade promises, brand right-aligned, Summary's Sort disabled when nothing's left, reopening sorted families from Families.
+
+## Waitlist wording (2026-11-03)
+
+- The waitlist borrowed the home's two-step sentence: “To get the Mac app first,” / “then enter your email...”. Changed only these two strings to “Be notified when Syca is ready for Mac.” / “Enter your email…”, so signup clearly means a launch notification. The product description, styling and signup behaviour were left as found.
+- Build passed (existing >500 kB chunk warning). Chrome checked at 1800×1043 and 900×800: the 36px heading stays one 39.6px line at both widths, with no horizontal overflow. No email was submitted. At edit time the underlying waitlist screen/module and its integration were another chat's uncommitted work; the copy cannot be committed independently until that base is committed.
+- Verification dead ends: an existing tab returned `Timed out after 10000ms waiting for CDP command Page.getFrameTree`; a fresh Chrome tab worked. A read-only layout probe returned `TypeError: parseFloat is not a function`; returning the measured height and line-height directly worked. These were browser-tool issues; no app workaround was added.
