@@ -74,3 +74,13 @@ A running record of every kind of folder and file the app has been run on, what 
 - **New file:** adding one file and refreshing scanned only that file (about 7 s, mostly first-use warm-up of OCR and the GPU model); choices kept, families regrouped.
 - **Forget / expiry:** Forget returned to the start screen and removed only that folder's records; all 6 files stayed on disk. A 31-day-old record was dropped at start, a 29-day-old one kept.
 - **Not checked:** the “Resume” click after Chrome is closed and reopened (test-storage folders are always readable); a refresh in the middle of a long scan (same per-file save path as the new-file test).
+
+## Full-flow audit after the Families rebuild (2026-11-03)
+
+- **Folder:** an 11-file test folder in Chrome's private storage (no user files): 3 sets (Sonoma ×3, radial ×2, horizon ×2), solos mac-purple, a pale paper PNG, a one-page PDF and an unreadable `broken.png`.
+- **Start → Families:** picked the folder, typed "mixed exports" (one row: Mixed), Enter → loading → Families: 3 sets · 4 solos; PDF and paper got the edge line; broken.png "No preview". Grouping Strict / Loose / Balanced and Show All / Sets / Solos worked; Enter on a focused cell opened Sort.
+- **Sort:** Keep both, Undo, Backspace with nothing to undo (no-op), These are different, ⌘Z, zoom arrows looping 3/3 → 1/3 → 2/3 → 3/3, Escape back, Pick, reopening an out version from the strip, then on to the next set; sets → solos (broken Keep, mac-purple Delete, PDF Keep, paper Delete) → Summary.
+- **Summary → Apply → Done → Rescan:** 6 to reject / 5 to keep matched every choice; Apply moved the 6 into `_to_delete` (all direct moves), Done reported 2.0 MB; Rescan showed 5 files, all kept, Sort disabled.
+- **Found and fixed:** the start bar's first frame could run backwards (scaleX −0.004); skipped screen fades threw uncaught promise errors; Syca sat left on Done; Summary's Sort was enabled with nothing to sort; a sorted family clicked in Families was skipped (now reopens: a set's final beside its newest out version, a solo's Keep / Delete).
+- **Production build** (`vite preview`): start screen, fonts, cursor load; CSS times minified to .35s / .4s and read correctly.
+- **Not checked:** native Finder drag, the Resume click after a Chrome restart, a real large folder on the new Families grid, phone widths (unsupported by design).

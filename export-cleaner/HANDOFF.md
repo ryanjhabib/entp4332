@@ -17,7 +17,7 @@ A Chrome web app (class project, ENTP 4332) that helps designers and photographe
 ## How it works
 **Intro UI update (2026-11-02):** the start screen now says Syca, with “To start, drag or select a folder”, a native picker on italic/underlined select, and whole-intro folder dropping. Five stretch columns, 24px margins, 12px gutters, 36px Garamond Regular intro, 16px Medium brand/caption, `#EEEEEE` backdrop and a centered 2px white rule. Garamond uses antialiased rendering, matching RH Studio; the caption stays weight 500. Font files are bundled locally. See `TESTING.md` for measured layouts and input-test limits. Save progress remains unbuilt; CSS hot updates generally retain state, but HTML/JavaScript reloads can reset it.
 
-**The flow:** choose/drop folder → the scan starts on the start screen (the white rule is its progress bar) → describe the media type (`src/media.js`; stored, not used for grouping yet) → one loading screen for the rest of the scan (read files → thumbnails → model preparation → describe each file → group) → overview (Families) ⇄ Compare stream → Summary → Apply → Done.
+**The flow (2026-11-03):** choose/drop folder → the scan starts on the start screen (the white rule is its progress bar) → describe the media type (`src/media.js`; sets the starting grouping level) → loading screen → **Families** (sets first, then solos, as a full-width grid of cells) ⇄ **Sort** (`src/compare.js`: pairs in a set, winner stays on; then solos one at a time with Keep / Delete; zoom view on Space or a frame click) → Summary (click a file to undo its choice) → Apply → Done. Every screen after the start uses the Figma's language: the Families | Sort header, 36px Garamond titles, 12px Instrument Sans details, 24px Garamond links. Saved progress per folder (`src/store.js`), the MSW cursor (`src/cursor.js`), Eternitie's overflow loop (`src/loop.js`), MSW's screen fades (`fade()` in `src/dom.js`).
 
 | File | Job |
 |---|---|
@@ -32,7 +32,8 @@ A Chrome web app (class project, ENTP 4332) that helps designers and photographe
 | `src/ocr.js` | Tesseract.js, English, words at ≥80% confidence |
 | `src/metadata.js` | exifr: capture moment + camera, Lightroom `OriginalDocumentID` |
 | `src/group.js` | `nameStem`, `fileSimilarity`, strongest-first linking with a different-documents check, `orderByLook` |
-| `src/compare.js` | the compare stream: winner stays on, Keep both, Same piece (S), Different (D), Not the same (N), undo, versions grid |
+| `src/compare.js` | Sort: winner stays on within a family, Keep both, These are different (N), Undo; sets first then solos (Keep / Delete, MSW in-frame zoom); zoom view with looping arrows; reopening a sorted family from Families |
+| `src/store.js`, `src/cursor.js`, `src/loop.js` | saved progress (IndexedDB); MSW's + cursor; Eternitie's overflow fade + hover loop |
 | `src/summary.js`, `src/apply.js` | summary screen; move rejects with `FileSystemFileHandle.move()`, falling back to copy → verify → remove |
 | `src/dom.js`, `src/style.css` | helpers and formats; every colour, size and space is a CSS custom property in `:root` |
 
@@ -52,8 +53,8 @@ A Chrome web app (class project, ENTP 4332) that helps designers and photographe
 ## Open issues and next steps
 1. **Grouping quality:** follow the order in `INSIGHTS.md`. Short-text phrase rule → multi-scale crop matching → low-content guard → per-file content type replacing the levels → measure DINOv2-base → opt-in AI judge / grouping prompt.
 2. ~~Save progress~~ **Built 2026-11-03** (`src/store.js`): per-folder scan rows + choices in IndexedDB, per-tab folder in sessionStorage, Web Locks for one tab per folder, Forget button, 30-day expiry. Open: new files trigger a full regroup (manual splits/merges are redone); the Resume click after a Chrome restart is untested.
-3. **Compare:** switching to Families during a "same piece?" check skips that check on return; changing the grouping level undoes manual S/N fixes. Ideas agreed for later: flicker (spacebar swaps A/B in place) and linked zoom.
-4. **Overview UX** for Ryan's design pass: multi-file families before singles; very large folders.
+3. **Sort:** changing the grouping level undoes manual splits (N). No progress-through-folder indicator; no marker for which strip cells are on screen. MSW's in-frame zoom is on solos only (offered for pairs' zoom view).
+4. **Families / Summary / Done** are a first pass in the Figma language (built 2026-11-03 without a Figma): Ryan to refine. Very large folders (thousands of cells) are untested for speed. Phone widths aren't designed (phones can't run the app anyway).
 5. **Deploy to Vercel** (Hobby): ONNX runtime wasm is 26.9 MB (6.8 MB compressed) per first visit; the model and OCR data come from CDNs, not Vercel. Push only when Ryan says so.
 
 ## Status

@@ -524,3 +524,8 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - 2026-11-03: arrows no longer pick (they rejected 7 of Ryan's files by accident); Summary cards clear their choice on click; compare/zoom layout swapped per Figma (details left, Pick right at 515 = 2.5px off column 8, links left-aligned 66px apart).
 - 2026-11-03: solos (Figma 19:123): Keep / Delete on the zoom layout, MSW's in-frame zoom (1.6x, 300ms, pans with the pointer); compare does every set, then solos, then summary. Families list sets then solos with All / Sets / Solos. Fixed in testing: the fade put the thumbnail back over the loaded original.
 - 2026-11-03: Compare strip halved (cells 120 × 60, thumbs 48); zoom arrows loop (scroll stays clamped); zoom/solo details pinned 20px under the frame; compare and zoom frames locked to 3:2 (container units on .compare-sides / .zoom). Tried and dropped: details following each picture's own height (Ryan wants them pinned to the 3:2 frame).
+
+## Families | Sort, Families rebuild, audit (2026-11-03, overnight)
+
+- Renamed the views Families | Sort. Rebuilt Families, Summary, Done and the unsupported screen in Sort's language (header, 36px Garamond title at y 76, 12px sans counts, 24px Garamond links 66px apart, small toggles in the header-toggle style, full-width #AAA cell grid: 8 / 6 / 4 / 2 columns at ≥1400 / ≥1000 / ≥700 / below; sets span a column per version, solos one cell, packed densely). Ryan asked for a base to refine; no Figma for these yet.
+- Audit fixes: progress bar clamp, caught skipped-fade promises, brand right-aligned, Summary's Sort disabled when nothing's left, reopening sorted families from Families.
