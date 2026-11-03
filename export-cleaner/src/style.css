@@ -104,7 +104,6 @@
   --compare-actions-height: 44px; /* actions' capitals to the strip */
   --compare-link-size: 24px;
   --compare-link-gap: 66px; /* Figma 65.6–65.8 */
-  --compare-pick-offset: -2.5px; /* "2/5" and Pick: Figma 515px, column 8 starts at 517.5 */
   --zoom-info-gap: 49px; /* zoomed frame to its details */
   --zoom-info-height: 140px; /* details top to the window's bottom */
   --strip-cell-width: 144px;
@@ -732,12 +731,10 @@ button:disabled {
   text-box: trim-both cap alphabetic;
 }
 
-/* "2/5" and Pick sit right of the details, at 491px into the half: 2.5px
-   left of column 8 in the Figma, kept as drawn. */
+/* "2/5" and Pick sit right of the details, from column 8. */
 .compare-index {
   grid-column: 8 / -1;
   top: 0;
-  left: var(--compare-pick-offset);
   font-size: var(--intro-size);
   font-weight: var(--font-weight-regular);
   line-height: 1;
@@ -747,7 +744,6 @@ button:disabled {
 .compare-pick {
   grid-column: 8 / -1;
   top: var(--compare-pick-top);
-  left: var(--compare-pick-offset);
   padding: 0;
   border: 0;
   border-radius: 0;
