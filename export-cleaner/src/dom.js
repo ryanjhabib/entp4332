@@ -13,7 +13,12 @@ export function fade(change) {
     change();
     return Promise.resolve();
   }
-  return document.startViewTransition(change).updateCallbackDone;
+  const transition = document.startViewTransition(change);
+  // A fade is skipped when another starts or the tab is hidden; the change
+  // still happens, so its rejected promises mean nothing.
+  transition.ready.catch(() => {});
+  transition.finished.catch(() => {});
+  return transition.updateCallbackDone;
 }
 
 // Changes screen, with the fade. The first screen just appears.
