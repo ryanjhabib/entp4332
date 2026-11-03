@@ -24,6 +24,7 @@ let queue = []; // versions still to take a turn, next first
 let history = []; // undo: a snapshot from before each choice
 let onExit = () => {};
 let onChange = () => {};
+let revisit = null; // the family opened from Families, shown even if it's all decided
 
 // Opens the stream at a family. history is kept until the user leaves, so
 // Undo can step back across families and splits. change() is called after
@@ -33,6 +34,7 @@ export function openFamily(allFamilies, entries, exit, change) {
   onExit = exit;
   onChange = change;
   history = [];
+  revisit = entries;
   show('compare');
   startFamily(entries);
 }
@@ -42,10 +44,15 @@ const contending = (entries) => entries.filter((entry) => entry.decision !== 're
 // The newest version starts on the left (most likely the final), the next
 // newest on the right; the rest wait their turn, newest first. Versions
 // already out stay out: click one in the versions grid to bring it back.
-// A family opened with one version left shows it alone, for Keep or Reject.
+// A family opened with one version left shows it alone, for Keep or Delete.
+// One opened from Families that's already sorted shows its final beside the
+// newest version that's out, to change the choice.
 function startFamily(entries) {
   family = entries;
   const contenders = contending(entries).reverse();
+  if (entries === revisit && contenders.length < 2) {
+    contenders.push(...entries.filter((entry) => entry.decision === 'reject').reverse());
+  }
   if (!contenders.length) contenders.push(entries.at(-1));
   [slots.left, slots.right = null, ...queue] = contenders;
   newcomer = 'right';
@@ -53,7 +60,10 @@ function startFamily(entries) {
   else afterChoice();
 }
 
+// Before every choice. Any choice ends the revisit: from then on, finished
+// families are skipped again.
 function snapshot() {
+  revisit = null;
   history.push({
     families: [...families],
     family,
@@ -116,7 +126,7 @@ const toSort = (f) => contending(f).length === 1 && !contending(f)[0].decision;
 function afterChoice() {
   if (slots.left && slots.right) return render();
   const lone = slots.left ?? slots.right;
-  if (lone && !lone.decision) return render();
+  if (lone && (!lone.decision || family === revisit)) return render();
   const after = families.slice(families.indexOf(family) + 1);
   const next = after.find(toCompare) ?? families.find(toCompare) ?? after.find(toSort) ?? families.find(toSort);
   if (next) return startFamily(next);
@@ -174,7 +184,7 @@ function render() {
   $('#not-the-same').title = pair ? `Moves ${slots[newcomer].name} into a family of its own` : '';
   $('#compare-undo').disabled = !history.length;
   const lone = pair ? null : slots.left ?? slots.right;
-  showSolo(lone && !lone.decision ? lone : null);
+  showSolo(lone && (!lone.decision || family === revisit) ? lone : null);
   renderVersions();
   onChange();
 }
