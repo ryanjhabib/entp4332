@@ -107,6 +107,16 @@
   --strip-cell-height: 120px; /* Figma 144, made shorter */
   --strip-thumb-inset: 12px; /* above and below a 96px thumbnail */
   --strip-date-height: 24px; /* Figma 20 */
+  /* The + cursor (cursor.js), as on Mercy Stays Warm: in general, over
+     anything clickable, over text fields (an upright line), and over a
+     compare frame (a − in the full-size view). */
+  --cursor-size: 10px;
+  --cursor-size-link: 20px;
+  --cursor-size-text: 20px;
+  --cursor-size-zoom: 170px;
+  --cursor-stroke: 0.5px;
+  --cursor-fade: 250ms; /* fading in, and changing size */
+  --cursor-fold: 300ms; /* a line folding away */
 }
 
 [hidden] {
@@ -972,4 +982,109 @@ code {
   margin: 0;
   font-size: var(--text-s);
   font-weight: 600;
+}
+
+/* The cursor (cursor.js), desktop with a mouse or trackpad: a thin + on the
+   pointer in a window-sized layer above everything, white inverted against
+   what's under it. Its size follows what it's over; a line folds away for
+   the text cursor and the −. */
+.cursor-layer {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root.has-cursor,
+  :root.has-cursor * {
+    cursor: none !important;
+  }
+
+  :root.has-cursor img {
+    -webkit-user-drag: none;
+  }
+
+  .cursor-layer {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    overflow: hidden;
+    pointer-events: none;
+    mix-blend-mode: difference;
+  }
+
+  .cursor {
+    --size: var(--cursor-size);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--size);
+    height: var(--size);
+    margin: calc(var(--size) / -2) 0 0 calc(var(--size) / -2);
+    opacity: 0;
+    will-change: transform; /* its own layer: moving it repaints nothing */
+    transition:
+      opacity var(--cursor-fade) ease,
+      width var(--cursor-fade) ease,
+      height var(--cursor-fade) ease,
+      margin var(--cursor-fade) ease;
+  }
+
+  .cursor.is-shown {
+    opacity: 1;
+  }
+
+  .cursor[data-mode="link"] {
+    --size: var(--cursor-size-link);
+  }
+
+  .cursor[data-mode="text"] {
+    --size: var(--cursor-size-text);
+  }
+
+  .cursor[data-mode="zoom"],
+  .cursor[data-mode="zoomed"] {
+    --size: var(--cursor-size-zoom);
+  }
+
+  .cursor::before,
+  .cursor::after {
+    content: "";
+    position: absolute;
+    background: var(--color-surface);
+    transition:
+      transform var(--cursor-fold) ease,
+      opacity var(--cursor-fold) ease;
+  }
+
+  .cursor::before {
+    top: calc(50% - var(--cursor-stroke) / 2);
+    right: 0;
+    left: 0;
+    height: var(--cursor-stroke);
+  }
+
+  .cursor::after {
+    top: 0;
+    bottom: 0;
+    left: calc(50% - var(--cursor-stroke) / 2);
+    width: var(--cursor-stroke);
+  }
+
+  .cursor[data-mode="text"]::before {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+
+  .cursor[data-mode="zoomed"]::after {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor,
+  .cursor::before,
+  .cursor::after {
+    transition: none;
+  }
 }

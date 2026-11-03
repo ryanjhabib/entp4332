@@ -307,6 +307,7 @@ function versionItem(entry) {
   const onScreen = entry === slots.left || entry === slots.right;
   item.dataset.state = onScreen ? 'on-screen' : entry.decision === 'reject' ? 'out' : '';
   item.title = entry.name;
+  item.role = 'button';
   item.innerHTML = '<div class="version-thumb"></div><p class="version-date"></p>';
   if (entry.thumb) {
     const img = document.createElement('img');
@@ -333,6 +334,8 @@ async function showFrame(side, entry) {
   img.hidden = !entry?.thumb;
   img.src = entry?.thumb ?? '';
   frame.dataset.empty = entry && !entry.thumb ? 'No preview' : !entry ? 'Only version' : '';
+  if (entry?.thumb) frame.dataset.cursor = 'zoom'; // the big + (cursor.js): click to see it full size
+  else delete frame.dataset.cursor;
   if (!entry?.thumb) return;
   let url;
   try {
@@ -359,12 +362,13 @@ const FLICK_STEP = 40; // px of scrolling per version
 const flickCanvas = $('#flick canvas');
 let flick = null; // { entries, index, thumbs, pictures, scrolled }
 
-function openFlick() {
+// Opens on `start`: the clicked frame's version, or for Space the left one.
+function openFlick(start = slots.left ?? slots.right) {
   const entries = boundary ? [...family, ...boundary] : family;
   document.activeElement?.blur(); // so Space can't also press a button
   $('#flick').hidden = false;
   sizeFlick();
-  flick = { entries, index: entries.indexOf(slots.left ?? slots.right), thumbs: [], pictures: [], scrolled: 0 };
+  flick = { entries, index: entries.indexOf(start), thumbs: [], pictures: [], scrolled: 0 };
   drawFlick();
   loadFlick(flick);
 }
@@ -454,6 +458,14 @@ window.addEventListener('resize', () => {
   sizeFlick();
   drawFlick();
 });
+
+// A click on a frame opens the full-size view on that version; a click there closes it.
+for (const side of ['left', 'right']) {
+  $(`#frame-${side}`).addEventListener('click', () => {
+    if (slots[side]?.thumb) openFlick(slots[side]);
+  });
+}
+$('#flick').addEventListener('click', closeFlick);
 
 $('#pick-left').addEventListener('click', () => pick('left'));
 $('#pick-right').addEventListener('click', () => pick('right'));

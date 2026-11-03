@@ -10,6 +10,7 @@ import { TRASH_FOLDER, requestWriteAccess, moveRejected } from './apply.js';
 import { prepareModel } from './embed.js';
 import { MEDIA_TYPES, setUpMediaField } from './media.js';
 import { getFolder, folderRecord, saveFolder, savedFiles, saveFile, pruneFiles, forgetFolder, forgetStale, claimFolder } from './store.js';
+import { setUpCursor } from './cursor.js';
 import { startLoading, updateLoading, startScan, scannedFile, finishLoading, failLoading } from './loading.js';
 
 // Everything the app knows lives here.
@@ -443,5 +444,6 @@ async function resume() {
   $('#start-folder').hidden = false;
 }
 
+setUpCursor();
 show(isSupported() ? 'start' : 'unsupported');
 if (isSupported()) resume().catch((error) => console.warn('Couldn’t resume:', error));
