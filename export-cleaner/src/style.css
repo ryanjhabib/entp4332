@@ -667,23 +667,29 @@ button:disabled {
   text-box: trim-both cap alphabetic;
 }
 
+/* The frames are 3:2 boxes, a half's width (834 × 556 at 1728 wide),
+   smaller only when the window is too short for that and the details. */
 .compare-sides {
   display: grid;
   grid-template-columns: 1fr 1fr;
   column-gap: var(--grid-gutter);
   min-height: 0;
   margin-top: var(--space-5);
+  container-type: size;
 }
 
 .compare-side {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) var(--compare-info-height);
+  grid-template-rows: auto var(--compare-info-height);
+  align-content: start;
   row-gap: var(--compare-info-gap);
   min-height: 0;
 }
 
 .compare-frame {
   position: relative;
+  width: min(100%, (100cqh - var(--compare-info-gap) - var(--compare-info-height)) * 3 / 2);
+  aspect-ratio: 3 / 2;
   display: grid;
   place-items: center;
   min-height: 0;
@@ -938,11 +944,13 @@ button:disabled {
   display: none;
   grid-row: 2 / -1;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  grid-template-rows: minmax(0, 1fr) var(--zoom-info-height);
+  grid-template-rows: auto var(--zoom-info-height);
+  align-content: start;
   column-gap: var(--grid-gutter);
   row-gap: var(--zoom-info-gap);
   min-height: 0;
   margin-top: var(--space-5);
+  container-type: size;
 }
 
 #compare:is(.is-zoomed, .is-solo) .zoom {
@@ -953,10 +961,13 @@ button:disabled {
   display: none;
 }
 
+/* A 3:2 box across columns 1–4 (1116 × 744 at 1728 wide), smaller only
+   when the window is too short for that and the details. */
 .zoom-frame {
   position: relative;
   grid-column: 1 / 5;
-  min-height: 0;
+  width: min(100%, (100cqh - var(--zoom-info-gap) - var(--zoom-info-height)) * 3 / 2);
+  aspect-ratio: 3 / 2;
 }
 
 .zoom-frame canvas {
