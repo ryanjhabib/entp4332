@@ -480,3 +480,9 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 ## General renamed Mixed (2026-11-02)
 
 - Ryan picked "Mixed" over General / Random ("random" reads like the grouping is random; "Mixed Media" means one artwork in art). id and label are now `mixed`; "general" joined its keywords. Older entries above still say General.
+
+## Shot date hidden when empty; Space flick preview (2026-11-03)
+
+- Compare hides "No shot date" when neither side has one (design exports never do); one-sided still shows, bold.
+- Space in compare opens the flick preview (Ryan: like Finder's Space preview / camera roll). Full-screen overlay, one canvas; scroll or arrows step oldest→newest, 40px per step, max one per wheel event. Versions fit the screen centred; thumbnails first, then each rendered at screen size via `renderAt`, nearest first. Space/Escape close. Includes the next family during "same piece?". Not yet: choosing from inside it, touch/swipe, zoom.
+- Memory note: each version is held at screen size while open (about 8–25 MB per version on a retina screen); freed on close.
