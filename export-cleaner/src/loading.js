@@ -2,6 +2,10 @@ import { $ } from './dom.js';
 
 const FACTS = [
   'A bat’s wing, a dolphin’s flipper, and a human hand share the same underlying skeletal plan.',
+  'Broccoli, kale, cauliflower, and Brussels sprouts are all the same species.',
+  'Mushrooms are more closely related to animals than to plants.',
+  'Octopuses and humans evolved camera-like eyes completely independently.',
+  'Some euphorbias look almost exactly like cacti, but the two evolved that shape independently.',
 ];
 const SCAN_MESSAGES = ['Scanning for similarities', 'Finding patterns', 'Comparing your versions', 'Tracing the details'];
 const FACT_INTERVAL = 20_000;
