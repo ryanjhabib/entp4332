@@ -767,9 +767,11 @@ button:disabled {
   top: calc(var(--compare-row-step) + var(--compare-text-inset));
 }
 
+/* Long names end in "…". Clipped sideways only: the lines are trimmed to the
+   baseline, so clipping all round would cut off descenders. */
 .compare-details span {
   display: block;
-  overflow: hidden;
+  overflow-x: clip;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
