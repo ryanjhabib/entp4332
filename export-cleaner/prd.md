@@ -45,13 +45,22 @@
 
 ## Evidence that shaped the product
 
-- **"Find the final" before "free up space" (2026-11-01).** Testing on my own folders, the useful moment was seeing every version of one photo together, not the gigabytes saved. Finding the final is a weekly need; cleanup is occasional.
-- **Compare replaced swiping (2026-11-01).** The first version swiped through files one by one to keep or delete. That made it a cleanup app, so it became a side-by-side compare for choosing the final.
+### From the Discovery Report
+
+The customer interviews were synthetic (AI personas: Maya, 29, a freelance brand designer; Jordan, 21, a design student), so these are hypotheses still to test with real designers.
+
+- **"Find the final" before "free up space" (2026-11-01).** Maya pays for 2 TB and never runs out, so space does nothing for her: "find the version you actually liked" is her real annoyance. She spent 15 minutes opening files to pick the best 3 of 60–70 poster exports. Jordan freed 20 GB and left every poster version untouched: "the hardest part isn't the mess, it's not knowing which version mattered." My own folders said the same.
+- **Grouped by what files look like, not their names.** Both personas' names stop meaning anything: `poster2_new_ACTUAL.png`, `poster_FINAL_actual.png`, `Frame 12.png`, `thing_final.png`. Names are only a weak tie-breaker (+0.05).
+- **The designer decides; the AI only groups.** The report's difference from duplicate finders like Gemini 2, PhotoSweeper and dupeGuru is the review: the designer judges versions by intent, not by similarity. Compare replaced swiping (2026-11-01) for the same reason: swiping made it a keep-or-delete app, so it became a side-by-side compare for choosing the final.
+- **Nothing is permanently deleted, and everything is shown first.** Fear of deleting the wrong version is why both personas never clean ("the second I delete a file I'll want it back"; "I'd only trust it if it showed me exactly what it was deleting first"). So Apply only moves rejects to `_to_delete`, undecided files are never touched, and Summary lists every choice, each one undoable, before anything moves.
+- **Free in the browser, paid as a Mac app.** Neither persona showed clear willingness to pay, and Jordan won't pay at all. So the web app is free, and the Mac app waitlist (M6) is a first measure of whether anyone wants the paid version.
+
+### From testing
+
 - **Saved progress (M5).** The 3-year Lightroom folder (1,286 photos) took 41 minutes to scan, and a refresh threw all of it away.
 - **Grouping levels and media types.** Product flat-lays showed that no single strictness is right for every folder: Strict separates two different jackets but also splits the 3 shots of one bag. The media type now sets the level.
 - **Short-text phrase rule.** Graphic design work is often a few distinctive words. Two zooms of the same "let me taste eternity" print stayed apart until matching words counted as evidence.
 - **Compare stays inside one family; arrow keys no longer pick.** Arrow keys rejected 7 files by accident during a real session.
-- [Placeholder for Ryan: findings from the Discovery Report and the synthetic interviews that shaped these choices.]
 
 ## Testing
 
