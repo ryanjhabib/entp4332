@@ -443,7 +443,9 @@ $('#view-compare').addEventListener('click', () => {
   if (next) compareFamily(next);
 });
 $('#open-summary').addEventListener('click', () => showSummary(state.files, saveProgress));
-$('#summary-back').addEventListener('click', showOverview);
+$('#summary-back').addEventListener('click', () => showOverview());
+$('#summary-families').addEventListener('click', () => showOverview());
+$('#summary-sort').addEventListener('click', () => $('#view-compare').click());
 $('#apply').addEventListener('click', apply);
 $('#rescan').addEventListener('click', () => openFolder(state.dir));
 // Drops this folder's saved scan and choices, then starts over (files untouched).

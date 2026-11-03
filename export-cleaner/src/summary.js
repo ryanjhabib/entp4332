@@ -21,8 +21,7 @@ export function showSummary(files, change = onChange) {
     `${plural(files.length, 'file')} · ${groups.reject.length} to reject · ${groups.keep.length} to keep · ` +
     `${groups.undecided.length} undecided · nothing has changed yet`;
   const rejectBytes = groups.reject.reduce((sum, entry) => sum + entry.file.size, 0);
-  $('#summary-space').hidden = !groups.reject.length;
-  $('#summary-space').textContent = `Rejecting these frees ${formatSize(rejectBytes)}`;
+  $('#summary-space').textContent = groups.reject.length ? `Rejecting these frees ${formatSize(rejectBytes)}` : 'Nothing marked to reject yet';
   $('#apply').hidden = !groups.reject.length;
   $('#apply').textContent = `Move ${plural(groups.reject.length, 'file')} to _to_delete`;
   $('#apply-status').textContent = '';

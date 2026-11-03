@@ -161,11 +161,6 @@ p {
   margin: 0 0 var(--space-4);
 }
 
-.muted {
-  color: var(--color-sans-muted);
-  font-size: var(--text-s);
-}
-
 button {
   font: inherit;
   padding: var(--space-2) var(--space-4);
@@ -482,20 +477,6 @@ button {
 button:disabled {
   opacity: 0.4;
   cursor: default;
-}
-
-.bar {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
-/* Screens not yet in the Figma's language. */
-#summary,
-#done,
-#unsupported {
-  padding: var(--space-6);
 }
 
 /* Families (main.js) in Sort's design language: the same header, the
@@ -1135,20 +1116,43 @@ button:disabled {
   grid-column: 1 / 4; /* half the width, so its details sit as compare's do */
 }
 
-/* Summary screen */
-.buttons {
-  display: flex;
-  gap: var(--space-3);
+/* Summary and Done, in the same language as Families: a group's heading
+   in 24px Garamond, its note in the counts' sans, then its files as the
+   grid's single cells. Apply is the one link in the Delete red. */
+.page-links .page-delete {
+  color: var(--color-delete);
+}
+
+.page-status:empty {
+  display: none;
+}
+
+.page-meta-dark {
+  color: var(--color-text);
 }
 
 .summary-group {
-  margin-bottom: var(--space-7);
+  margin-top: var(--space-7);
+}
+
+.summary-group:last-child {
+  padding-bottom: var(--space-7);
 }
 
 .summary-head {
-  margin: 0 0 var(--space-1);
-  font-size: var(--text-m);
-  font-weight: 600;
+  margin: 0;
+  font-size: var(--compare-link-size);
+  font-weight: var(--font-weight-regular);
+  line-height: 1;
+  text-box: trim-both cap alphabetic;
+}
+
+.summary-group .page-meta {
+  margin-top: var(--space-3);
+}
+
+.summary-group .card-row {
+  margin-top: var(--space-5);
 }
 
 code {
@@ -1156,14 +1160,7 @@ code {
 }
 
 .failed-list {
-  margin: 0 0 var(--space-5);
-  font-size: var(--text-s);
-}
-
-/* The space-saving number: the first thing on the Summary and Done screens. */
-.headline {
-  font-size: var(--text-l);
-  font-weight: 600;
+  padding-left: var(--space-4);
 }
 
 /* The cursor (cursor.js), desktop with a mouse or trackpad: a thin + on the
