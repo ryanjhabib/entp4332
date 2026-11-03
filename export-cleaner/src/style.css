@@ -552,6 +552,7 @@ button:disabled {
 .settings {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   grid-column: 4 / -1;
   gap: var(--space-3) var(--space-5);
   margin-top: var(--page-links-gap);
