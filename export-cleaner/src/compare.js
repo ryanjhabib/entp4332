@@ -334,7 +334,11 @@ async function showFrame(side, entry) {
   frame.dataset.empty = entry && !entry.thumb ? 'No preview' : !entry ? 'Only version' : '';
   if (entry?.thumb) frame.dataset.cursor = 'zoom'; // the big + (cursor.js): click to see it full size
   else delete frame.dataset.cursor;
+  frame.classList.remove('blends');
   if (!entry?.thumb) return;
+  blendsIn(entry).then((blends) => {
+    if (shown[side] === entry) frame.classList.toggle('blends', blends);
+  });
   let url;
   try {
     url = await makePreview(entry);
@@ -348,6 +352,43 @@ async function showFrame(side, entry) {
   if (shown[side] !== entry) return URL.revokeObjectURL(url); // moved on while it loaded
   previewUrls[side] = url;
   img.src = url;
+}
+
+// The image takes its own shape inside the frame (see .compare-frame img), so
+// its edge line, when it needs one, sits on the picture.
+for (const side of ['left', 'right']) {
+  const img = $(`#frame-${side} img`);
+  img.addEventListener('load', () => img.style.setProperty('--ratio', img.naturalWidth / img.naturalHeight));
+}
+
+// Whether a version's outer edge is close to the page's grey (#EEE), so it
+// needs a line to show where it ends: at least half of the thumbnail's
+// outer ring of pixels, at 32 × 32, within EDGE_NEAR of it on every channel
+// (see-through counts as near: it shows the page). Worked out once a file.
+const PAGE_GREY = 238;
+const EDGE_NEAR = 20;
+const EDGE_SHARE = 0.5;
+
+async function blendsIn(entry) {
+  if (entry.blends === undefined) {
+    const bitmap = await createImageBitmap(await (await fetch(entry.thumb)).blob());
+    const ctx = new OffscreenCanvas(32, 32).getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(bitmap, 0, 0, 32, 32);
+    bitmap.close();
+    const pixels = ctx.getImageData(0, 0, 32, 32).data;
+    let ring = 0;
+    let near = 0;
+    for (let y = 0; y < 32; y++) {
+      for (let x = 0; x < 32; x++) {
+        if (x && y && x < 31 && y < 31) continue;
+        const i = (y * 32 + x) * 4;
+        ring += 1;
+        if (pixels[i + 3] < 128 || [0, 1, 2].every((c) => Math.abs(pixels[i + c] - PAGE_GREY) <= EDGE_NEAR)) near += 1;
+      }
+    }
+    entry.blends = near / ring >= EDGE_SHARE;
+  }
+  return entry.blends;
 }
 
 // Space shows the versions one at a time, filling the screen in the same
