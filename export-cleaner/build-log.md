@@ -520,3 +520,4 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - Zoom page (Figma frame 135): compare gets `.is-zoomed` (crossfaded via `fade()` in dom.js); one version on columns 1–4 top-left, compare's info block 49px below, 140px to the bottom. Pick there: on-screen version wins; flicked-to version comes in. Measured equal to Figma at 1728 × 1009.
 - Note: the browser pane did run view transitions this time (mid-fade states visible in screenshots), unlike the web-lessons note.
 - Open with Ryan: drop the "same piece?" family-border step and keep compare inside one family.
+- 2026-11-03: compare now stays inside one family (border step, merge, S/D keys, strip divider removed; single families skipped; summary after the last). Export date value always #333.
