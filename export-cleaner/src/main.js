@@ -428,7 +428,7 @@ function showThumb(entry) {
 }
 
 $('#choose').addEventListener('click', chooseFolder);
-$('#choose-again').addEventListener('click', chooseFolder);
+$('#choose-again').addEventListener('click', goHome);
 $('#loading-retry').addEventListener('click', chooseFolder);
 // Where Compare picks up: the family it was last on if that still has versions
 // to decide, otherwise the first family in the overview's order that does.
@@ -459,13 +459,18 @@ $('#summary-families').addEventListener('click', () => showOverview());
 $('#summary-sort').addEventListener('click', () => $('#view-compare').click());
 $('#apply').addEventListener('click', apply);
 $('#rescan').addEventListener('click', () => openFolder(state.dir));
+// Back to the start screen, fresh. This folder's progress stays saved, so
+// opening it again picks up where it left off.
+function goHome() {
+  sessionStorage.removeItem(TAB_KEY);
+  location.reload();
+}
 // Drops this folder's saved scan and choices, then starts over (files untouched).
 $('#forget').addEventListener('click', async () => {
   await forgetFolder(state.record.id);
-  sessionStorage.removeItem(TAB_KEY);
-  location.reload();
+  goHome();
 });
-$('#done-choose').addEventListener('click', chooseFolder);
+$('#done-choose').addEventListener('click', goHome);
 $('#settings').addEventListener('click', (event) => {
   const show = event.target.closest('[data-show]');
   if (show) {
