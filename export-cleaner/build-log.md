@@ -521,3 +521,4 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - Note: the browser pane did run view transitions this time (mid-fade states visible in screenshots), unlike the web-lessons note.
 - Open with Ryan: drop the "same piece?" family-border step and keep compare inside one family.
 - 2026-11-03: compare now stays inside one family (border step, merge, S/D keys, strip divider removed; single families skipped; summary after the last). Export date value always #333.
+- 2026-11-03: arrows no longer pick (they rejected 7 of Ryan's files by accident); Summary cards clear their choice on click; compare/zoom layout swapped per Figma (details left, Pick right at 515 = 2.5px off column 8, links left-aligned 66px apart).
