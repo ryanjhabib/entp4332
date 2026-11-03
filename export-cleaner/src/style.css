@@ -756,7 +756,8 @@ button:disabled {
 }
 
 /* Two rows, each under a line: name and size | shape; when | dates.
-   A value that differs from the other side is dark. */
+   The name, the export date and any value that differs from the other
+   side are dark. */
 .compare-details {
   grid-column: 3 / 9;
   top: 0;
@@ -811,8 +812,7 @@ button:disabled {
   margin-bottom: -0.3em;
 }
 
-.compare-details .name,
-.compare-details .differs {
+.compare-details .dark {
   color: var(--color-text);
 }
 

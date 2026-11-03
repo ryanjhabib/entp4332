@@ -174,8 +174,9 @@ function render() {
 }
 
 // Under a frame: where the version sits in its family ("2/5") and its
-// details. A detail that differs from the other side is dark, since that
-// difference is often the answer. The shot date only shows when one side
+// details. The name and export date are always dark; any other detail that
+// differs from the other side is too, since that difference is often the
+// answer. The shot date only shows when one side
 // has one (design exports never do).
 function renderInfo(side, entry, other) {
   $(`#info-${side}`).hidden = !entry;
@@ -184,8 +185,8 @@ function renderInfo(side, entry, other) {
   const mine = details(entry);
   const theirs = other && details(other);
   const line = (key, text = mine[key][0]) => {
-    if (key === 'name') return loopLine(text, 'name');
-    return loopLine(text, theirs && mine[key][1] !== theirs[key][1] ? 'differs' : '');
+    if (key === 'name' || key === 'exported') return loopLine(text, 'dark');
+    return loopLine(text, theirs && mine[key][1] !== theirs[key][1] ? 'dark' : '');
   };
   const block = (...lines) => {
     const p = document.createElement('p');
