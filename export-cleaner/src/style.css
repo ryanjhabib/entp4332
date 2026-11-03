@@ -38,7 +38,8 @@
   --color-bg: #eeeeee;
   --color-surface: #ffffff;
   --color-text: #333333;
-  --color-muted: #aaaaaa;
+  --color-muted: #aaaaaa; /* grey serif text and the strip's lines */
+  --color-sans-muted: #888888; /* grey sans text */
   --color-line: #e2e2e2;
   --color-keep: #1f7a3a;
   --color-reject: #b3261e;
@@ -125,7 +126,7 @@ p {
 }
 
 .muted {
-  color: var(--color-muted);
+  color: var(--color-sans-muted);
   font-size: var(--text-s);
 }
 
@@ -249,7 +250,7 @@ button {
 }
 
 .start-estimate {
-  color: var(--color-muted);
+  color: var(--color-sans-muted);
 }
 
 /* After Chrome reopens: one click to read the saved folder again. */
@@ -374,7 +375,7 @@ button {
 }
 
 .loading-phase {
-  color: var(--color-muted);
+  color: var(--color-sans-muted);
 }
 
 #loading-dots {
@@ -524,7 +525,7 @@ button:disabled {
   place-items: center;
   aspect-ratio: 1;
   background: var(--color-thumb-bg);
-  color: var(--color-muted);
+  color: var(--color-sans-muted);
   font-size: var(--text-s);
 }
 
@@ -550,7 +551,7 @@ button:disabled {
 }
 
 .card-time {
-  color: var(--color-muted);
+  color: var(--color-sans-muted);
 }
 
 /* Families | Compare: the pressed one is the view you're in. */
@@ -593,7 +594,7 @@ button:disabled {
   place-items: center;
   height: var(--compare-frame-height);
   background: var(--color-thumb-bg);
-  color: var(--color-muted);
+  color: var(--color-sans-muted);
   font-size: var(--text-s);
 }
 
@@ -627,7 +628,7 @@ button:disabled {
 }
 
 .flick-caption {
-  color: var(--color-muted);
+  color: var(--color-sans-muted);
   font-size: var(--text-s);
 }
 
@@ -637,7 +638,7 @@ button:disabled {
   flex-direction: column;
   gap: var(--space-1);
   margin-top: var(--space-3);
-  color: var(--color-muted);
+  color: var(--color-sans-muted);
   font-size: var(--text-s);
 }
 
@@ -686,7 +687,7 @@ button:disabled {
   flex-basis: 100%;
   padding-top: var(--space-2);
   border-top: 1px solid var(--color-line);
-  color: var(--color-muted);
+  color: var(--color-sans-muted);
   font-size: var(--text-s);
   cursor: default;
 }
@@ -716,7 +717,7 @@ button:disabled {
 /* When each version was exported: the quickest way to read their order. */
 .version-date {
   margin: var(--space-1) 0 0;
-  color: var(--color-muted);
+  color: var(--color-sans-muted);
   font-size: var(--text-s);
 }
 
