@@ -18,6 +18,7 @@
 
 import { $, show, familyDates, exportFormat, dayFormat, formatSize } from './dom.js';
 import { makePreview, renderAt } from './thumbs.js';
+import { loopLine, loopOnHover } from './loop.js';
 import { fileSimilarity } from './group.js';
 
 let families = []; // every family, in the overview's order (shared with it: merges change it)
@@ -236,11 +237,8 @@ function renderInfo(side, entry, other) {
   const mine = details(entry);
   const theirs = other && details(other);
   const line = (key, text = mine[key][0]) => {
-    const span = document.createElement('span');
-    span.textContent = text;
-    if (key === 'name') span.className = 'name';
-    else if (theirs && mine[key][1] !== theirs[key][1]) span.className = 'differs';
-    return span;
+    if (key === 'name') return loopLine(text, 'name');
+    return loopLine(text, theirs && mine[key][1] !== theirs[key][1] ? 'differs' : '');
   };
   const block = (...lines) => {
     const p = document.createElement('p');
@@ -460,7 +458,9 @@ window.addEventListener('resize', () => {
 });
 
 // A click on a frame opens the full-size view on that version; a click there closes it.
+// Hovering the details loops any that don't fit.
 for (const side of ['left', 'right']) {
+  loopOnHover($(`#info-${side}`));
   $(`#frame-${side}`).addEventListener('click', () => {
     if (slots[side]?.thumb) openFlick(slots[side]);
   });

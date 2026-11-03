@@ -117,6 +117,9 @@
   --cursor-stroke: 0.5px;
   --cursor-fade: 250ms; /* fading in, and changing size */
   --cursor-fold: 300ms; /* a line folding away */
+  /* Hover fades, as on Eternitie: also the loop's ease back (loop.js). */
+  --hover-fade: 350ms;
+  --ease-fade: ease;
 }
 
 [hidden] {
@@ -561,15 +564,18 @@ button:disabled {
 
 .card-name,
 .card-time {
-  overflow: hidden;
   margin: 0;
   font-size: var(--text-s);
   white-space: nowrap;
-  text-overflow: ellipsis;
 }
 
 .card-name {
   margin-top: var(--space-2);
+}
+
+.card-time {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .card-time {
@@ -777,13 +783,11 @@ button:disabled {
   top: calc(var(--compare-row-step) + var(--compare-text-inset));
 }
 
-/* Long names end in "…". Clipped sideways only: the lines are trimmed to the
-   baseline, so clipping all round would cut off descenders. */
-.compare-details span {
-  display: block;
-  overflow-x: clip;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+/* The lines are trimmed to the baseline, so a looping line (which clips and
+   masks to its box) gets room below for descenders. */
+.compare-details .loop-line {
+  padding-bottom: 0.3em;
+  margin-bottom: -0.3em;
 }
 
 .compare-details .name,
@@ -1085,6 +1089,51 @@ code {
   .cursor,
   .cursor::before,
   .cursor::after {
+    transition: none;
+  }
+}
+
+/* A line too long for its box (loop.js), as on Eternitie: it fades out over
+   its last 2em, and while its host is hovered it loops left with a copy 3em
+   behind, its left edge fading in as it runs. A line that fits never fades. */
+@property --loop-edge-opacity {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 1;
+}
+
+.loop-line {
+  display: block;
+  overflow: clip;
+  white-space: nowrap;
+  transition: --loop-edge-opacity var(--hover-fade) var(--ease-fade);
+}
+
+.loop-line[data-overflow] {
+  mask-image: linear-gradient(to right, rgb(0 0 0 / var(--loop-edge-opacity)), #000 2em, #000 calc(100% - 2em), transparent);
+}
+
+.loop-track {
+  display: inline-block;
+}
+
+.loop-copy {
+  display: none;
+  padding-left: 3em;
+}
+
+.loop-line[data-loop] .loop-copy {
+  display: inline;
+}
+
+@media (hover: hover) {
+  .loop-host:hover .loop-line[data-loop] {
+    --loop-edge-opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loop-line {
     transition: none;
   }
 }

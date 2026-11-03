@@ -11,6 +11,7 @@ import { prepareModel } from './embed.js';
 import { MEDIA_TYPES, setUpMediaField } from './media.js';
 import { getFolder, folderRecord, saveFolder, savedFiles, saveFile, pruneFiles, forgetFolder, forgetStale, claimFolder } from './store.js';
 import { setUpCursor } from './cursor.js';
+import { loopLine, loopOnHover } from './loop.js';
 import { startLoading, updateLoading, startScan, scannedFile, finishLoading, failLoading } from './loading.js';
 
 // Everything the app knows lives here.
@@ -372,8 +373,8 @@ function renderFamily(entries) {
 function renderCard(entry) {
   const card = document.createElement('li');
   card.innerHTML = '<div class="thumb"></div><p class="card-name"></p><p class="card-time"></p>';
-  card.querySelector('.card-name').textContent = entry.name;
-  card.querySelector('.card-name').title = entry.name;
+  card.querySelector('.card-name').replaceWith(loopLine(entry.name, 'card-name'));
+  loopOnHover(card);
   card.querySelector('.card-time').textContent = exportFormat.format(entry.file.lastModified);
   entry.card = card;
   return card;
