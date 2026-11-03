@@ -504,3 +504,12 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - Bug: details descenders clipped by overflow: hidden on baseline-trimmed lines; now overflow-x: clip.
 - localhost kept dying because the preview's own dev server is stopped by the app whenever the browser pane's preview closes. Server now runs in Ryan's terminal (`npm run dev`), previews attach via the `export-cleaner-attach` launch config.
 - Open: "Summary" goes to the families overview (as Families did) — confirm with Ryan; no progress-through-folder indicator any more; no visible marker for which strip cells are on screen.
+
+## Cursor, hover loop, edge line, transitions (2026-11-03)
+
+- Cursor (`cursor.js`): MSW's + (10 / 20 link / 20 text / 170 zoom px, 0.5px, white difference). Frames show the zoom +; click opens the flick view on that version, − there, click closes. MSW's Safari workarounds skipped (Chrome-only, no page fades).
+- Hover loop (`loop.js`): Eternitie's LoopText (2em edge fade; 50px/s loop, copy 3em behind; eased back over 350ms). Compare details and family card names. Bug caught: cards are built off-page, and unobserving disconnected targets stopped their overflow check.
+- Edge line: thumbnails whose 32×32 outer ring is ≥50% within 20 of #EEE get a 1px #CCC line; images now sized to their own shape (container units + --ratio) so the line sits on the picture.
+- Transitions: screens via view transitions, MSW's 400ms fade-over-held-old; flick view fades 400ms; buttons fade colour/fill 350ms and go italic on hover. Verified in real Chrome via DevTools (the pane can't run view transitions).
+- Lesson added to web-lessons.md: the build minifies 350ms → .35s, so read CSS times with their unit (`cssTime` in dom.js).
+- Not done / offered: the line on strip thumbnails and in the flick view; a fade-in for the newcomer image after a pick; hover fade on the media-type rows (left instant so arrowing doesn't lag).
