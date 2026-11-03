@@ -187,8 +187,7 @@ function render() {
 function renderInfo(side, entry, other) {
   $(`#info-${side}`).hidden = !entry;
   if (!entry) return;
-  const index = $(`#index-${side}`); // none when zoomed
-  if (index) index.textContent = `${family.indexOf(entry) + 1}/${family.length}`;
+  $(`#index-${side}`).textContent = `${family.indexOf(entry) + 1}/${family.length}`;
   const mine = details(entry);
   const theirs = other && details(other);
   const line = (key, text = mine[key][0]) => {
@@ -395,6 +394,7 @@ function showSolo(entry) {
     img.src = entry.thumb ?? '';
     renderInfo('zoom', entry, null);
     $('#pick-zoom').hidden = true;
+    $('#index-zoom').hidden = true; // a solo is always 1/1
     $('#keep-solo').hidden = false;
     $('#delete-solo').hidden = false;
     compare.classList.add('is-solo');
@@ -506,6 +506,7 @@ function drawFlick() {
   }
   renderInfo('zoom', entry, null);
   $('#pick-zoom').hidden = !(slots.left && slots.right);
+  $('#index-zoom').hidden = false;
   $('#keep-solo').hidden = true;
   $('#delete-solo').hidden = true;
 }
