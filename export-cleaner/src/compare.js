@@ -159,7 +159,8 @@ function undo() {
   render();
 }
 
-// finished: true when the stream has reached its end, false when the user left.
+// finished: true when the stream has reached its end or Summary was pressed
+// (both go to the summary), false when the user left for Families.
 // The overview is told which family the stream was on, to show it there.
 function exit(finished = false) {
   flick = null;
@@ -578,6 +579,7 @@ $('#keep-solo').addEventListener('click', () => decideAlone('keep'));
 $('#delete-solo').addEventListener('click', () => decideAlone('reject'));
 $('#compare-undo').addEventListener('click', undo);
 $('#view-families').addEventListener('click', () => exit());
+$('#compare-summary').addEventListener('click', () => exit(true));
 
 document.addEventListener('keydown', (event) => {
   if ($('#compare').hidden) return;

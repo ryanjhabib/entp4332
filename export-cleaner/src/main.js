@@ -455,6 +455,7 @@ function openSummary() {
 }
 
 $('#open-summary').addEventListener('click', openSummary);
+$('#view-summary').addEventListener('click', openSummary);
 $('#summary-back').addEventListener('click', () => showOverview());
 $('#summary-families').addEventListener('click', () => showOverview());
 $('#summary-sort').addEventListener('click', () => $('#view-compare').click());
