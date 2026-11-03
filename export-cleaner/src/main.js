@@ -11,6 +11,7 @@ import { prepareModel } from './embed.js';
 import { MEDIA_TYPES, setUpMediaField } from './media.js';
 import { getFolder, folderRecord, saveFolder, savedFiles, saveFile, pruneFiles, forgetFolder, forgetStale, claimFolder } from './store.js';
 import { setUpCursor } from './cursor.js';
+import './waitlist.js';
 import { loopLine, loopOnHover } from './loop.js';
 import { startLoading, updateLoading, startScan, scannedFile, finishLoading, failLoading } from './loading.js';
 

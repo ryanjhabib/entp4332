@@ -177,7 +177,8 @@ button {
 
 /* The intro owns the full viewport; the other app screens retain their layout. */
 #start,
-#loading {
+#loading,
+#join {
   position: fixed;
   inset: 0;
   display: grid;
@@ -198,6 +199,22 @@ button {
 .start-brand {
   grid-column: 1;
   margin: 0;
+  font-size: var(--brand-size);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--intro-line-height);
+  letter-spacing: 0;
+}
+
+/* Waitlist (and Back on the join screen) mirrors the brand on the right: same type, same row. */
+.waitlist-open {
+  grid-column: -2 / -1;
+  grid-row: 1;
+  justify-self: end;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-text);
   font-size: var(--brand-size);
   font-weight: var(--font-weight-medium);
   line-height: var(--intro-line-height);

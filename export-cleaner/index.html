@@ -26,6 +26,8 @@
     <section class="screen" id="start" hidden>
       <header class="entry-header">
         <h1 class="start-brand">Syca</h1>
+        <!-- Opens the join screen (waitlist.js). A class, not an id: loading.js copies this header. -->
+        <button class="waitlist-open" type="button">Waitlist</button>
         <p class="start-description">i. helps you find and compare the different versions of your work,<br />ii. and tend to everything you made along the way.</p>
       </header>
       <div class="start-prompt">
@@ -41,6 +43,22 @@
         <input class="describe-input" id="describe-input" type="text" placeholder="then describe the media type..." aria-label="Media type" role="combobox" aria-autocomplete="list" aria-controls="describe-list" aria-expanded="false" autocomplete="off" spellcheck="false" />
         <ul class="describe-list" id="describe-list" role="listbox" aria-label="Media types" hidden></ul>
       </div>
+    </section>
+
+    <!-- The Mac app waitlist: home's layout, with an email band in place of the describe field. -->
+    <section class="screen" id="join" hidden>
+      <header class="entry-header">
+        <h1 class="start-brand">Syca</h1>
+        <button class="waitlist-open" id="join-back" type="button">Back</button>
+        <p class="start-description">i. helps you find and compare the different versions of your work,<br />ii. and tend to everything you made along the way.</p>
+      </header>
+      <div class="start-prompt">
+        <p class="start-intro" id="join-intro" role="status">Be notified when Syca is ready for Mac.</p>
+      </div>
+      <div class="start-rule" aria-hidden="true"></div>
+      <form class="describe" id="join-form" novalidate>
+        <input class="describe-input" id="join-email" type="email" name="email" placeholder="Enter your email…" aria-label="Email for the Mac app waitlist" autocomplete="email" spellcheck="false" />
+      </form>
     </section>
 
     <section class="screen" id="loading" aria-label="Scanning your folder" hidden>
