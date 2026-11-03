@@ -1,46 +1,37 @@
-// Step 5: compare versions side by side to find the final, one continuous
-// stream through the whole folder in the overview's order (similar families
-// next to each other).
+// Step 5: compare versions side by side to find the final, family by family
+// in the overview's order (similar families next to each other).
 //
 // Inside a family, "winner stays on": two versions are on screen; pick the
 // better one and it stays where it is, the other is out (rejected), and the
 // next version takes its place. "Keep both" keeps the newcomer too (a 4:5 post
-// and a 9:16 story) and brings in the next.
-//
-// Where a family ends, its final is checked against the closest version of the
-// next family: "Same piece" merges the two families and the comparing goes
-// on; "Different" starts the next family. That catches the versions the
-// grouping missed, one-file families included. The opposite fix, "Not the
-// same", splits the newcomer off into a family of its own.
+// and a 9:16 story) and brings in the next. "These are different" splits the
+// newcomer off into a family of its own. When a family is done, the next one
+// with something to compare starts; after the last, the summary.
 //
 // Choices are stored on each file as entry.decision = 'keep' | 'reject';
 // nothing on disk changes.
 
-import { $, show, fade, familyDates, exportFormat, dayFormat, formatSize } from './dom.js';
+import { $, show, fade, exportFormat, dayFormat, formatSize } from './dom.js';
 import { makePreview, renderAt } from './thumbs.js';
 import { loopLine, loopOnHover } from './loop.js';
-import { fileSimilarity } from './group.js';
 
-let families = []; // every family, in the overview's order (shared with it: merges change it)
+let families = []; // every family, in the overview's order (shared with it: splits change it)
 let family = null; // the versions being compared, oldest first
 const slots = { left: null, right: null }; // the version on each side, or null
 let newcomer = 'right'; // the side most recently filled: "keep both" replaces it
 let queue = []; // versions still to take a turn, next first
-let boundary = null; // the next family, while asking whether it's the same piece
-let apart = new Set(); // versions split off with "Not the same": not asked about again
 let history = []; // undo: a snapshot from before each choice
 let onExit = () => {};
 let onChange = () => {};
 
 // Opens the stream at a family. history is kept until the user leaves, so
-// Undo can step back across families and merges. change() is called after
+// Undo can step back across families and splits. change() is called after
 // every choice (to save progress).
 export function openFamily(allFamilies, entries, exit, change) {
   families = allFamilies;
   onExit = exit;
   onChange = change;
   history = [];
-  apart = new Set();
   show('compare');
   startFamily(entries);
 }
@@ -50,10 +41,9 @@ const contending = (entries) => entries.filter((entry) => entry.decision !== 're
 // The newest version starts on the left (most likely the final), the next
 // newest on the right; the rest wait their turn, newest first. Versions
 // already out stay out: click one in the versions grid to bring it back.
-// A family with one version goes straight to the check against its neighbour.
+// A family opened with one version left shows it alone, for Keep or Reject.
 function startFamily(entries) {
   family = entries;
-  boundary = null;
   const contenders = contending(entries).reverse();
   if (!contenders.length) contenders.push(entries.at(-1));
   [slots.left, slots.right = null, ...queue] = contenders;
@@ -69,8 +59,6 @@ function snapshot() {
     slots: { ...slots },
     newcomer,
     queue: [...queue],
-    boundary,
-    apart: new Set(apart),
     decisions: family.map((entry) => entry.decision),
   });
 }
@@ -78,7 +66,7 @@ function snapshot() {
 // The version on `side` wins: it stays, the other is out, the next comes in.
 function pick(side) {
   const other = side === 'left' ? 'right' : 'left';
-  if (boundary || !slots.left || !slots.right) return;
+  if (!slots.left || !slots.right) return;
   snapshot();
   slots[side].decision = 'keep';
   slots[other].decision = 'reject';
@@ -88,7 +76,7 @@ function pick(side) {
 }
 
 function keepBoth() {
-  if (boundary || !slots.left || !slots.right) return;
+  if (!slots.left || !slots.right) return;
   snapshot();
   slots.left.decision = 'keep';
   slots.right.decision = 'keep';
@@ -96,86 +84,49 @@ function keepBoth() {
   afterChoice();
 }
 
-// Not the same piece: the newcomer leaves this family for one of its own,
-// placed right after it, and the next version comes in. The stream visits it
-// next without asking "same piece?" about it again.
+// These are different: the newcomer leaves this family for one of its own,
+// placed right after it, and the next version comes in.
 function notTheSame() {
-  if (boundary || !slots.left || !slots.right) return;
+  if (!slots.left || !slots.right) return;
   snapshot();
   const entry = slots[newcomer];
   const rest = family.filter((member) => member !== entry);
   families.splice(families.indexOf(family), 1, rest, [entry]);
   family = rest;
-  apart.add(entry);
   slots[newcomer] = queue.shift() ?? null;
   afterChoice();
 }
 
-// A lone version at the very end of the stream, with no neighbour left.
+// A family opened with one version left: Keep or Reject it.
 function decideAlone(decision) {
   snapshot();
   (slots.left ?? slots.right).decision = decision;
   afterChoice();
 }
 
-// Once one side is empty this family's comparing is done: check its final
-// against the next family. At the end of the stream, a version never decided
-// waits for Keep / Reject; otherwise it's over.
+// Once one side is empty this family is done: on to the next family with two
+// or more versions still in it and something undecided (a family of one has
+// nothing to compare), or after the last, the summary. A version on its own
+// that's undecided waits for Keep / Reject first.
 function afterChoice() {
   if (slots.left && slots.right) return render();
-  const next = families.slice(families.indexOf(family) + 1).find((f) => contending(f).some((entry) => !entry.decision));
-  if (next) return next.every((entry) => apart.has(entry)) ? startFamily(next) : askSamePiece(next);
-  if (!(slots.left ?? slots.right).decision) return render();
+  const lone = slots.left ?? slots.right;
+  if (lone && !lone.decision) return render();
+  const next = families.slice(families.indexOf(family) + 1)
+    .find((f) => contending(f).length > 1 && contending(f).some((entry) => !entry.decision));
+  if (next) return startFamily(next);
   exit(true);
 }
 
-// The final stays where it is; the next family's closest version comes in beside it.
-function askSamePiece(next) {
-  const final = slots.left ?? slots.right;
-  const side = slots.left ? 'right' : 'left';
-  const candidates = contending(next);
-  boundary = next;
-  slots[side] = final.vectors?.length
-    ? candidates.reduce((best, entry) => (fileSimilarity(final, entry) > fileSimilarity(final, best) ? entry : best))
-    : candidates.at(-1);
-  newcomer = side;
-  render();
-}
-
-// Same piece: the two families become one, and the comparing goes on with
-// the next family's versions taking their turns.
-function samePiece() {
-  if (!boundary) return;
-  snapshot();
-  const merged = [...family, ...boundary].sort((a, b) => a.file.lastModified - b.file.lastModified);
-  families.splice(families.indexOf(boundary), 1);
-  families.splice(families.indexOf(family), 1, merged);
-  queue = contending(boundary).filter((entry) => entry !== slots[newcomer]).reverse();
-  family = merged;
-  boundary = null;
-  render();
-}
-
-function different() {
-  if (!boundary) return;
-  snapshot();
-  startFamily(boundary);
-}
-
 // Clicking a version in the grid brings it in as the newcomer; one that was
-// out comes back undecided. While asking "same piece?", a next-family version
-// swaps in to check a different one, and one of this family's goes back to
-// comparing it against the final (the way to reopen a choice once Undo is gone).
+// out comes back undecided (the way to reopen a choice once Undo is gone).
 function challengeWith(entry) {
   if (entry === slots.left || entry === slots.right) return;
-  const reopen = boundary && family.includes(entry);
-  if (boundary && !reopen && !boundary.includes(entry)) return;
   snapshot();
   if (entry.decision === 'reject') entry.decision = undefined;
   queue = queue.filter((waiting) => waiting !== entry);
   const side = slots.left && slots.right ? newcomer : slots.left ? 'right' : 'left';
-  if (slots[side] && !boundary) queue.unshift(slots[side]);
-  if (reopen) boundary = null; // the next family's version just leaves the screen
+  if (slots[side]) queue.unshift(slots[side]);
   slots[side] = entry;
   newcomer = side;
   render();
@@ -190,8 +141,6 @@ function undo() {
   Object.assign(slots, step.slots);
   newcomer = step.newcomer;
   queue = step.queue;
-  boundary = step.boundary;
-  apart = step.apart;
   render();
 }
 
@@ -212,14 +161,11 @@ function render() {
     showFrame(side, slots[side]);
     renderInfo(side, slots[side], other);
   }
-  const comparing = pair && !boundary;
-  $('#pick-left').hidden = !comparing;
-  $('#pick-right').hidden = !comparing;
-  $('#keep-both').hidden = !comparing;
-  $('#not-the-same').hidden = !comparing;
-  $('#not-the-same').title = comparing ? `Moves ${slots[newcomer].name} into a family of its own` : '';
-  $('#same-piece').hidden = !boundary;
-  $('#different').hidden = !boundary;
+  $('#pick-left').hidden = !pair;
+  $('#pick-right').hidden = !pair;
+  $('#keep-both').hidden = !pair;
+  $('#not-the-same').hidden = !pair;
+  $('#not-the-same').title = pair ? `Moves ${slots[newcomer].name} into a family of its own` : '';
   $('#keep-alone').hidden = pair;
   $('#reject-alone').hidden = pair;
   $('#compare-undo').disabled = !history.length;
@@ -234,8 +180,7 @@ function render() {
 function renderInfo(side, entry, other) {
   $(`#info-${side}`).hidden = !entry;
   if (!entry) return;
-  const group = boundary?.includes(entry) ? boundary : family;
-  $(`#index-${side}`).textContent = `${group.indexOf(entry) + 1}/${group.length}`;
+  $(`#index-${side}`).textContent = `${family.indexOf(entry) + 1}/${family.length}`;
   const mine = details(entry);
   const theirs = other && details(other);
   const line = (key, text = mine[key][0]) => {
@@ -290,16 +235,9 @@ function ratio(width, height) {
   return match ? `${match[0]}:${match[1]}` : `${r.toFixed(1)}:1`;
 }
 
-// This family's versions; while asking "same piece?", the next family's after a divider.
+// This family's versions.
 function renderVersions() {
-  const items = family.map(versionItem);
-  if (boundary) {
-    const divider = document.createElement('li');
-    divider.className = 'version-divider';
-    divider.textContent = `Next family · ${familyDates(boundary)}`;
-    items.push(divider, ...boundary.map(versionItem));
-  }
-  $('#version-grid').replaceChildren(...items);
+  $('#version-grid').replaceChildren(...family.map(versionItem));
 }
 
 function versionItem(entry) {
@@ -399,8 +337,7 @@ async function blendsIn(entry) {
 // version large in place of the pair, with its details, like Quick Look in
 // Finder: scrolling or the arrow keys step through the family oldest to
 // newest in the same place, so whatever changed between two versions jumps
-// out. While asking "same piece?", the next family's versions follow on.
-// Each version is drawn at the frame's size (the thumbnail until then) onto
+// out. Each version is drawn at the frame's size (the thumbnail until then) onto
 // one canvas, so a step is a single draw. A click on it, Space or Escape
 // goes back; the change fades both ways like changing screen.
 const FLICK_STEP = 40; // px of scrolling per version
@@ -409,7 +346,7 @@ let flick = null; // { entries, index, thumbs, pictures, scrolled }
 
 // Opens on `start`: the clicked frame's version, or for Space the left one.
 function openFlick(start = slots.left ?? slots.right) {
-  const entries = boundary ? [...family, ...boundary] : family;
+  const entries = family;
   document.activeElement?.blur(); // so Space can't also press a button
   const current = { entries, index: entries.indexOf(start), thumbs: [], pictures: [], scrolled: 0 };
   flick = current;
@@ -488,7 +425,7 @@ function drawFlick() {
     }
   }
   renderInfo('zoom', entry, null);
-  $('#pick-zoom').hidden = !(slots.left && slots.right) || Boolean(boundary);
+  $('#pick-zoom').hidden = !(slots.left && slots.right);
 }
 
 function stepFlick(direction) {
@@ -539,8 +476,6 @@ $('#pick-left').addEventListener('click', () => pick('left'));
 $('#pick-right').addEventListener('click', () => pick('right'));
 $('#keep-both').addEventListener('click', keepBoth);
 $('#not-the-same').addEventListener('click', notTheSame);
-$('#same-piece').addEventListener('click', samePiece);
-$('#different').addEventListener('click', different);
 $('#keep-alone').addEventListener('click', () => decideAlone('keep'));
 $('#reject-alone').addEventListener('click', () => decideAlone('reject'));
 $('#compare-undo').addEventListener('click', undo);
@@ -566,8 +501,6 @@ document.addEventListener('keydown', (event) => {
   else if (event.key === 'ArrowRight') pick('right');
   else if (event.key === 'ArrowDown') keepBoth();
   else if (event.key === 'n') notTheSame();
-  else if (event.key === 's') samePiece();
-  else if (event.key === 'd') different();
   else if (event.key === 'Escape') exit();
   else if ((event.key === 'z' && command) || event.key === 'Backspace') undo();
   else return;
