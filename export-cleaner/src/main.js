@@ -333,18 +333,27 @@ function showOverview(focus) {
 
 // Once every file is described: its families, similar ones side by side.
 // The cards made during loading are moved into place, not rebuilt.
+// Sets (families of two or more, to compare) come first, then solos (files on
+// their own, to keep or delete), each in the grouping's order; Show picks
+// all, or one kind.
+let showing = 'all';
+const setsThenSolos = () => [...state.families.filter((f) => f.length > 1), ...state.families.filter((f) => f.length === 1)];
+
 function renderFamilies() {
   $('#folder-name').textContent = state.dir.name;
   const decided = state.files.filter((entry) => entry.decision).length;
+  const sets = state.families.filter((f) => f.length > 1).length;
   $('#file-count').textContent = [
     plural(state.files.length, 'design file'),
-    plural(state.families.length, 'family', 'families'),
+    plural(sets, 'set'),
+    plural(state.families.length - sets, 'solo'),
     `${decided} decided`,
   ].join(' · ');
   $('#settings').hidden = false;
   $('#view-compare').disabled = !nextFamily();
   $('#open-summary').hidden = !decided;
-  $('#families').replaceChildren(...state.families.map(renderFamily));
+  const shown = setsThenSolos().filter((f) => showing === 'all' || (showing === 'sets') === (f.length > 1));
+  $('#families').replaceChildren(...shown.map(renderFamily));
 }
 
 function renderFamily(entries) {
@@ -399,7 +408,7 @@ $('#loading-retry').addEventListener('click', chooseFolder);
 function nextFamily() {
   const open = (f) => f.some((entry) => !entry.decision);
   if (state.families.includes(lastCompared) && open(lastCompared)) return lastCompared;
-  return state.families.find(open);
+  return setsThenSolos().find(open);
 }
 
 $('#view-compare').addEventListener('click', () => {
@@ -418,6 +427,13 @@ $('#forget').addEventListener('click', async () => {
 });
 $('#done-choose').addEventListener('click', chooseFolder);
 $('#settings').addEventListener('click', (event) => {
+  const show = event.target.closest('[data-show]');
+  if (show) {
+    showing = show.dataset.show;
+    for (const option of $('#settings').querySelectorAll('[data-show]')) option.setAttribute('aria-pressed', option === show);
+    renderFamilies();
+    return;
+  }
   const button = event.target.closest('[data-level]');
   if (!button || button.dataset.level === level) return;
   setLevel(button.dataset.level);
