@@ -4,8 +4,15 @@
     {
       "name": "export-cleaner",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 3400
+    },
+    {
+      "name": "export-cleaner-attach",
+      "url": "http://localhost:3400"
     }
   ]
 }
