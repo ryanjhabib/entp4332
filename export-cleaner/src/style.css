@@ -45,6 +45,7 @@
   --color-reject: #b3261e;
   --color-thumb-bg: #f2f2f2;
   --color-accent: #95a081; /* select, the progress bar and the caret */
+  --color-delete: #9d5858;
   --color-band: #e5e5e5;
   --color-band-line: #cccccc;
   --color-row-active: #222222;
@@ -120,6 +121,9 @@
   --cursor-stroke: 0.5px;
   --cursor-fade: 250ms; /* fading in, and changing size */
   --cursor-fold: 300ms; /* a line folding away */
+  /* A version on its own zooms in its frame, as MSW's product photos do. */
+  --photo-zoom: 1.6;
+  --photo-zoom-duration: 300ms;
   /* Hover fades, as on Eternitie: also the loop's ease back (loop.js). */
   --hover-fade: 350ms;
   --ease-fade: ease;
@@ -757,6 +761,12 @@ button:disabled {
   text-underline-position: from-font;
 }
 
+/* A version on its own: Keep on column 8, Delete on column 10 (Figma frame 136). */
+.compare-delete {
+  grid-column: 10 / -1;
+  color: var(--color-delete);
+}
+
 /* Two rows, each under a line: name and size | shape; when | dates.
    The name, the export date and any value that differs from the other
    side are dark. */
@@ -935,11 +945,11 @@ button:disabled {
   margin-top: var(--space-5);
 }
 
-#compare.is-zoomed .zoom {
+#compare:is(.is-zoomed, .is-solo) .zoom {
   display: grid;
 }
 
-#compare.is-zoomed :is(.compare-sides, .compare-actions, .compare-strip) {
+#compare:is(.is-zoomed, .is-solo) :is(.compare-sides, .compare-actions, .compare-strip) {
   display: none;
 }
 
@@ -954,6 +964,47 @@ button:disabled {
   inset: 0;
   width: 100%;
   height: 100%;
+}
+
+/* A version on its own: the picture in a frame of its own size at the top
+   left (container units and --ratio, as in compare), which it zooms inside. */
+.zoom-frame {
+  container-type: size;
+}
+
+.solo-picture {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: none;
+  overflow: hidden;
+  width: min(100cqw, 100cqh * var(--ratio, 1));
+  height: min(100cqh, 100cqw / var(--ratio, 1));
+}
+
+#compare.is-solo .solo-picture {
+  display: block;
+}
+
+#compare.is-solo .zoom-frame canvas {
+  display: none;
+}
+
+.solo-picture img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: var(--zoom-x, 50%) var(--zoom-y, 50%);
+  transition: transform var(--photo-zoom-duration) ease;
+}
+
+.solo-picture.is-zoomed img {
+  transform: scale(var(--photo-zoom));
+}
+
+.solo-picture.blends {
+  outline: 1px solid var(--color-band-line);
+  outline-offset: -1px;
 }
 
 #info-zoom {

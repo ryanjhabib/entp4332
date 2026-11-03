@@ -6,7 +6,8 @@
 // next version takes its place. "Keep both" keeps the newcomer too (a 4:5 post
 // and a 9:16 story) and brings in the next. "These are different" splits the
 // newcomer off into a family of its own. When a family is done, the next one
-// with something to compare starts; after the last, the summary.
+// with a pair still to compare starts; once none has, the versions on their
+// own come one at a time, to Keep or Delete; then the summary.
 //
 // Choices are stored on each file as entry.decision = 'keep' | 'reject';
 // nothing on disk changes.
@@ -97,23 +98,27 @@ function notTheSame() {
   afterChoice();
 }
 
-// A family opened with one version left: Keep or Reject it.
+// A version on its own: Keep or Delete (reject) it.
 function decideAlone(decision) {
   snapshot();
   (slots.left ?? slots.right).decision = decision;
   afterChoice();
 }
 
-// Once one side is empty this family is done: on to the next family with two
-// or more versions still in it and something undecided (a family of one has
-// nothing to compare), or after the last, the summary. A version on its own
-// that's undecided waits for Keep / Reject first.
+// Once one side is empty this family is done. Next: a family with a pair
+// still to compare (two or more versions in, something undecided), from here
+// in the overview's order, then from the top; once there are none, a version
+// on its own that's undecided, the same way; then the summary. A version on
+// its own waits for Keep / Delete first.
+const toCompare = (f) => contending(f).length > 1 && contending(f).some((entry) => !entry.decision);
+const toSort = (f) => contending(f).length === 1 && !contending(f)[0].decision;
+
 function afterChoice() {
   if (slots.left && slots.right) return render();
   const lone = slots.left ?? slots.right;
   if (lone && !lone.decision) return render();
-  const next = families.slice(families.indexOf(family) + 1)
-    .find((f) => contending(f).length > 1 && contending(f).some((entry) => !entry.decision));
+  const after = families.slice(families.indexOf(family) + 1);
+  const next = after.find(toCompare) ?? families.find(toCompare) ?? after.find(toSort) ?? families.find(toSort);
   if (next) return startFamily(next);
   exit(true);
 }
@@ -148,7 +153,8 @@ function undo() {
 // The overview is told which family the stream was on, to show it there.
 function exit(finished = false) {
   flick = null;
-  $('#compare').classList.remove('is-zoomed');
+  solo = null;
+  $('#compare').classList.remove('is-zoomed', 'is-solo');
   for (const side of ['left', 'right']) showFrame(side, null);
   history = [];
   onExit(finished, family);
@@ -166,9 +172,9 @@ function render() {
   $('#keep-both').hidden = !pair;
   $('#not-the-same').hidden = !pair;
   $('#not-the-same').title = pair ? `Moves ${slots[newcomer].name} into a family of its own` : '';
-  $('#keep-alone').hidden = pair;
-  $('#reject-alone').hidden = pair;
   $('#compare-undo').disabled = !history.length;
+  const lone = pair ? null : slots.left ?? slots.right;
+  showSolo(lone && !lone.decision ? lone : null);
   renderVersions();
   onChange();
 }
@@ -353,6 +359,7 @@ function openFlick(start = slots.left ?? slots.right) {
   const current = { entries, index: entries.indexOf(start), thumbs: [], pictures: [], scrolled: 0 };
   flick = current;
   const zoomed = fade(() => {
+    $('#flick .zoom-frame').dataset.cursor = 'zoomed';
     $('#compare').classList.add('is-zoomed');
     sizeFlick();
     if (flick === current) drawFlick();
@@ -363,6 +370,77 @@ function openFlick(start = slots.left ?? slots.right) {
 function closeFlick() {
   flick = null;
   fade(() => $('#compare').classList.remove('is-zoomed'));
+}
+
+// A version on its own (the Figma's frame 136): the zoomed layout with Keep
+// and Delete, the picture zooming in its frame as on MSW's product pages
+// (below); null leaves it. Coming and going fade like zooming.
+let solo = null;
+let soloUrl = null;
+
+function showSolo(entry) {
+  const compare = $('#compare');
+  if (entry === solo) return;
+  solo = entry;
+  if (!entry) {
+    fade(() => compare.classList.remove('is-solo'));
+    return;
+  }
+  const picture = $('.solo-picture');
+  const img = picture.querySelector('img');
+  const shown = fade(() => {
+    picture.classList.remove('is-zoomed', 'blends');
+    picture.dataset.cursor = 'zoom';
+    delete $('#flick .zoom-frame').dataset.cursor; // the − (back) is only for zoomed pairs
+    img.src = entry.thumb ?? '';
+    renderInfo('zoom', entry, null);
+    $('#pick-zoom').hidden = true;
+    $('#keep-solo').hidden = false;
+    $('#delete-solo').hidden = false;
+    compare.classList.add('is-solo');
+  });
+  if (!entry.thumb) return;
+  blendsIn(entry).then((blends) => {
+    if (solo === entry) picture.classList.toggle('blends', blends);
+  });
+  // Sharp when zoomed: the original (or a large render), once decoded and
+  // the fade has put the thumbnail in.
+  makePreview(entry).then(async (url) => {
+    const loader = new Image();
+    loader.src = url;
+    await loader.decode();
+    await shown;
+    if (solo !== entry) return URL.revokeObjectURL(url);
+    if (soloUrl) URL.revokeObjectURL(soloUrl);
+    soloUrl = url;
+    img.src = url;
+  }).catch(() => {}); // keep the thumbnail
+}
+
+// MSW's product photo zoom: a click zooms the picture 1.6x toward the
+// pointer inside its frame, moving the mouse pans, and a click or leaving
+// zooms back out (style.css, --photo-zoom). The cursor turns from + to −.
+// With the frame the picture's own size, the zoom point is simply where the
+// pointer is in it.
+{
+  const picture = $('.solo-picture');
+  const img = picture.querySelector('img');
+  img.addEventListener('load', () => picture.style.setProperty('--ratio', img.naturalWidth / img.naturalHeight));
+  const follow = (event) => {
+    const box = picture.getBoundingClientRect();
+    picture.style.setProperty('--zoom-x', `${Math.min(Math.max(event.clientX - box.left, 0), box.width)}px`);
+    picture.style.setProperty('--zoom-y', `${Math.min(Math.max(event.clientY - box.top, 0), box.height)}px`);
+  };
+  const zoom = (on) => {
+    picture.classList.toggle('is-zoomed', on);
+    picture.dataset.cursor = on ? 'zoomed' : 'zoom';
+  };
+  picture.addEventListener('pointermove', follow);
+  picture.addEventListener('pointerleave', () => zoom(false));
+  picture.addEventListener('click', (event) => {
+    follow(event);
+    zoom(!picture.classList.contains('is-zoomed'));
+  });
 }
 
 function sizeFlick() {
@@ -428,6 +506,8 @@ function drawFlick() {
   }
   renderInfo('zoom', entry, null);
   $('#pick-zoom').hidden = !(slots.left && slots.right);
+  $('#keep-solo').hidden = true;
+  $('#delete-solo').hidden = true;
 }
 
 function stepFlick(direction) {
@@ -461,7 +541,9 @@ for (const side of ['left', 'right']) {
     if (slots[side]?.thumb) openFlick(slots[side]);
   });
 }
-$('#flick .zoom-frame').addEventListener('click', closeFlick);
+$('#flick .zoom-frame').addEventListener('click', () => {
+  if (flick) closeFlick();
+});
 loopOnHover($('#info-zoom'));
 
 // Pick while zoomed: a version on screen wins, as Pick under its frame does;
@@ -478,8 +560,8 @@ $('#pick-left').addEventListener('click', () => pick('left'));
 $('#pick-right').addEventListener('click', () => pick('right'));
 $('#keep-both').addEventListener('click', keepBoth);
 $('#not-the-same').addEventListener('click', notTheSame);
-$('#keep-alone').addEventListener('click', () => decideAlone('keep'));
-$('#reject-alone').addEventListener('click', () => decideAlone('reject'));
+$('#keep-solo').addEventListener('click', () => decideAlone('keep'));
+$('#delete-solo').addEventListener('click', () => decideAlone('reject'));
 $('#compare-undo').addEventListener('click', undo);
 $('#view-families').addEventListener('click', () => exit());
 
@@ -501,8 +583,9 @@ document.addEventListener('keydown', (event) => {
   // No key decides which version wins: arrows read as moving around (they do
   // step through versions when zoomed), and picking by them by accident
   // rejected files. Picking is the Pick links' job.
-  if (event.key === ' ') openFlick();
-  else if (event.key === 'n') notTheSame();
+  if (event.key === ' ') {
+    if (!solo) openFlick();
+  } else if (event.key === 'n') notTheSame();
   else if (event.key === 'Escape') exit();
   else if ((event.key === 'z' && command) || event.key === 'Backspace') undo();
   else return;
