@@ -181,7 +181,8 @@ function render() {
 function renderInfo(side, entry, other) {
   $(`#info-${side}`).hidden = !entry;
   if (!entry) return;
-  $(`#index-${side}`).textContent = `${family.indexOf(entry) + 1}/${family.length}`;
+  const index = $(`#index-${side}`); // none when zoomed
+  if (index) index.textContent = `${family.indexOf(entry) + 1}/${family.length}`;
   const mine = details(entry);
   const theirs = other && details(other);
   const line = (key, text = mine[key][0]) => {

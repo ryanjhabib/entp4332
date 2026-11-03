@@ -103,6 +103,8 @@
   --compare-pick-top: 57px;
   --compare-actions-height: 44px; /* actions' capitals to the strip */
   --compare-link-size: 24px;
+  --compare-link-gap: 66px; /* Figma 65.6–65.8 */
+  --compare-pick-offset: -2.5px; /* "2/5" and Pick: Figma 515px, column 8 starts at 517.5 */
   --zoom-info-gap: 49px; /* zoomed frame to its details */
   --zoom-info-height: 140px; /* details top to the window's bottom */
   --strip-cell-width: 144px;
@@ -730,9 +732,12 @@ button:disabled {
   text-box: trim-both cap alphabetic;
 }
 
+/* "2/5" and Pick sit right of the details, at 491px into the half: 2.5px
+   left of column 8 in the Figma, kept as drawn. */
 .compare-index {
-  grid-column: 1 / 3;
+  grid-column: 8 / -1;
   top: 0;
+  left: var(--compare-pick-offset);
   font-size: var(--intro-size);
   font-weight: var(--font-weight-regular);
   line-height: 1;
@@ -740,8 +745,9 @@ button:disabled {
 }
 
 .compare-pick {
-  grid-column: 1 / 3;
+  grid-column: 8 / -1;
   top: var(--compare-pick-top);
+  left: var(--compare-pick-offset);
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -759,7 +765,7 @@ button:disabled {
    The name, the export date and any value that differs from the other
    side are dark. */
 .compare-details {
-  grid-column: 3 / 9;
+  grid-column: 1 / 7;
   top: 0;
   right: 0;
   height: 100%;
@@ -816,29 +822,16 @@ button:disabled {
   color: var(--color-text);
 }
 
-/* The links for this step: the first ends on column 5, the last on the
-   margin, and the middle one sits centred between them. */
+/* The links for this step, in a row from the left margin, evenly spaced. */
 .compare-actions {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  column-gap: var(--grid-gutter);
-  align-items: start;
-}
-
-.compare-actions-first {
-  display: flex; /* not a line of text, which would push the link down */
-  grid-column: 1 / 6;
-  justify-self: end;
-}
-
-.compare-actions-end {
   display: flex;
-  grid-column: 6;
-  margin-left: calc(-1 * var(--grid-gutter)); /* starts where column 5 ends */
+  align-items: start;
+  gap: var(--compare-link-gap);
 }
 
-.compare-actions-end > :not(#compare-undo) {
-  margin: 0 auto;
+.compare-actions-first,
+.compare-actions-end {
+  display: contents;
 }
 
 .compare-actions button {
