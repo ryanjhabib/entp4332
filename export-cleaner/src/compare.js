@@ -41,6 +41,9 @@ export function openFamily(allFamilies, entries, exit, change) {
 
 const contending = (entries) => entries.filter((entry) => entry.decision !== 'reject');
 
+// Families are ordered by colour (group.js), so newest comes from the dates.
+const newestFirst = (entries) => [...entries].sort((a, b) => b.file.lastModified - a.file.lastModified);
+
 // The newest version starts on the left (most likely the final), the next
 // newest on the right; the rest wait their turn, newest first. Versions
 // already out stay out: click one in the versions grid to bring it back.
@@ -49,11 +52,11 @@ const contending = (entries) => entries.filter((entry) => entry.decision !== 're
 // newest version that's out, to change the choice.
 function startFamily(entries) {
   family = entries;
-  const contenders = contending(entries).reverse();
+  const contenders = newestFirst(contending(entries));
   if (entries === revisit && contenders.length < 2) {
-    contenders.push(...entries.filter((entry) => entry.decision === 'reject').reverse());
+    contenders.push(...newestFirst(entries.filter((entry) => entry.decision === 'reject')));
   }
-  if (!contenders.length) contenders.push(entries.at(-1));
+  if (!contenders.length) contenders.push(newestFirst(entries)[0]);
   [slots.left, slots.right = null, ...queue] = contenders;
   newcomer = 'right';
   if (slots.right) render();
@@ -353,8 +356,8 @@ export async function blendsIn(entry) {
 
 // Zoomed (the Figma's frame 135): Space or a click on a frame shows one
 // version large in place of the pair, with its details, like Quick Look in
-// Finder: scrolling or the arrow keys step through the family oldest to
-// newest in the same place, so whatever changed between two versions jumps
+// Finder: scrolling or the arrow keys step through the family (by colour, then
+// oldest to newest) in the same place, so whatever changed between two versions jumps
 // out. Each version is drawn at the frame's size (the thumbnail until then) onto
 // one canvas, so a step is a single draw. A click on it, Space or Escape
 // goes back; the change fades both ways like changing screen.

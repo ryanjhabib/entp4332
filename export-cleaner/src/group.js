@@ -139,7 +139,7 @@ function sharedWords(a, b) {
 // documents in one family (an image that looks like several decks made from
 // one template joins the one it matches best).
 // Files with nothing to compare (no preview) stay on their own.
-// Returns families as arrays of files, each oldest first, ordered by look (see orderByLook).
+// Returns families as arrays of files, each by colour (see orderByColour), ordered by look (see orderByLook).
 export function groupFiles(files, { minSimilarity }) {
   const stems = files.map((entry) => nameStem(entry.name));
   const links = [];
@@ -180,7 +180,26 @@ export function groupFiles(files, { minSimilarity }) {
     if (!families.has(key)) families.set(key, []);
     families.get(key).push(entry);
   });
-  return orderByLook([...families.values()]);
+  return orderByLook([...families.values()].map(orderByColour));
+}
+
+// Below this chroma a version is black and white (they measure 0–0.2, colour
+// photos 26 and up); below this shadows grey it has true blacks (dark graphics
+// measure 22, everything else tested 59 and up). See readColour in describe.js.
+const GREY_CHROMA = 6;
+const BLACK_SHADOWS = 40;
+
+// A family's versions grouped by colour (black and white or colour, with true
+// blacks or without), so a black and white edit sits beside the other black and
+// white edits. Groups come in order of their oldest version, each oldest first.
+export function orderByColour(family) {
+  const sets = new Map();
+  for (const entry of family) {
+    const key = entry.tone ? `${entry.tone.chroma < GREY_CHROMA} ${entry.tone.shadows < BLACK_SHADOWS}` : '';
+    if (!sets.has(key)) sets.set(key, []);
+    sets.get(key).push(entry);
+  }
+  return [...sets.values()].flat();
 }
 
 // How much colour counts when ordering families: a weak tie-breaker after looks.

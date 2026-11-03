@@ -2,8 +2,8 @@ import './style.css';
 import { $, show, plural, familyDates, exportFormat, formatSize } from './dom.js';
 import { isSupported, pickFolder, droppedFolder, readFolder } from './scan.js';
 import { makeThumbnail } from './thumbs.js';
-import { describe } from './describe.js';
-import { groupFiles } from './group.js';
+import { describe, readColour } from './describe.js';
+import { groupFiles, orderByColour } from './group.js';
 import { openFamily, blendsIn } from './compare.js';
 import { showSummary } from './summary.js';
 import { TRASH_FOLDER, requestWriteAccess, moveRejected } from './apply.js';
@@ -18,7 +18,7 @@ import { startLoading, updateLoading, startScan, scannedFile, finishLoading, fai
 // Everything the app knows lives here.
 const state = {
   dir: null, // the folder the user picked (a FileSystemDirectoryHandle)
-  // For each design file: { handle, file, name, ext, thumb, width, height, vectors, words, shot, colour, card, decision }
+  // For each design file: { handle, file, name, ext, thumb, width, height, vectors, words, shot, colour, tone, card, decision }
   files: [],
   families: [], // [[entry, ...], ...], each oldest first, similar families side by side
   mediaType: null, // the chosen MEDIA_TYPES entry; sets the grouping level
@@ -129,11 +129,14 @@ async function loadFolder(dir) {
   const todo = files.filter((entry) => {
     const row = saved.get(entry.name);
     if (row?.size !== entry.file.size || row.lastModified !== entry.file.lastModified) return true;
-    const { thumb, width, height, vectors, words, shot, colour } = row;
-    Object.assign(entry, { thumb: thumb && URL.createObjectURL(thumb), width, height, vectors, words, shot, colour });
+    const { thumb, width, height, vectors, words, shot, colour, tone } = row;
+    Object.assign(entry, { thumb: thumb && URL.createObjectURL(thumb), width, height, vectors, words, shot, colour, tone });
     entry.decision = record.decisions[entry.name];
     return false;
   });
+  // Files saved before tones were read get theirs from the thumbnail.
+  await Promise.all(files.filter((entry) => entry.thumb && !entry.tone && !todo.includes(entry))
+    .map(async (entry) => { entry.tone = (await readColour(entry.thumb)).tone; }));
   state.dir = dir;
   state.record = record;
   state.files = files;
@@ -173,7 +176,7 @@ function savedFamilies(record, files) {
   const byName = new Map(files.map((entry) => [entry.name, entry]));
   const families = record.families.map((names) => names.map((name) => byName.get(name)));
   const placed = families.flat();
-  return placed.length === files.length && placed.every(Boolean) ? families : null;
+  return placed.length === files.length && placed.every(Boolean) ? families.map(orderByColour) : null;
 }
 
 // The media type and grouping level the folder was last seen with.

@@ -7,7 +7,7 @@
 //   { id, handle, name, used, typeId, description, level,
 //     families: [[file name, ...], ...], decisions: { name: 'keep' | 'reject' } }
 // - files: what the scan found for each file, written once as it's scanned:
-//   { folder, name, size, lastModified, thumb (Blob), width, height, vectors, words, shot, colour }
+//   { folder, name, size, lastModified, thumb (Blob), width, height, vectors, words, shot, colour, tone }
 //   A row is only reused while the file's size and date still match.
 //
 // A folder unused for FORGET_AFTER is dropped; "Forget this folder" drops it at once.
@@ -73,9 +73,9 @@ export async function savedFiles(id) {
 
 export async function saveFile(id, entry) {
   const thumb = entry.thumb ? await (await fetch(entry.thumb)).blob() : null;
-  const { name, width, height, vectors, words, shot, colour } = entry;
+  const { name, width, height, vectors, words, shot, colour, tone } = entry;
   const { size, lastModified } = entry.file;
-  await result((await objects('files', 'readwrite')).put({ folder: id, name, size, lastModified, thumb, width, height, vectors, words, shot, colour }));
+  await result((await objects('files', 'readwrite')).put({ folder: id, name, size, lastModified, thumb, width, height, vectors, words, shot, colour, tone }));
 }
 
 // Drops the rows of files no longer in the folder.

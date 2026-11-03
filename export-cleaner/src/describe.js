@@ -1,7 +1,7 @@
 // What the grouping compares for each file: what it looks like (one vector
 // per image, one per PDF page), the words in it (a PDF's text, or an image's
-// text read by OCR), which shot it is (photo metadata), and its average
-// colour (for ordering the overview).
+// text read by OCR), which shot it is (photo metadata), its average colour
+// (for ordering the overview) and its tone (for ordering a family's versions).
 
 import { embed } from './embed.js';
 import { withPdf, renderPage, readWords } from './pdf.js';
@@ -24,13 +24,13 @@ const OCR_SIZE = 1600;
 const OCR_LARGE = 3200;
 
 // Returns { vectors: [Float32Array, ...], words: Set | null, shot: { taken, moment, original } | null,
-// colour: [r, g, b] | null }.
+// colour: [r, g, b] | null, tone: { chroma, shadows } | null }.
 export async function describe(entry, onDownload) {
-  if (!entry.thumb) return { vectors: [], words: null, shot: null, colour: null }; // unreadable file
+  if (!entry.thumb) return { vectors: [], words: null, shot: null, colour: null, tone: null }; // unreadable file
   return {
     ...(await describeContent(entry, onDownload)),
     shot: await readShot(entry),
-    colour: await averageColour(entry.thumb),
+    ...(await readColour(entry.thumb)),
   };
 }
 
@@ -45,8 +45,10 @@ async function describeContent(entry, onDownload) {
   }
 }
 
-// The thumbnail's average colour as [r, g, b] (0–255); transparent areas count as white.
-async function averageColour(thumbUrl) {
+// The thumbnail's average colour as [r, g, b] (0–255), and its tone: chroma,
+// how far its pixels are from grey on average (0 for black and white), and
+// shadows, the grey of its darkest 5% (0–255). Transparent areas count as white.
+export async function readColour(thumbUrl) {
   const bitmap = await createImageBitmap(await (await fetch(thumbUrl)).blob());
   const canvas = new OffscreenCanvas(16, 16);
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -56,12 +58,21 @@ async function averageColour(thumbUrl) {
   bitmap.close();
   const pixels = ctx.getImageData(0, 0, 16, 16).data;
   const sum = [0, 0, 0];
+  const greys = [];
+  let chroma = 0;
   for (let i = 0; i < pixels.length; i += 4) {
-    sum[0] += pixels[i];
-    sum[1] += pixels[i + 1];
-    sum[2] += pixels[i + 2];
+    const [r, g, b] = pixels.subarray(i, i + 3);
+    sum[0] += r;
+    sum[1] += g;
+    sum[2] += b;
+    chroma += Math.max(r, g, b) - Math.min(r, g, b);
+    greys.push(0.2126 * r + 0.7152 * g + 0.0722 * b);
   }
-  return sum.map((total) => total / 256);
+  greys.sort((a, b) => a - b);
+  return {
+    colour: sum.map((total) => total / 256),
+    tone: { chroma: chroma / 256, shadows: greys[Math.floor(greys.length * 0.05)] },
+  };
 }
 
 // The image's text by OCR, or null if it can't be read (the looks still count).
