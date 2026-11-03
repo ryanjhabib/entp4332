@@ -496,3 +496,11 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - New `src/store.js` (IndexedDB `syca`: `folders` light record rewritten per choice; `files` per-file scan rows written as each is scanned). `loadFolder` reuses rows whose size + lastModified match, scans the rest, restores saved families only when nothing changed and the level matches. sessionStorage `syca-folder` per tab; auto-resume when `queryPermission` is granted, else a "Resume <name>" button in the start screen's folder line. Web Locks `syca-folder-<id>` per folder. Forget button in the Families header. 30-day expiry on start.
 - Bug caught in testing: a refused second tab first restored the other tab's media type; the lock is now checked before restoring.
 - Placeholder UI (Ryan to design): the "Resume <name>" link and the "Forget this folder" button.
+
+## Compare screen from the Figma (2026-11-03)
+
+- Frame 134 (node 17:50): 6-column grid for halves and actions, 24-column for the details; text-box trim so Figma cap distances apply directly. Measured equal at 1728 × 1009 (see commit 8bee62b for every number).
+- Ryan's changes on top: strip shorter (cells 120, date row 24), images top-left in the frames, all strip dates #888, serif buttons italic on hover, new sans grey #888 everywhere (`--color-sans-muted`).
+- Bug: details descenders clipped by overflow: hidden on baseline-trimmed lines; now overflow-x: clip.
+- localhost kept dying because the preview's own dev server is stopped by the app whenever the browser pane's preview closes. Server now runs in Ryan's terminal (`npm run dev`), previews attach via the `export-cleaner-attach` launch config.
+- Open: "Summary" goes to the families overview (as Families did) — confirm with Ryan; no progress-through-folder indicator any more; no visible marker for which strip cells are on screen.
