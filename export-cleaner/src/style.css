@@ -751,8 +751,9 @@ button:disabled {
   cursor: default;
 }
 
+/* Always on the right, also in a header without the toggle (Done). */
 .compare-brand {
-  margin: 0;
+  margin: 0 0 0 auto;
   font-size: var(--brand-size);
   font-weight: var(--font-weight-medium);
   line-height: 1;

@@ -265,7 +265,7 @@ function compareFamily(family) {
   openFamily(state.families, family, (finished, current) => {
     lastCompared = current;
     saveProgress();
-    if (finished) showSummary(state.files, saveProgress);
+    if (finished) openSummary();
     else showOverview(current);
   }, saveProgress);
 }
@@ -442,7 +442,18 @@ $('#view-compare').addEventListener('click', () => {
   const next = nextFamily();
   if (next) compareFamily(next);
 });
-$('#open-summary').addEventListener('click', () => showSummary(state.files, saveProgress));
+// Summary's Sort is off when there's nothing left to sort, as Families' is;
+// undoing a choice there can turn it back on.
+function openSummary() {
+  const sortable = () => ($('#summary-sort').disabled = !nextFamily());
+  sortable();
+  showSummary(state.files, () => {
+    saveProgress();
+    sortable();
+  });
+}
+
+$('#open-summary').addEventListener('click', openSummary);
 $('#summary-back').addEventListener('click', () => showOverview());
 $('#summary-families').addEventListener('click', () => showOverview());
 $('#summary-sort').addEventListener('click', () => $('#view-compare').click());
