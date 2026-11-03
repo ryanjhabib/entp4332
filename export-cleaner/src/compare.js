@@ -17,7 +17,7 @@
 // nothing on disk changes.
 
 import { $, show, familyDates, exportFormat, dayFormat, formatSize } from './dom.js';
-import { makePreview } from './thumbs.js';
+import { makePreview, renderAt } from './thumbs.js';
 import { fileSimilarity } from './group.js';
 
 let families = []; // every family, in the overview's order (shared with it: merges change it)
@@ -330,6 +330,112 @@ async function showFrame(side, entry) {
   img.src = url;
 }
 
+// Space shows the versions one at a time, filling the screen in the same
+// place, like Quick Look in Finder: scrolling or the arrow keys step through
+// them oldest to newest, so whatever changed between two versions jumps out.
+// While asking "same piece?", the next family's versions follow on. Each
+// version is drawn at screen size (the thumbnail until then) onto one canvas,
+// so a step is a single draw. Space or Escape closes.
+const FLICK_STEP = 40; // px of scrolling per version
+const flickCanvas = $('#flick canvas');
+let flick = null; // { entries, index, thumbs, pictures, scrolled }
+
+function openFlick() {
+  const entries = boundary ? [...family, ...boundary] : family;
+  document.activeElement?.blur(); // so Space can't also press a button
+  $('#flick').hidden = false;
+  sizeFlick();
+  flick = { entries, index: entries.indexOf(slots.left ?? slots.right), thumbs: [], pictures: [], scrolled: 0 };
+  drawFlick();
+  loadFlick(flick);
+}
+
+function closeFlick() {
+  flick = null;
+  $('#flick').hidden = true;
+}
+
+function sizeFlick() {
+  const box = flickCanvas.getBoundingClientRect();
+  flickCanvas.width = Math.round(box.width * devicePixelRatio);
+  flickCanvas.height = Math.round(box.height * devicePixelRatio);
+}
+
+// Thumbnails first (instant), then each version at screen size, nearest first.
+async function loadFlick(current) {
+  const { entries } = current;
+  await Promise.all(entries.map(async (entry, i) => {
+    if (!entry.thumb) return;
+    const img = new Image();
+    img.src = entry.thumb;
+    await img.decode().catch(() => {});
+    current.thumbs[i] = img;
+  }));
+  if (flick !== current) return;
+  drawFlick();
+  const nearest = entries.map((_, i) => i).sort((a, b) => Math.abs(a - current.index) - Math.abs(b - current.index));
+  for (const i of nearest) {
+    if (!entries[i].thumb) continue;
+    const { width, height } = entries[i];
+    const longest = Math.max(flickCanvas.width, flickCanvas.height);
+    // Just big enough to fill the screen (never past the file's own size).
+    const size = width ? Math.round(Math.min(1, flickCanvas.width / width, flickCanvas.height / height) * Math.max(width, height)) : longest;
+    try {
+      current.pictures[i] = await renderAt(entries[i], size);
+    } catch {
+      continue; // keep the thumbnail
+    }
+    if (flick !== current) return;
+    if (i === current.index) drawFlick();
+  }
+}
+
+// The version fits the screen, centred, so versions with the same framing line up.
+function drawFlick() {
+  const { entries, index } = flick;
+  const entry = entries[index];
+  const picture = flick.pictures[index] ?? flick.thumbs[index];
+  const ctx = flickCanvas.getContext('2d');
+  ctx.clearRect(0, 0, flickCanvas.width, flickCanvas.height);
+  if (picture) {
+    const width = picture.naturalWidth ?? picture.width;
+    const height = picture.naturalHeight ?? picture.height;
+    const scale = Math.min(flickCanvas.width / width, flickCanvas.height / height);
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(picture, (flickCanvas.width - width * scale) / 2, (flickCanvas.height - height * scale) / 2, width * scale, height * scale);
+  }
+  $('#flick-caption').textContent = [
+    `${index + 1} of ${entries.length}`,
+    entry.name,
+    exportFormat.format(entry.file.lastModified),
+    entry.decision === 'reject' && 'out',
+    entry.thumb && !flick.pictures[index] && 'loading',
+  ].filter(Boolean).join(' · ');
+}
+
+function stepFlick(direction) {
+  const index = Math.max(0, Math.min(flick.entries.length - 1, flick.index + direction));
+  if (index === flick.index) return;
+  flick.index = index;
+  drawFlick();
+}
+
+// Each FLICK_STEP of scrolling is one version, at most one per wheel event:
+// a slow scroll steps slowly, a fast flick of the trackpad runs through them.
+$('#flick').addEventListener('wheel', (event) => {
+  event.preventDefault();
+  flick.scrolled += event.deltaY;
+  if (Math.abs(flick.scrolled) < FLICK_STEP) return;
+  stepFlick(Math.sign(flick.scrolled));
+  flick.scrolled = 0;
+}, { passive: false });
+
+window.addEventListener('resize', () => {
+  if (!flick) return;
+  sizeFlick();
+  drawFlick();
+});
+
 $('#pick-left').addEventListener('click', () => pick('left'));
 $('#pick-right').addEventListener('click', () => pick('right'));
 $('#keep-both').addEventListener('click', keepBoth);
@@ -342,10 +448,22 @@ $('#compare-undo').addEventListener('click', undo);
 $('#view-families').addEventListener('click', () => exit());
 
 document.addEventListener('keydown', (event) => {
-  if ($('#compare').hidden || event.repeat) return;
+  if ($('#compare').hidden) return;
   const command = event.metaKey || event.ctrlKey;
+  if (flick) {
+    // Holding an arrow keeps stepping, so repeats count here.
+    if (command) return;
+    if (event.key === 'ArrowDown' || event.key === 'ArrowRight') stepFlick(1);
+    else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') stepFlick(-1);
+    else if (event.key === ' ' || event.key === 'Escape') {
+      if (!event.repeat) closeFlick();
+    } else return;
+    return event.preventDefault();
+  }
+  if (event.repeat) return;
   if (command && event.key !== 'z') return; // leave ⌘S, ⌘D and the like to the browser
-  if (event.key === 'ArrowLeft') pick('left');
+  if (event.key === ' ') openFlick();
+  else if (event.key === 'ArrowLeft') pick('left');
   else if (event.key === 'ArrowRight') pick('right');
   else if (event.key === 'ArrowDown') keepBoth();
   else if (event.key === 'n') notTheSame();
