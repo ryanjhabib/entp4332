@@ -513,3 +513,10 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - Transitions: screens via view transitions, MSW's 400ms fade-over-held-old; flick view fades 400ms; buttons fade colour/fill 350ms and go italic on hover. Verified in real Chrome via DevTools (the pane can't run view transitions).
 - Lesson added to web-lessons.md: the build minifies 350ms → .35s, so read CSS times with their unit (`cssTime` in dom.js).
 - Not done / offered: the line on strip thumbnails and in the flick view; a fade-in for the newcomer image after a pick; hover fade on the media-type rows (left instant so arrowing doesn't lag).
+
+## Edge lines everywhere; zoom page (2026-11-03)
+
+- Pale-edge line also on strip thumbnails (sized to their shape, centred) and drawn on the zoom canvas.
+- Zoom page (Figma frame 135): compare gets `.is-zoomed` (crossfaded via `fade()` in dom.js); one version on columns 1–4 top-left, compare's info block 49px below, 140px to the bottom. Pick there: on-screen version wins; flicked-to version comes in. Measured equal to Figma at 1728 × 1009.
+- Note: the browser pane did run view transitions this time (mid-fade states visible in screenshots), unlike the web-lessons note.
+- Open with Ryan: drop the "same piece?" family-border step and keep compare inside one family.
