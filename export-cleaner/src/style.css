@@ -95,7 +95,7 @@
   --family-thumb-size: 120px;
   /* the window minus the rest of the pinned top (~290px) and a first row of the grid with dates (~210px) */
   /* Compare, from the Figma at 1728 × 1009 (see #compare). */
-  --compare-toggle-width: 237px; /* each half of Summary | Compare */
+  --compare-toggle-width: 237px; /* each half of Families | Sort */
   --compare-toggle-height: 28px;
   --compare-info-gap: 20px; /* frame to the details */
   --compare-info-height: 149px; /* details top to the actions' capitals */
@@ -634,7 +634,7 @@ button:disabled {
   justify-content: space-between;
 }
 
-/* Summary | Compare: the dark one is where you are. */
+/* Families | Sort: the dark one is where you are. */
 .compare-toggle {
   display: flex;
 }
