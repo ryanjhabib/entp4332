@@ -511,8 +511,11 @@ function drawFlick() {
   $('#delete-solo').hidden = true;
 }
 
-function stepFlick(direction) {
-  const index = Math.max(0, Math.min(flick.entries.length - 1, flick.index + direction));
+// The arrow keys loop (after the last comes the first again); scrolling
+// stops at either end, so a trackpad's momentum doesn't spin round.
+function stepFlick(direction, loop = false) {
+  const count = flick.entries.length;
+  const index = loop ? (flick.index + direction + count) % count : Math.max(0, Math.min(count - 1, flick.index + direction));
   if (index === flick.index) return;
   flick.index = index;
   drawFlick();
@@ -572,8 +575,8 @@ document.addEventListener('keydown', (event) => {
   if (flick) {
     // Holding an arrow keeps stepping, so repeats count here.
     if (command) return;
-    if (event.key === 'ArrowDown' || event.key === 'ArrowRight') stepFlick(1);
-    else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') stepFlick(-1);
+    if (event.key === 'ArrowDown' || event.key === 'ArrowRight') stepFlick(1, true);
+    else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') stepFlick(-1, true);
     else if (event.key === ' ' || event.key === 'Escape') {
       if (!event.repeat) closeFlick();
     } else return;
