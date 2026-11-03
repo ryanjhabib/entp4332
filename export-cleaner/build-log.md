@@ -490,3 +490,9 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 ## Loading facts (2026-11-03)
 
 - Four facts added to the 20s rotation after the bat-wing one: Brassica varieties, fungi closer to animals, octopus/human eyes, euphorbias vs cacti. Skipped chitin, prestin and the genetic code as too technical. Longest stays 3–4 lines on desktop, 4–6 at 375px (bottom 694px of 812). Rotation observed at 20.5s.
+
+## Saved progress (2026-11-03)
+
+- New `src/store.js` (IndexedDB `syca`: `folders` light record rewritten per choice; `files` per-file scan rows written as each is scanned). `loadFolder` reuses rows whose size + lastModified match, scans the rest, restores saved families only when nothing changed and the level matches. sessionStorage `syca-folder` per tab; auto-resume when `queryPermission` is granted, else a "Resume <name>" button in the start screen's folder line. Web Locks `syca-folder-<id>` per folder. Forget button in the Families header. 30-day expiry on start.
+- Bug caught in testing: a refused second tab first restored the other tab's media type; the lock is now checked before restoring.
+- Placeholder UI (Ryan to design): the "Resume <name>" link and the "Forget this folder" button.

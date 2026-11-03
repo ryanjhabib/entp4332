@@ -51,7 +51,7 @@ A Chrome web app (class project, ENTP 4332) that helps designers and photographe
 
 ## Open issues and next steps
 1. **Grouping quality:** follow the order in `INSIGHTS.md`. Short-text phrase rule → multi-scale crop matching → low-content guard → per-file content type replacing the levels → measure DINOv2-base → opt-in AI judge / grouping prompt.
-2. **Save progress (IndexedDB)** so a reload or rescan doesn't redo every file (discussed with Ryan, not built).
+2. ~~Save progress~~ **Built 2026-11-03** (`src/store.js`): per-folder scan rows + choices in IndexedDB, per-tab folder in sessionStorage, Web Locks for one tab per folder, Forget button, 30-day expiry. Open: new files trigger a full regroup (manual splits/merges are redone); the Resume click after a Chrome restart is untested.
 3. **Compare:** switching to Families during a "same piece?" check skips that check on return; changing the grouping level undoes manual S/N fixes. Ideas agreed for later: flicker (spacebar swaps A/B in place) and linked zoom.
 4. **Overview UX** for Ryan's design pass: multi-file families before singles; very large folders.
 5. **Deploy to Vercel** (Hobby): ONNX runtime wasm is 26.9 MB (6.8 MB compressed) per first visit; the model and OCR data come from CDNs, not Vercel. Push only when Ryan says so.

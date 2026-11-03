@@ -65,3 +65,12 @@ A running record of every kind of folder and file the app has been run on, what 
 - Thirteen browser checks passed. Synthetic folder enumeration was delayed 500ms, and one generated PNG passed the real thumbnail, DINOv2, OCR, grouping and final-card pipeline. Confirmed loading before enumeration ends, hidden overview/no thumbnail grid during processing, 100% before overview, correct final card, monotonic/settled percentage, ETA calculation, failure recovery, stopped dots and completion without a hang when already at 100%.
 - Recorded progress samples from 0→67%: settled by 185ms and stayed settled through 501ms; dots observed as `.`, `..`, `...`, `.` at 600ms intervals. One fact remains stable; 20s rotation is configured for future additional facts. A 67% / approximately 3-minute preview was seeded for visual QA only. Temporary fixtures removed; no user images or real folder were used.
 - Limits: no repeat of the 1,200-image run or cold-cache resource network audit. Grouping logic and processing providers did not change. Reduced-motion handling is implemented; this session’s live animation measurement used normal motion.
+
+## Saved progress across refreshes and tabs (2026-11-03)
+
+- **Setup:** two real folders in Chrome's private test storage (OPFS, so the handles can be saved), built from the generated Sonoma / radial / horizon test images. No user files.
+- **Refresh:** 5-file folder, first scan 4.3 s; after a split (Not the same) and a keep/reject pair, a refresh brought back the identical families, choices, Mixed and Balanced, with data restored 184 ms after page start.
+- **Two tabs:** a second tab picking the same folder showed “already open in another Syca tab” on the start screen without taking its media type; a different folder opened normally, both locks held, each tab resuming its own folder. A background tab finishes resuming only once shown (Chrome pauses animation frames there).
+- **New file:** adding one file and refreshing scanned only that file (about 7 s, mostly first-use warm-up of OCR and the GPU model); choices kept, families regrouped.
+- **Forget / expiry:** Forget returned to the start screen and removed only that folder's records; all 6 files stayed on disk. A 31-day-old record was dropped at start, a 29-day-old one kept.
+- **Not checked:** the “Resume” click after Chrome is closed and reopened (test-storage folders are always readable); a refresh in the middle of a long scan (same per-file save path as the new-file test).
