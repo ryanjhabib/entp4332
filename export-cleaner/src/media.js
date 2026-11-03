@@ -6,7 +6,7 @@
 // still overrides it.
 
 export const MEDIA_TYPES = [
-  { id: 'general', label: 'General', level: 'balanced', keywords: ['mixed', 'everything', 'all', 'misc', 'random', 'various', 'assorted', 'stuff', 'files', 'folder', 'anything', 'unsorted', 'junk', 'mess', 'messy', 'clutter', 'dump', 'leftovers', 'downloads', 'desktop', 'exports', 'archive', 'backup', 'untitled', 'unknown', 'idk', 'dunno', 'whatever'],
+  { id: 'mixed', label: 'Mixed', level: 'balanced', keywords: ['general', 'everything', 'all', 'misc', 'random', 'various', 'assorted', 'stuff', 'files', 'folder', 'anything', 'unsorted', 'junk', 'mess', 'messy', 'clutter', 'dump', 'leftovers', 'downloads', 'desktop', 'exports', 'archive', 'backup', 'untitled', 'unknown', 'idk', 'dunno', 'whatever'],
     about: ['a mixed folder of all kinds of files', 'unsorted downloads and random exports', 'a class project or school assignment', 'everything from my desktop'] },
   { id: 'photographs', label: 'Photographs', level: 'balanced', keywords: ['photo', 'photography', 'photographer', 'image', 'picture', 'pic', 'camera', 'raw', 'jpeg', 'jpg', 'lightroom', 'shoot', 'shot', 'portrait', 'landscape', 'street', 'film', 'analog', 'edit', 'grade', 'wedding', 'event', 'travel', 'dslr', 'iphone'],
     about: ['photographs from a camera shoot', 'portraits, landscapes, street and travel photos', 'photos from a wedding, concert or event', 'edited photos and film scans', 'photos of my pets, friends and family', 'a fashion lookbook or editorial shoot'] },
@@ -52,7 +52,7 @@ function fit(word, term) {
 }
 
 // Types that fit what was typed, best first; ties keep the list's order,
-// except that General, the catch-all, goes after a specific type.
+// except that Mixed, the catch-all, goes after a specific type.
 // A word only counts as a typo when it matches nothing as typed, so
 // "edits" finds edit, not editorial. Empty text lists every type.
 export function matchTypes(text) {
@@ -69,7 +69,7 @@ export function matchTypes(text) {
   return MEDIA_TYPES
     .map((type, t) => ({ type, score: fits[t].reduce((sum, f, w) => sum + (f > 0.5 || typoOnly[w] ? f : 0), 0) }))
     .filter(({ score }) => score)
-    .sort((a, b) => b.score - a.score || (a.type.id === 'general') - (b.type.id === 'general'))
+    .sort((a, b) => b.score - a.score || (a.type.id === 'mixed') - (b.type.id === 'mixed'))
     .map(({ type }) => type);
 }
 
@@ -106,7 +106,7 @@ export async function closestType(text) {
 // When no keyword fits, the closest meaning appears as the only row. Nothing
 // is pre-selected: the dark row is only where the pointer (or the arrow keys)
 // are. Enter takes that row, otherwise the top row, otherwise (the model is
-// still loading) waits for the closest meaning (General if it can't load).
+// still loading) waits for the closest meaning (Mixed if it can't load).
 // onChoose(type, text) reports the choice.
 export function setUpMediaField(input, list, onChoose) {
   let shown = [];
