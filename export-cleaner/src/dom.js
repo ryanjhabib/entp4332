@@ -4,20 +4,29 @@ export const $ = (selector) => document.querySelector(selector);
 
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
-// Changes screen. As on Mercy Stays Warm, the new screen fades in over the
-// old one, which holds and fades only in the second half (a view
-// transition; timing in style.css, --screen-fade). The first screen just
-// appears. Resolves once the new screen is showing.
+// Makes a change to the page with a fade, as on Mercy Stays Warm: the new
+// look fades in over the old, which holds and fades only in the second half
+// (a view transition; timing in style.css, --screen-fade). Resolves once
+// the change has been made.
+export function fade(change) {
+  if (!document.startViewTransition || reducedMotion.matches) {
+    change();
+    return Promise.resolve();
+  }
+  return document.startViewTransition(change).updateCallbackDone;
+}
+
+// Changes screen, with the fade. The first screen just appears.
 export function show(id) {
   const swap = () => {
     for (const screen of document.querySelectorAll('.screen')) screen.hidden = screen.id !== id;
   };
   const current = document.querySelector('.screen:not([hidden])');
-  if (!current || current.id === id || !document.startViewTransition || reducedMotion.matches) {
+  if (!current || current.id === id) {
     swap();
     return Promise.resolve();
   }
-  return document.startViewTransition(swap).updateCallbackDone;
+  return fade(swap);
 }
 
 // A CSS time token in ms ("400ms", or ".4s" once the build has minified it).

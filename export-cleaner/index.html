@@ -132,10 +132,15 @@
 
       <div class="compare-strip"><ul class="version-grid" id="version-grid"></ul></div>
 
-      <!-- Space or a click on a frame: the versions full size in one place; scrolling flicks through them. -->
-      <div class="flick" id="flick" data-cursor="zoomed" hidden>
-        <canvas></canvas>
-        <p class="flick-caption" id="flick-caption"></p>
+      <!-- Zoomed (Space or a click on a frame): one version large, in place of the
+           pair, links and strip; scrolling flicks through the family. -->
+      <div class="zoom" id="flick">
+        <div class="zoom-frame" data-cursor="zoomed"><canvas></canvas></div>
+        <div class="compare-info" id="info-zoom">
+          <p class="compare-index" id="index-zoom"></p>
+          <button class="compare-pick" id="pick-zoom" type="button">Pick</button>
+          <div class="compare-details" id="details-zoom"></div>
+        </div>
       </div>
     </section>
 

@@ -103,6 +103,8 @@
   --compare-pick-top: 57px;
   --compare-actions-height: 44px; /* actions' capitals to the strip */
   --compare-link-size: 24px;
+  --zoom-info-gap: 49px; /* zoomed frame to its details */
+  --zoom-info-height: 140px; /* details top to the window's bottom */
   --strip-cell-width: 144px;
   --strip-cell-height: 120px; /* Figma 144, made shorter */
   --strip-thumb-inset: 12px; /* above and below a 96px thumbnail */
@@ -945,26 +947,43 @@ button:disabled {
   cursor: default;
 }
 
-/* Space in compare: one version at a time, filling the screen. */
-.flick {
-  position: fixed;
-  inset: 0;
-  z-index: 2;
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  gap: var(--space-3);
-  padding: var(--grid-margin);
-  background: var(--color-bg);
+/* Zoomed (Figma frame 135): one version across columns 1–4, its details
+   below in the same block as compare's, in place of the pair, links and
+   strip. The header stays. */
+.zoom {
+  display: none;
+  grid-row: 2 / -1;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-rows: minmax(0, 1fr) var(--zoom-info-height);
+  column-gap: var(--grid-gutter);
+  row-gap: var(--zoom-info-gap);
+  min-height: 0;
+  margin-top: var(--space-5);
 }
 
-.flick canvas {
+#compare.is-zoomed .zoom {
+  display: grid;
+}
+
+#compare.is-zoomed :is(.compare-sides, .compare-actions, .compare-strip) {
+  display: none;
+}
+
+.zoom-frame {
+  position: relative;
+  grid-column: 1 / 5;
+  min-height: 0;
+}
+
+.zoom-frame canvas {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
 }
 
-.flick-caption {
-  color: var(--color-sans-muted);
-  font-size: var(--text-s);
+#info-zoom {
+  grid-column: 1 / 4; /* half the width, so its details sit as compare's do */
 }
 
 /* Summary screen */

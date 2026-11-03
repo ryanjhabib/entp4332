@@ -16,7 +16,7 @@
 // Choices are stored on each file as entry.decision = 'keep' | 'reject';
 // nothing on disk changes.
 
-import { $, show, familyDates, exportFormat, dayFormat, formatSize, cssTime } from './dom.js';
+import { $, show, fade, familyDates, exportFormat, dayFormat, formatSize } from './dom.js';
 import { makePreview, renderAt } from './thumbs.js';
 import { loopLine, loopOnHover } from './loop.js';
 import { fileSimilarity } from './group.js';
@@ -198,6 +198,8 @@ function undo() {
 // finished: true when the stream has reached its end, false when the user left.
 // The overview is told which family the stream was on, to show it there.
 function exit(finished = false) {
+  flick = null;
+  $('#compare').classList.remove('is-zoomed');
   for (const side of ['left', 'right']) showFrame(side, null);
   history = [];
   onExit(finished, family);
@@ -393,12 +395,14 @@ async function blendsIn(entry) {
   return entry.blends;
 }
 
-// Space shows the versions one at a time, filling the screen in the same
-// place, like Quick Look in Finder: scrolling or the arrow keys step through
-// them oldest to newest, so whatever changed between two versions jumps out.
-// While asking "same piece?", the next family's versions follow on. Each
-// version is drawn at screen size (the thumbnail until then) onto one canvas,
-// so a step is a single draw. Space or Escape closes.
+// Zoomed (the Figma's frame 135): Space or a click on a frame shows one
+// version large in place of the pair, with its details, like Quick Look in
+// Finder: scrolling or the arrow keys step through the family oldest to
+// newest in the same place, so whatever changed between two versions jumps
+// out. While asking "same piece?", the next family's versions follow on.
+// Each version is drawn at the frame's size (the thumbnail until then) onto
+// one canvas, so a step is a single draw. A click on it, Space or Escape
+// goes back; the change fades both ways like changing screen.
 const FLICK_STEP = 40; // px of scrolling per version
 const flickCanvas = $('#flick canvas');
 let flick = null; // { entries, index, thumbs, pictures, scrolled }
@@ -407,39 +411,19 @@ let flick = null; // { entries, index, thumbs, pictures, scrolled }
 function openFlick(start = slots.left ?? slots.right) {
   const entries = boundary ? [...family, ...boundary] : family;
   document.activeElement?.blur(); // so Space can't also press a button
-  fadeFlick(true);
-  sizeFlick();
-  flick = { entries, index: entries.indexOf(start), thumbs: [], pictures: [], scrolled: 0 };
-  drawFlick();
-  loadFlick(flick);
+  const current = { entries, index: entries.indexOf(start), thumbs: [], pictures: [], scrolled: 0 };
+  flick = current;
+  const zoomed = fade(() => {
+    $('#compare').classList.add('is-zoomed');
+    sizeFlick();
+    if (flick === current) drawFlick();
+  });
+  loadFlick(current, zoomed);
 }
 
 function closeFlick() {
   flick = null;
-  fadeFlick(false);
-}
-
-// Opening and closing fade over --screen-fade, as changing screen does; a
-// reversal mid-fade carries on from the opacity it had reached.
-const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-let flickFade = null;
-
-function fadeFlick(open) {
-  const overlay = $('#flick');
-  const from = flickFade ? getComputedStyle(overlay).opacity : Number(!open);
-  flickFade?.cancel();
-  flickFade = null;
-  overlay.hidden = false;
-  if (reducedMotion.matches) {
-    overlay.hidden = !open;
-    return;
-  }
-  const fade = overlay.animate([{ opacity: from }, { opacity: Number(open) }], { duration: cssTime(overlay, '--screen-fade'), easing: 'ease' });
-  flickFade = fade;
-  fade.finished.then(() => {
-    flickFade = null;
-    if (!open) overlay.hidden = true;
-  }).catch(() => {}); // cancelled by a reversal
+  fade(() => $('#compare').classList.remove('is-zoomed'));
 }
 
 function sizeFlick() {
@@ -449,7 +433,8 @@ function sizeFlick() {
 }
 
 // Thumbnails first (instant), then each version at screen size, nearest first.
-async function loadFlick(current) {
+// `zoomed` resolves once the canvas has its size.
+async function loadFlick(current, zoomed) {
   const { entries } = current;
   await Promise.all(entries.map(async (entry, i) => {
     if (!entry.thumb) return;
@@ -459,6 +444,7 @@ async function loadFlick(current) {
     current.thumbs[i] = img;
     await blendsIn(entry);
   }));
+  await zoomed;
   if (flick !== current) return;
   drawFlick();
   const nearest = entries.map((_, i) => i).sort((a, b) => Math.abs(a - current.index) - Math.abs(b - current.index));
@@ -478,7 +464,8 @@ async function loadFlick(current) {
   }
 }
 
-// The version fits the screen, centred, so versions with the same framing line up.
+// The version fits the frame at its top left, as in compare, so versions with
+// the same framing line up. Its details follow it.
 function drawFlick() {
   const { entries, index } = flick;
   const entry = entries[index];
@@ -489,7 +476,7 @@ function drawFlick() {
     const width = picture.naturalWidth ?? picture.width;
     const height = picture.naturalHeight ?? picture.height;
     const scale = Math.min(flickCanvas.width / width, flickCanvas.height / height);
-    const [x, y, w, h] = [(flickCanvas.width - width * scale) / 2, (flickCanvas.height - height * scale) / 2, width * scale, height * scale];
+    const [x, y, w, h] = [0, 0, width * scale, height * scale];
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(picture, x, y, w, h);
     if (entry.blends) {
@@ -500,13 +487,8 @@ function drawFlick() {
       ctx.strokeRect(x + line / 2, y + line / 2, w - line, h - line);
     }
   }
-  $('#flick-caption').textContent = [
-    `${index + 1} of ${entries.length}`,
-    entry.name,
-    exportFormat.format(entry.file.lastModified),
-    entry.decision === 'reject' && 'out',
-    entry.thumb && !flick.pictures[index] && 'loading',
-  ].filter(Boolean).join(' · ');
+  renderInfo('zoom', entry, null);
+  $('#pick-zoom').hidden = !(slots.left && slots.right) || Boolean(boundary);
 }
 
 function stepFlick(direction) {
@@ -540,7 +522,18 @@ for (const side of ['left', 'right']) {
     if (slots[side]?.thumb) openFlick(slots[side]);
   });
 }
-$('#flick').addEventListener('click', closeFlick);
+$('#flick .zoom-frame').addEventListener('click', closeFlick);
+loopOnHover($('#info-zoom'));
+
+// Pick while zoomed: a version on screen wins, as Pick under its frame does;
+// one flicked to comes onto the screen to be compared.
+$('#pick-zoom').addEventListener('click', () => {
+  const entry = flick.entries[flick.index];
+  const side = entry === slots.left ? 'left' : entry === slots.right ? 'right' : null;
+  closeFlick();
+  if (side) pick(side);
+  else challengeWith(entry);
+});
 
 $('#pick-left').addEventListener('click', () => pick('left'));
 $('#pick-right').addEventListener('click', () => pick('right'));
