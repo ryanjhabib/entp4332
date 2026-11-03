@@ -105,8 +105,8 @@
   --compare-actions-height: 44px; /* actions' capitals to the strip */
   --compare-link-size: 24px;
   --compare-link-gap: 66px; /* Figma 65.6–65.8 */
-  --zoom-info-gap: 49px; /* zoomed frame to its details */
-  --zoom-info-height: 140px; /* details top to the window's bottom */
+  --zoom-info-gap: 20px; /* zoomed frame to its details, as in compare (Figma 49) */
+  --zoom-info-height: 169px; /* details top to the window's bottom: the frame keeps its size */
   --strip-cell-width: 120px; /* Figma 144; the longest date is 96px */
   --strip-cell-height: 60px; /* Figma 144, then 120, halved */
   --strip-thumb-inset: 6px; /* above and below a 48px thumbnail */
@@ -932,8 +932,8 @@ button:disabled {
 }
 
 /* Zoomed (Figma frame 135): one version across columns 1–4, its details
-   below in the same block as compare's, in place of the pair, links and
-   strip. The header stays. */
+   pinned 20px under the frame (as in compare) in the same block as
+   compare's, in place of the pair, links and strip. The header stays. */
 .zoom {
   display: none;
   grid-row: 2 / -1;
