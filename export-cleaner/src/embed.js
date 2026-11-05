@@ -2,7 +2,10 @@
 // (DINOv2 small, Apache 2.0) that runs here in the browser. Images that share
 // content get similar numbers, even cropped, re-edited, or laid out differently.
 // The model (about 84 MB) downloads from Hugging Face the first time, then
-// Chrome caches it. No image ever leaves the computer.
+// Chrome caches it; the Mac app has it built in (see resources.js). No image
+// ever leaves the computer.
+
+import { loadPipeline } from './resources.js';
 
 const MODEL = 'onnx-community/dinov2-small';
 
@@ -18,7 +21,7 @@ async function device() {
 // The library is large, so like pdf.js it's only fetched once a folder is opened.
 // onDownload(percent) reports the first-time download of the model file.
 function loadModel(onDownload) {
-  modelReady ??= import('@huggingface/transformers').then(async ({ pipeline }) =>
+  modelReady ??= loadPipeline().then(async (pipeline) =>
     pipeline('image-feature-extraction', MODEL, {
       device: await device(),
       dtype: 'fp32', // full precision: accuracy over speed

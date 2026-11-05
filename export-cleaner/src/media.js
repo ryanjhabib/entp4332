@@ -5,6 +5,8 @@
 // at (see LEVELS in main.js); the overview's Loose / Balanced / Strict toggle
 // still overrides it.
 
+import { loadPipeline } from './resources.js';
+
 export const MEDIA_TYPES = [
   { id: 'mixed', label: 'Mixed', level: 'balanced', keywords: ['general', 'everything', 'all', 'misc', 'random', 'various', 'assorted', 'stuff', 'files', 'folder', 'anything', 'unsorted', 'junk', 'mess', 'messy', 'clutter', 'dump', 'leftovers', 'downloads', 'desktop', 'exports', 'archive', 'backup', 'untitled', 'unknown', 'idk', 'dunno', 'whatever'],
     about: ['a mixed folder of all kinds of files', 'unsorted downloads and random exports', 'a class project or school assignment', 'everything from my desktop'] },
@@ -75,14 +77,15 @@ export function matchTypes(text) {
 
 // The meaning match: all-MiniLM-L6-v2 (Apache 2.0, about 23 MB quantised),
 // through the same library as the image model. It downloads from Hugging Face
-// the first time a description fits no keyword, then Chrome caches it. It runs
-// on the processor, leaving the GPU to the scan; the typed text never leaves.
+// the first time a description fits no keyword, then Chrome caches it (the
+// Mac app has it built in). It runs on the processor, leaving the GPU to the
+// scan; the typed text never leaves.
 const TEXT_MODEL = 'Xenova/all-MiniLM-L6-v2';
 const ABOUT = MEDIA_TYPES.flatMap((type) => type.about.map(() => type));
 let meaningReady = null;
 
 function loadMeaning() {
-  meaningReady ??= import('@huggingface/transformers').then(async ({ pipeline }) => {
+  meaningReady ??= loadPipeline().then(async (pipeline) => {
     const embed = await pipeline('feature-extraction', TEXT_MODEL, { dtype: 'q8', device: 'wasm' });
     const vectors = await embed(MEDIA_TYPES.flatMap((type) => type.about), { pooling: 'mean', normalize: true });
     return { embed, phrases: vectors.tolist() };

@@ -1,7 +1,10 @@
 // Reading the words inside an image (OCR, optical character recognition), so
 // text-heavy images can be compared by their words the way PDFs are.
 // Tesseract.js, English. Its engine and language data (a few MB) come from
-// the jsDelivr CDN the first time, then Chrome caches them.
+// the jsDelivr CDN the first time, then Chrome caches them; the Mac app has
+// them built in (see resources.js).
+
+import { TESSERACT_PATHS } from './resources.js';
 
 // Words Tesseract is less sure of than this (0–100) are left out: on photos
 // it "finds" words in textures, all at low confidence.
@@ -11,7 +14,7 @@ let workerReady = null;
 
 function loadWorker() {
   workerReady ??= import('tesseract.js')
-    .then(({ createWorker }) => createWorker('eng'))
+    .then(({ createWorker, OEM }) => createWorker('eng', OEM.LSTM_ONLY, TESSERACT_PATHS)) // LSTM_ONLY: Tesseract's default engine
     .catch((error) => {
       workerReady = null; // let the next file try again
       throw error;
