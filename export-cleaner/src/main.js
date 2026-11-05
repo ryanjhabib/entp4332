@@ -314,6 +314,7 @@ function showDone({ moved, failed }) {
     `Moved ${plural(moved.length, 'file')} into ${TRASH_FOLDER} inside “${state.dir.name}”. ` +
     `${plural(kept, 'other file')} ${kept === 1 ? 'wasn’t' : 'weren’t'} touched.`;
   const copied = moved.filter((m) => m.how === 'copy').length;
+  $('#done-how').hidden = !moved.length;
   $('#done-how').textContent = copied
     ? `${moved.length - copied} moved directly; ${copied} copied, checked, then the original removed (Chrome refused a direct move).`
     : 'Every file was moved directly: same file, same dates, nothing copied.';
@@ -322,11 +323,12 @@ function showDone({ moved, failed }) {
     $('#done-how').textContent += ` ${renamed.length} renamed to avoid a clash with files already in ${TRASH_FOLDER}.`;
   }
   $('#done-failed').hidden = !failed.length;
-  $('#done-failed-head').textContent = `Couldn’t move ${plural(failed.length, 'file')}. They’re still in place.`;
+  // Each says where the file is now; Chrome's own error is in the console.
+  $('#done-failed-head').textContent = `Couldn’t move ${plural(failed.length, 'file')}.`;
   $('#done-failed-list').replaceChildren(
-    ...failed.map(({ entry, error }) => {
+    ...failed.map(({ entry, gone }) => {
       const li = document.createElement('li');
-      li.textContent = `${entry.name}: ${error.message}`;
+      li.textContent = `${entry.name}: ${gone ? 'no longer in this folder' : 'still in place'}`;
       return li;
     }),
   );

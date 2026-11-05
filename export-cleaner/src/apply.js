@@ -12,8 +12,10 @@ export async function requestWriteAccess(dir) {
 }
 
 // Moves each rejected file into _to_delete, one at a time.
-// Returns { moved: [{ entry, name, how }], failed: [{ entry, error }] }.
+// Returns { moved: [{ entry, name, how }], failed: [{ entry, error, gone }] },
+// gone when a file that couldn't be moved isn't in the folder any more.
 export async function moveRejected(dir, rejected, onProgress) {
+  const existed = await dir.getDirectoryHandle(TRASH_FOLDER).then(() => true, () => false);
   const trash = await dir.getDirectoryHandle(TRASH_FOLDER, { create: true });
   const moved = [];
   const failed = [];
@@ -24,10 +26,14 @@ export async function moveRejected(dir, rejected, onProgress) {
       moved.push({ entry, name, how });
     } catch (error) {
       console.error(`Could not move ${entry.name}:`, error);
-      failed.push({ entry, error });
+      const gone = await entry.handle.getFile().then(() => false, (missing) => missing.name === 'NotFoundError');
+      failed.push({ entry, error, gone });
     }
     onProgress(moved.length + failed.length);
   }
+  // Nothing went into a _to_delete made just now, so it goes again. Without
+  // `recursive`, removeEntry only removes an empty folder.
+  if (!existed && !moved.length) await dir.removeEntry(TRASH_FOLDER).catch(() => {});
   return { moved, failed };
 }
 
