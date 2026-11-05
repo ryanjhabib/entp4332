@@ -176,11 +176,10 @@ test.describe('Sort zoom', () => {
     await app.expectPair('sunset-bw.png', 'sunset-crop.jpg'); // nothing was decided
   });
 
-  test.fixme('the wheel steps one version at a time and stops at either end', {
-    annotation: { type: 'bug', description: 'Unverified test, not a confirmed app bug: on its first run (2026-11-05) the wheel didn’t step back from 3/3. The 2026-11-04 audit says the wheel worked, so the test may be at fault. Needs a look.' },
-  }, async ({ app, page }) => {
+  test('the wheel steps one version at a time and stops at either end', async ({ app, page }) => {
     await page.keyboard.press(' ');
     await expect.poll(() => zoomed(app)).toBe('3/3 sunset-bw.png');
+    await app.settled(); // during the zoom's fade-in the wheel goes to the fade, not the picture
     const frame = await page.locator('#flick .zoom-frame').boundingBox();
     await page.mouse.move(frame.x + frame.width / 2, frame.y + frame.height / 2);
     await page.mouse.wheel(0, 40); // already the last: stays
@@ -224,7 +223,7 @@ test.describe('Sort zoom', () => {
 });
 
 test.describe('Sort with a big set', () => {
-  test('a set of 14 versions keeps both pictures and both Picks on screen', async ({ app, page }) => {
+  test('a set of 14 versions keeps both pictures and both Picks on screen, and the strip scrolls', async ({ app, page }) => {
     await app.scan('fourteen', folders.fourteen);
     await expect(page.locator('#file-count')).toHaveText('14 design files · 1 set · 0 solos · 0 decided');
     await page.locator('#view-compare').click();
@@ -234,7 +233,18 @@ test.describe('Sort with a big set', () => {
     }
     const right = await page.locator('#frame-right').boundingBox();
     expect(right.x + right.width).toBeLessThanOrEqual(1440);
-    // Not yet checked: that the strip scrolls, and a real click on the right
-    // Pick at this size (a first attempt measured the wrong element).
+    // The strip is wider than the window and scrolls sideways to the last version.
+    const strip = page.locator('#version-grid');
+    expect(await strip.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
+    const last = page.locator('#version-grid > li').last();
+    await expect(last).not.toBeInViewport({ ratio: 1 });
+    await strip.evaluate((el) => { el.scrollLeft = el.scrollWidth; });
+    await expect(last).toBeInViewport({ ratio: 1 });
+    // A real click on a waiting version there brings it in to be compared.
+    const waiting = page.locator('#version-grid > li:not([data-state="on-screen"])').last();
+    const name = await waiting.getAttribute('title');
+    await waiting.click();
+    await expect.poll(async () => (await app.sort()).right?.name).toBe(name);
+    await expect(page.locator('#pick-right')).toBeInViewport({ ratio: 1 });
   });
 });

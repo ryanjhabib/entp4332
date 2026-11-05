@@ -68,6 +68,12 @@ export class App {
     return this.page.locator(selector);
   }
 
+  // Waits for a screen fade (a view transition) to finish: until then the
+  // fade's overlay gets the mouse and the wheel, not the page under it.
+  async settled() {
+    await this.page.waitForFunction(() => !document.getAnimations().some((a) => a.effect?.pseudoElement?.startsWith('::view-transition')));
+  }
+
   // ---- Start screen ----
 
   async open() {
