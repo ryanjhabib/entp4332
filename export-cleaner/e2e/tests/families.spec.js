@@ -124,4 +124,17 @@ test.describe('Families grouping levels', () => {
     expect(await app.grouping()).toEqual(balanced);
     await expect(page.locator('#file-count')).toHaveText('7 design files · 2 sets · 1 solo · 0 decided');
   });
+
+  test.fixme('switching Grouping and back keeps a “These are different” split', {
+    annotation: { type: 'bug', description: 'Open on master (TESTING.md 2026-11-04): any Grouping change drops the splits, even back at the same level.' },
+  }, async ({ app, page }) => {
+    await app.scan('small', folders.small);
+    await app.cell('sunset.png').click();
+    await page.locator('#not-the-same').click(); // sunset-crop.jpg on its own
+    await app.toFamilies();
+    await expect(page.locator('#file-count')).toHaveText('6 design files · 2 sets · 2 solos · 0 decided');
+    await page.locator('[data-level="strict"]').click();
+    await page.locator('[data-level="balanced"]').click();
+    await expect(page.locator('#file-count')).toHaveText('6 design files · 2 sets · 2 solos · 0 decided');
+  });
 });

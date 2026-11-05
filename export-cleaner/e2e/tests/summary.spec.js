@@ -102,7 +102,8 @@ test.describe('Summary', () => {
     annotation: { type: 'bug', description: 'Open on master (TESTING.md 2026-11-04): the second click clears the card that moves into its place.' },
   }, async ({ app, page }) => {
     await sortEverything(app, page);
-    await app.summaryCard('flowers.png').dblclick();
-    expect((await app.summary()).reject).toEqual(['sunset-crop.jpg', 'sunset.png']);
+    // The first card: the next one slides into its place under the pointer.
+    await app.summaryCard('sunset.png').dblclick();
+    expect((await app.summary()).reject).toEqual(['flowers.png', 'sunset-crop.jpg']);
   });
 });
