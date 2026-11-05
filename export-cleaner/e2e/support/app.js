@@ -5,6 +5,9 @@
 // downloads.
 
 import { test as base, expect } from '@playwright/test';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { guardNetwork } from './network.js';
 
@@ -17,23 +20,42 @@ export const test = base.extend({
   // Set gpu: true in a test to leave WebGPU switched on (see the WebGPU test).
   gpu: [false, { option: true }],
 
-  context: async ({ context, gpu }, use) => {
-    const blocked = await guardNetwork(context);
-    const errors = [];
-    context.on('page', (page) => page.on('pageerror', (error) => errors.push(`${page.url()}: ${error.message}`)));
-    await context.addInitScript({ path: BROWSER_HELPERS });
-    // The test browser has no graphics card: Chrome offers WebGPU but can't
-    // start it, which stops the scan (an open bug, see the WebGPU test in
-    // start.spec.js). So the image model runs on the processor here, the
-    // app's own path for a Chrome without WebGPU. Same model, same files.
-    if (!gpu) await context.addInitScript(() => delete Navigator.prototype.gpu);
-    await use(context);
-    expect(errors, 'errors the page threw and didn’t catch').toEqual([]);
-    expect(blocked, 'requests that tried to leave the computer').toEqual([]);
+  // A normal browser profile in a new, empty folder, deleted afterwards.
+  // Playwright's usual private (incognito) profile can't be used: Chromium
+  // crashes when the app reads a saved folder back from its storage there
+  // (found 2026-11-05), which every reopen, refresh and rescan does.
+  context: async ({ playwright, channel, headless, viewport, baseURL, gpu }, use) => {
+    const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'export-cleaner-e2e-profile-'));
+    const context = await playwright.chromium.launchPersistentContext(profile, { channel, headless, viewport, baseURL });
+    try {
+      await setUp(context, gpu, use);
+    } finally {
+      await context.close();
+      fs.rmSync(profile, { recursive: true, force: true });
+    }
   },
 
   app: async ({ page }, use) => use(new App(page)),
 });
+
+async function setUp(context, gpu, use) {
+  const blocked = await guardNetwork(context);
+  const errors = [];
+  context.on('page', (page) => {
+    page.on('pageerror', (error) => errors.push(`${page.url()}: ${error.message}`));
+    page.on('crash', () => errors.push(`${page.url()}: the tab crashed`));
+    if (process.env.E2E_CONSOLE) page.on('console', (message) => console.log(`[browser ${message.type()}] ${message.text().slice(0, 300)}`));
+  });
+  await context.addInitScript({ path: BROWSER_HELPERS });
+  // The test browser has no graphics card: Chrome offers WebGPU but can't
+  // start it, which stops the scan (an open bug, see the WebGPU test in
+  // start.spec.js). So the image model runs on the processor here, the
+  // app's own path for a Chrome without WebGPU. Same model, same files.
+  if (!gpu) await context.addInitScript(() => delete Navigator.prototype.gpu);
+  await use(context);
+  expect(errors, 'errors the page threw and didn’t catch').toEqual([]);
+  expect(blocked, 'requests that tried to leave the computer').toEqual([]);
+}
 
 export { expect };
 
