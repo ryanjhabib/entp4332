@@ -50,7 +50,8 @@ export const dayFormat = new Intl.DateTimeFormat(undefined, { month: 'short', da
 
 // When a family's files were exported: "Oct 26, 2026", or "Mar 3 – Oct 26, 2026".
 export function familyDates(entries) {
-  return dayFormat.formatRange(entries[0].file.lastModified, entries.at(-1).file.lastModified);
+  const dates = entries.map((entry) => entry.file.lastModified);
+  return dayFormat.formatRange(Math.min(...dates), Math.max(...dates));
 }
 
 export function formatSize(bytes, decimals = 1) {
