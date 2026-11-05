@@ -16,6 +16,13 @@ function leave() {
   show(back);
 }
 
+// For a scan finishing: shows `id`, unless the waitlist is open, which isn't
+// left mid-email; its Back then goes to `id` instead of the screen it came from.
+export function showAfterWaitlist(id) {
+  if ($('#join').hidden) return show(id);
+  back = id;
+}
+
 // Delegated: loading.js copies the home header, Waitlist included, onto the loading screen.
 document.addEventListener('click', async (event) => {
   const button = event.target.closest('.waitlist-open');

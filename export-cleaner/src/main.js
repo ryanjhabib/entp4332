@@ -11,7 +11,7 @@ import { prepareModel } from './embed.js';
 import { MEDIA_TYPES, setUpMediaField } from './media.js';
 import { getFolder, folderRecord, saveFolder, savedFiles, saveFile, pruneFiles, forgetFolder, forgetStale, claimFolder } from './store.js';
 import { setUpCursor } from './cursor.js';
-import './waitlist.js';
+import { showAfterWaitlist } from './waitlist.js';
 import { loopLine, loopOnHover } from './loop.js';
 import { startLoading, updateLoading, startScan, scannedFile, finishLoading, failLoading } from './loading.js';
 
@@ -175,7 +175,7 @@ async function loadFolder(dir) {
   } else regroup();
   await finishLoading();
   scanning = false;
-  if (files === state.files) show('files');
+  if (files === state.files) showAfterWaitlist('files');
 }
 
 // The saved families, when every file is still in one of them.
