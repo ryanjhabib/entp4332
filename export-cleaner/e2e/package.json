@@ -1,0 +1,14 @@
+{
+  "name": "export-cleaner-e2e",
+  "private": true,
+  "description": "Automated clicks through Export Cleaner in a real Chromium. Separate from the app so Vercel never installs it.",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:watch": "playwright test --headed --workers=1",
+    "setup": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  }
+}
