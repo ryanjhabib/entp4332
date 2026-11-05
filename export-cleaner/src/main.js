@@ -448,10 +448,15 @@ function nextFamily() {
   return setsThenSolos().find(open);
 }
 
-$('#view-compare').addEventListener('click', () => {
+// Families' Sort and Summary's. Each screen turns its own Sort off when
+// there's nothing to sort, so Summary's can't go through Families' button,
+// which may still be off from before a choice was undone.
+function sortNext() {
   const next = nextFamily();
   if (next) compareFamily(next);
-});
+}
+
+$('#view-compare').addEventListener('click', sortNext);
 // Summary's Sort is off when there's nothing left to sort, as Families' is;
 // undoing a choice there can turn it back on.
 function openSummary() {
@@ -467,7 +472,7 @@ $('#open-summary').addEventListener('click', openSummary);
 $('#view-summary').addEventListener('click', openSummary);
 $('#summary-back').addEventListener('click', () => showOverview());
 $('#summary-families').addEventListener('click', () => showOverview());
-$('#summary-sort').addEventListener('click', () => $('#view-compare').click());
+$('#summary-sort').addEventListener('click', sortNext);
 $('#apply').addEventListener('click', apply);
 $('#rescan').addEventListener('click', () => openFolder(state.dir));
 // Back to the start screen, fresh. This folder's progress stays saved, so
