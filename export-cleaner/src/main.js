@@ -471,10 +471,20 @@ function goHome() {
   location.reload();
 }
 // Drops this folder's saved scan and choices, then starts over (files untouched).
-$('#forget').addEventListener('click', async () => {
+// That can be hours of work, so the first click only asks. Clicking anywhere
+// else takes the question back; a double-click doesn't answer it.
+const forget = $('#forget');
+const forgetLabel = forget.textContent;
+forget.addEventListener('click', async (event) => {
+  if (event.detail > 1) return;
+  if (forget.textContent === forgetLabel) {
+    forget.textContent = 'Click again to forget';
+    return;
+  }
   await forgetFolder(state.record.id);
   goHome();
 });
+forget.addEventListener('blur', () => { forget.textContent = forgetLabel; });
 $('#done-choose').addEventListener('click', goHome);
 $('#settings').addEventListener('click', (event) => {
   const show = event.target.closest('[data-show]');
