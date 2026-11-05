@@ -19,7 +19,9 @@ cd export-cleaner/e2e && npm test
 ```
 
 `npm test` builds the app into a temporary folder, serves it on port 3410 (your
-dev server on 3400 is never touched), and runs every test. The first run also
+dev server on 3400 is never touched), and runs every test. A full run took
+6 min 24 s in the cloud test machine (4 cores, two tests at a time); a Mac with
+more cores runs more at once. The first run also
 downloads the AI models and OCR files once (about 150 MB) into
 `e2e/.model-cache`; later runs use that copy. At the end it prints a summary:
 how many checks passed, which failed, and what isn't checked yet and why.
@@ -42,4 +44,9 @@ cd export-cleaner/e2e && npm run test:watch
 - **Network:** anything leaving the computer other than the AI downloads is
   blocked and fails the test. The test build points the waitlist at an address
   that can't exist, so nothing can reach the real Supabase table.
-- **Fresh start:** every test gets an empty browser profile.
+- **Fresh start:** every test gets its own empty, normal browser profile,
+  deleted afterwards. (Not Playwright's usual private profile: Chromium crashes
+  there when a page reads a saved folder back, which every refresh and rescan does.)
+- **Known bugs:** tests marked `test.fixme` check a bug that's still open; each
+  has a one-line reason, listed at the end of every run. When a fix lands on
+  `master`, change its `test.fixme(` to `test(` and it becomes a normal check.
