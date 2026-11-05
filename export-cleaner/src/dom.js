@@ -54,7 +54,9 @@ export function familyDates(entries) {
   return dayFormat.formatRange(Math.min(...dates), Math.max(...dates));
 }
 
+// Under 1 KB reads 1 KB, so a small file doesn't read as nothing; only 0 reads 0.
 export function formatSize(bytes, decimals = 1) {
+  if (!bytes) return '0 KB';
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
   if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(decimals)} MB`;
   return `${(bytes / 1024 / 1024 / 1024).toFixed(decimals)} GB`;
