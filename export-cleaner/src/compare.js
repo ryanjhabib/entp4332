@@ -564,9 +564,17 @@ $('#flick .zoom-frame').addEventListener('click', () => {
 });
 loopOnHover($('#info-zoom'));
 
+// A choice brings the next version up under the same button, so the second
+// click of a double-click would decide a version nobody has seen. It's ignored.
+function onChoice(selector, choose) {
+  $(selector).addEventListener('click', (event) => {
+    if (event.detail < 2) choose();
+  });
+}
+
 // Pick while zoomed: a version on screen wins, as Pick under its frame does;
 // one flicked to comes onto the screen to be compared.
-$('#pick-zoom').addEventListener('click', () => {
+onChoice('#pick-zoom', () => {
   const entry = flick.entries[flick.index];
   const side = entry === slots.left ? 'left' : entry === slots.right ? 'right' : null;
   closeFlick();
@@ -574,12 +582,12 @@ $('#pick-zoom').addEventListener('click', () => {
   else challengeWith(entry);
 });
 
-$('#pick-left').addEventListener('click', () => pick('left'));
-$('#pick-right').addEventListener('click', () => pick('right'));
-$('#keep-both').addEventListener('click', keepBoth);
-$('#not-the-same').addEventListener('click', notTheSame);
-$('#keep-solo').addEventListener('click', () => decideAlone('keep'));
-$('#delete-solo').addEventListener('click', () => decideAlone('reject'));
+onChoice('#pick-left', () => pick('left'));
+onChoice('#pick-right', () => pick('right'));
+onChoice('#keep-both', keepBoth);
+onChoice('#not-the-same', notTheSame);
+onChoice('#keep-solo', () => decideAlone('keep'));
+onChoice('#delete-solo', () => decideAlone('reject'));
 $('#compare-undo').addEventListener('click', undo);
 $('#view-families').addEventListener('click', () => exit());
 $('#compare-summary').addEventListener('click', () => exit(true));
