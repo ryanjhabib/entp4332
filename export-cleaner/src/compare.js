@@ -64,9 +64,8 @@ function startFamily(entries) {
 }
 
 // Before every choice. Any choice ends the revisit: from then on, finished
-// families are skipped again.
+// families are skipped again. Undo brings it back with the rest.
 function snapshot() {
-  revisit = null;
   history.push({
     families: [...families],
     family,
@@ -74,7 +73,9 @@ function snapshot() {
     newcomer,
     queue: [...queue],
     decisions: family.map((entry) => entry.decision),
+    revisit,
   });
+  revisit = null;
 }
 
 // The version on `side` wins: it stays, the other is out, the next comes in.
@@ -159,6 +160,7 @@ function undo() {
   Object.assign(slots, step.slots);
   newcomer = step.newcomer;
   queue = step.queue;
+  revisit = step.revisit;
   render();
 }
 
