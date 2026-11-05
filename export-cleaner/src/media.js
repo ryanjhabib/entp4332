@@ -146,7 +146,8 @@ export function setUpMediaField(input, list, onChoose) {
 
   input.addEventListener('focus', () => {
     input.select(); // typing replaces an earlier choice
-    render(MEDIA_TYPES);
+    // A choice lists every type; text typed and left lists its matches again.
+    render(MEDIA_TYPES.some((type) => type.label === input.value) ? MEDIA_TYPES : matchTypes(input.value));
   });
   input.addEventListener('input', () => {
     const text = input.value;
