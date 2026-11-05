@@ -44,7 +44,7 @@ $('#join-form').addEventListener('submit', async (event) => {
     intro.textContent = 'That email doesn’t look right.';
     return;
   }
-  email.disabled = true;
+  email.disabled = true; // while it saves
   try {
     const response = await fetch(`${URL}/rest/v1/waitlist`, {
       method: 'POST',
@@ -59,7 +59,7 @@ $('#join-form').addEventListener('submit', async (event) => {
   } catch (error) {
     console.warn(error);
     intro.textContent = 'That didn’t save. Try again.';
-    email.disabled = false;
-    email.focus();
   }
+  email.disabled = false;
+  email.focus();
 });
