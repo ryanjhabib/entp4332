@@ -728,6 +728,7 @@ button:disabled {
   position: fixed;
   inset: 0;
   display: grid;
+  grid-template-columns: minmax(0, 1fr); /* a long strip scrolls instead of widening the screen */
   grid-template-rows: auto minmax(0, 1fr) var(--compare-actions-height) auto;
   padding: var(--grid-margin) var(--grid-margin) 0;
   background: var(--color-bg);
