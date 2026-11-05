@@ -93,17 +93,17 @@ A running record of every kind of folder and file the app has been run on, what 
 - **Live:** after pushing, the new build was confirmed on syca.vercel.app by its files, not by scanning a folder there.
 - **Not checked:** a folder saved before this change reopening with the new order; full-size originals; Apply after the reorder; the row at phone width.
 
-## Full UX and bug audit (2026-11-04): open, nothing fixed yet
+## Full UX and bug audit (2026-11-04): must-fixes and the date bug fixed, the rest open
 
 - **How:** every button and flow driven on throwaway folders in the browser pane's private storage (28-file mix with broken, empty, huge-ratio, long-name, skipped and subfolder files; a 24-version set; empty; skipped-only; deleted-while-open). The pane was hidden, so animation frames and screen fades were faked on the page. Waitlist saves were stubbed, so nothing reached Supabase.
-- **Must fix:**
-  1. Sets wider than the strip break Sort: `#compare` has no column limit, so the strip widens it. At 1440 wide, 13+ versions push the right frame out (13: 786–1455, 24: 1446–2115) and it can't be scrolled to. Tried on the page: `#compare { grid-template-columns: minmax(0, 1fr) }` restores 726–1395 and the strip scrolls.
-  2. A real double-click on Pick rejected two versions, one never seen (pair to pair has no fade). Keep both shares the path.
-  3. Forget has no confirmation: one click dropped 4 choices and a 24-file scan.
-  4. A file dragged back out of `_to_delete`, as Done says to, returns marked reject (same name, size, date) and Apply offers to move it again.
-  5. During Apply the cards and the Families toggle stay live: clearing a card said 17 files, 18 moved; leaving for Families was pulled to Done.
+- **Must fix (all fixed the same day, see `build-log.md`):**
+  1. Sets wider than the strip break Sort: `#compare` has no column limit, so the strip widens it. At 1440 wide, 13+ versions push the right frame out (13: 786–1455, 24: 1446–2115) and it can't be scrolled to. Tried on the page: `#compare { grid-template-columns: minmax(0, 1fr) }` restores 726–1395 and the strip scrolls. Fixed: a5b8453.
+  2. A real double-click on Pick rejected two versions, one never seen (pair to pair has no fade). Keep both shares the path. Fixed: 52859bf.
+  3. Forget has no confirmation: one click dropped 4 choices and a 24-file scan. Fixed: 6e61530.
+  4. A file dragged back out of `_to_delete`, as Done says to, returns marked reject (same name, size, date) and Apply offers to move it again. Fixed: 4aa38de.
+  5. During Apply the cards and the Families toggle stay live: clearing a card said 17 files, 18 moved; leaving for Families was pulled to Done. Fixed: f9e8587.
 - **Bugs:**
-  - `familyDates` reads first and last, wrong since colour order: Jan–Jun shows Jan–Mar (ed51f4b).
+  - `familyDates` reads first and last, wrong since colour order: Jan–Jun shows Jan–Mar (ed51f4b). Fixed: 5a8a8a8.
   - Summary's Sort does nothing when `#view-compare` is stale-disabled (all decided, Families, Summary, clear a card).
   - Reopen a decided solo, Keep, Undo: dead screen, "1/1", "Only version", no buttons (`revisit` not restored).
   - Wheel on a solo throws "Cannot read properties of null (reading 'scrolled')".
@@ -116,6 +116,7 @@ A running record of every kind of folder and file the app has been run on, what 
   - Grouping toggles drop "These are different" splits, even back at the same level (13 solos back to 12). By code, so does any rescan with a file missing.
   - WebGPU present but no adapter: scan stops on a raw `--enable-unsafe-webgpu` message, no fallback. Offline and missing-folder errors are raw too, and a refresh repeats the missing-folder one.
   - 0 bytes reads "1 kb".
+  - Found while fixing: a real double-click on a Summary card clears that card and the one that moves into its place (3 to reject became 1). Only undoes choices, so left open.
 - **Passed:** Pick, Keep both, These are different (key `n` too), Undo across sets and splits, Backspace, ⌘Z, strip reopening, zoom (Space, arrows loop, wheel stops at ends, Pick while zoomed), reopening sorted sets and swapping the final, full stream sets then solos to Summary with no dead ends, Apply (right files, clash renamed, skipped files and subfolders untouched), Rescan, refresh mid-scan, reopening a saved folder (305ms), two tabs on one folder, waitlist validation and failure, HTML in file names, window heights down to 560.
 - **Not checked:** native picker and Finder drag, Apply on a real disk, Resume after a Chrome restart, real screen fades, large real folders.
 
