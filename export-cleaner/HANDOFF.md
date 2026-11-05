@@ -27,7 +27,7 @@ A Chrome web app (class project, ENTP 4332) that helps designers and photographe
 | `src/scan.js` | folder picker; reads top-level `png jpg jpeg webp avif gif tif tiff svg pdf` |
 | `src/thumbs.js` | `renderAt(entry, size)` for every type; 320px thumbnails; 1600px previews; TIFF via UTIF.js; SVG viewBox fix |
 | `src/pdf.js` | pdf.js wrappers: `withPdf`, `renderPage`, `readWords` |
-| `src/describe.js` | per file: `vectors` (one per image, one per PDF page up to 50), `words` (PDF text, or OCR at 1600px), `shot` (EXIF), `colour` |
+| `src/describe.js` | per file: `vectors` (one per image, one per PDF page up to 50), `words` (PDF text, or OCR at 1600px), `shot` (EXIF), `colour`, `tone` (chroma and shadows, for `orderByColour` in `group.js`) |
 | `src/embed.js` | DINOv2 small via Transformers.js on WebGPU; CLS token, normalised; `similarity` = dot product |
 | `src/ocr.js` | Tesseract.js, English, words at ≥80% confidence |
 | `src/metadata.js` | exifr: capture moment + camera, Lightroom `OriginalDocumentID` |

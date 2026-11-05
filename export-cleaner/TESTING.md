@@ -84,3 +84,12 @@ A running record of every kind of folder and file the app has been run on, what 
 - **Found and fixed:** the start bar's first frame could run backwards (scaleX −0.004); skipped screen fades threw uncaught promise errors; Syca sat left on Done; Summary's Sort was enabled with nothing to sort; a sorted family clicked in Families was skipped (now reopens: a set's final beside its newest out version, a solo's Keep / Delete).
 - **Production build** (`vite preview`): start screen, fonts, cursor load; CSS times minified to .35s / .4s and read correctly.
 - **Not checked:** native Finder drag, the Resume click after a Chrome restart, a real large folder on the new Families grid, phone widths (unsupported by design).
+
+## Colour sets inside a family (2026-11-03)
+
+- **Folder:** 27 files in Chrome's private storage, written in their real date order: 512px copies of 19 photos from Ryan's color folder, plus 8 calendars from graphic. Dates were therefore all the same day, in the right order.
+- **Result:** dunes 1126, 1128, 1129 (B&W) then 1127, 1208; calendars kuummyu, e-2 then vwrervr, e-3, and muim, e-1 then wwwqwd, e; the people and flower sets kept date order.
+- **Sort:** the dune set opened on 1208 beside 1129, its two newest.
+- **Live:** after pushing, the new build was confirmed on syca.vercel.app by its files, not by scanning a folder there.
+- **Not checked:** a folder saved before this change reopening with the new order; full-size originals; Apply after the reorder; the row at phone width.
+
