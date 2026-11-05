@@ -281,6 +281,7 @@ async function apply() {
   const status = $('#apply-status');
   $('#apply').disabled = true;
   $('#summary-back').disabled = true;
+  $('#summary').inert = true; // nothing on this screen can change while files move
   try {
     if (!(await requestWriteAccess(state.dir))) {
       status.textContent = 'Chrome wasn’t allowed to change this folder, so nothing moved.';
@@ -300,6 +301,7 @@ async function apply() {
   } finally {
     $('#apply').disabled = false;
     $('#summary-back').disabled = false;
+    $('#summary').inert = false;
   }
 }
 
