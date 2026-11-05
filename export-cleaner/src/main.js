@@ -68,10 +68,24 @@ async function openFolder(dir) {
     await loadFolder(dir);
   } catch (error) {
     if (open !== opening) return;
+    console.error(error);
     // Shown on the loading screen, or in the start screen's estimate line.
     scanning = false;
-    failLoading(error.message);
+    failLoading(scanProblem(error));
   }
+}
+
+// What stopped a scan, in plain words where Chrome's are for developers
+// (the console keeps those): the folder gone since it was picked, or no
+// connection for the first download of the image model (the library that
+// runs it is fetched then too).
+function scanProblem(error) {
+  if (error.name === 'NotFoundError') return 'This folder can’t be found. It may have been moved, renamed or deleted.';
+  if (error instanceof TypeError && error.message.startsWith('Failed to fetch')) {
+    // A refresh, since Chrome won't fetch a library that failed once again in the same page.
+    return 'Couldn’t download the image model. Check your connection, then refresh the page.';
+  }
+  return error.message;
 }
 
 // The scan starts as soon as a folder is picked. Until a media type is
