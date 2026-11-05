@@ -289,6 +289,10 @@ async function apply() {
     const result = await moveRejected(state.dir, rejected, (done) => {
       status.textContent = `Moving ${done} of ${rejected.length}…`;
     });
+    // A moved file's choice is used up: dragged back out of the folder, it
+    // comes back undecided, not set to be moved again.
+    for (const { entry } of result.moved) entry.decision = undefined;
+    saveProgress();
     showDone(result);
   } catch (error) {
     console.error(error);
