@@ -8,12 +8,19 @@ const MODEL = 'onnx-community/dinov2-small';
 
 let modelReady = null;
 
+// The Mac's GPU (WebGPU) when there's one to use, otherwise the processor
+// (WebAssembly). Some machines offer WebGPU but have no usable graphics
+// adapter, and asking for it anyway stopped the scan on a raw error.
+async function device() {
+  return (await navigator.gpu?.requestAdapter()) ? 'webgpu' : 'wasm';
+}
+
 // The library is large, so like pdf.js it's only fetched once a folder is opened.
 // onDownload(percent) reports the first-time download of the model file.
 function loadModel(onDownload) {
-  modelReady ??= import('@huggingface/transformers').then(({ pipeline }) =>
+  modelReady ??= import('@huggingface/transformers').then(async ({ pipeline }) =>
     pipeline('image-feature-extraction', MODEL, {
-      device: navigator.gpu ? 'webgpu' : 'wasm', // the Mac's GPU when Chrome allows it
+      device: await device(),
       dtype: 'fp32', // full precision: accuracy over speed
       progress_callback: (p) => {
         if (p.status === 'progress' && p.file.endsWith('.onnx')) onDownload(Math.round(p.progress));
