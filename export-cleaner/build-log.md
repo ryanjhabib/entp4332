@@ -555,3 +555,21 @@ DINOv2 small on the cases that matter: same poster across layouts 0.87–0.95; d
 - **Set dates cut short (5a8a8a8).** My regression from colour sorting: the range read the first and last files. Fix: earliest and latest of the set. Jan–Jun now reads "Jan 5 – Jun 5, 2026".
 - **Testing note:** when the desktop app's window is closed, the browser pane stops drawing frames, so scans sit at 98% and fades don't run until a screenshot forces a frame. Not an app bug. A real background tab should pause the same way at the last step until you return.
 
+
+## Audit small bugs (2026-11-05)
+
+Twelve fixes, one commit each (81d6589 to 0ca8761), checked in Chromium; symptom, cause and numbers in each commit. Wording marked placeholder is Ryan's to approve.
+- **Summary's Sort did nothing:** it clicked Families' Sort, which ignores clicks while disabled. Both call `sortNext()`.
+- **Dead screen after Undo on a reopened solo:** Undo didn't restore `revisit`. It's in the snapshot now.
+- **Wheel on a solo threw:** the zoom view's handler is on the box solos share. Returns unless the zoom view is open.
+- **Broken-image icon on a solo:** the picture is hidden and the frame shows "No preview" (12px Instrument Sans, #888), as compare's frames do.
+- **Done with nothing moved:** "moved directly" hidden; each failed file is checked and listed "still in place" or "no longer in this folder" (placeholders); an empty `_to_delete` Apply made is removed (non-recursive `removeEntry`, so only if empty).
+- **False "Failed to fetch":** the old scan failed on freed thumbnails. Only the latest open may report a failure.
+- **Waitlist pulled to Families:** `showAfterWaitlist()` leaves it open and points Back at Families.
+- **Waitlist field stayed off:** re-enabled and refocused after any save.
+- **Media field picked Mixed:** focus lists the typed text's matches; a choice or empty field still lists all eight. One line in `media.js`.
+- **Raw errors:** "This folder can't be found. It may have been moved, renamed or deleted." and "Couldn't download the image model. Check your connection, then refresh the page." (placeholders). Dead end: "then choose the folder again" doesn't work fully offline, since Chrome keeps a failed module import for the page's life; a refresh does.
+- **"1 kb" for 0 bytes:** 0 reads 0 KB.
+- **Summary double-click:** ignores `event.detail > 1`, like `onChoice`.
+- **Testing notes:** Vite reloads the first page after an edit, so the harness waits 1.5s and reloads. A background dev server stops after 30 minutes in this environment.
+- **New bug found:** a type chosen while the bar runs to 100% hangs the loading screen (see TESTING.md).
