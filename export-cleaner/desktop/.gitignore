@@ -1,0 +1,5 @@
+# Made by npm run build:web, npm run offline and npm run dist. Never committed:
+# offline/ holds the models (about 118 MB), and none of it belongs on the website.
+web/
+offline/
+release/

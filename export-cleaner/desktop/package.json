@@ -1,0 +1,42 @@
+{
+  "name": "export-cleaner-desktop",
+  "productName": "Export Cleaner",
+  "version": "0.1.0",
+  "description": "Export Cleaner for Mac: the web app in its own window, working offline.",
+  "private": true,
+  "type": "module",
+  "main": "main.js",
+  "scripts": {
+    "build:web": "cd .. && npx vite build --mode desktop --outDir desktop/web --emptyOutDir",
+    "offline": "node scripts/fetch-offline.js",
+    "start": "npm run build:web && npm run offline && electron .",
+    "dist": "npm run build:web && npm run offline && electron-builder --mac dmg --arm64"
+  },
+  "devDependencies": {
+    "electron": "45.2.3",
+    "electron-builder": "26.18.1"
+  },
+  "build": {
+    "appId": "com.ryanjhabib.exportcleaner",
+    "productName": "Export Cleaner",
+    "files": [
+      "main.js",
+      "web/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "offline",
+        "to": "offline"
+      }
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.photography",
+      "identity": "-",
+      "hardenedRuntime": false
+    }
+  }
+}
