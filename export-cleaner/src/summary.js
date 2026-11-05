@@ -44,9 +44,12 @@ export function showSummary(files, change = onChange) {
 }
 
 // Clicking a file to reject or keep clears its choice: it goes back to
-// Undecided, so a mistake is fixed where it's seen.
+// Undecided, so a mistake is fixed where it's seen. The next file then moves
+// in under the pointer, so the second click of a double-click is ignored,
+// as with Sort's buttons (onChoice in compare.js).
 for (const name of ['reject', 'keep']) {
   $(`#summary-${name} .card-row`).addEventListener('click', (event) => {
+    if (event.detail > 1) return;
     const entry = entryOfCard.get(event.target.closest('li'));
     if (!entry) return;
     entry.decision = undefined;
