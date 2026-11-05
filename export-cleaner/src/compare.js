@@ -539,7 +539,9 @@ function stepFlick(direction, loop = false) {
 
 // Each FLICK_STEP of scrolling is one version, at most one per wheel event:
 // a slow scroll steps slowly, a fast flick of the trackpad runs through them.
+// A solo uses the same layout, but has nothing to step through.
 $('#flick').addEventListener('wheel', (event) => {
+  if (!flick) return;
   event.preventDefault();
   flick.scrolled += event.deltaY;
   if (Math.abs(flick.scrolled) < FLICK_STEP) return;
