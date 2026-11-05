@@ -93,7 +93,7 @@ A running record of every kind of folder and file the app has been run on, what 
 - **Live:** after pushing, the new build was confirmed on syca.vercel.app by its files, not by scanning a folder there.
 - **Not checked:** a folder saved before this change reopening with the new order; full-size originals; Apply after the reorder; the row at phone width.
 
-## Full UX and bug audit (2026-11-04): must-fixes and the date bug fixed, the rest open
+## Full UX and bug audit (2026-11-04): must-fixes, the date bug and the small bugs fixed
 
 - **How:** every button and flow driven on throwaway folders in the browser pane's private storage (28-file mix with broken, empty, huge-ratio, long-name, skipped and subfolder files; a 24-version set; empty; skipped-only; deleted-while-open). The pane was hidden, so animation frames and screen fades were faked on the page. Waitlist saves were stubbed, so nothing reached Supabase.
 - **Must fix (all fixed the same day, see `build-log.md`):**
@@ -104,19 +104,31 @@ A running record of every kind of folder and file the app has been run on, what 
   5. During Apply the cards and the Families toggle stay live: clearing a card said 17 files, 18 moved; leaving for Families was pulled to Done. Fixed: f9e8587.
 - **Bugs:**
   - `familyDates` reads first and last, wrong since colour order: Jan–Jun shows Jan–Mar (ed51f4b). Fixed: 5a8a8a8.
-  - Summary's Sort does nothing when `#view-compare` is stale-disabled (all decided, Families, Summary, clear a card).
-  - Reopen a decided solo, Keep, Undo: dead screen, "1/1", "Only version", no buttons (`revisit` not restored).
-  - Wheel on a solo throws "Cannot read properties of null (reading 'scrolled')".
-  - A solo with no preview shows Chrome's broken-image icon in an empty square; frames say "No preview".
-  - Done with 0 moved says "Every file was moved directly" and "still in place" for a file that's gone, and leaves an empty `_to_delete`.
-  - A second folder mid-scan shows a false "Failed to fetch" until the new scan overwrites it.
-  - Waitlist opened from loading: the scan's end pulls you to Families.
-  - Waitlist field stays disabled after a success until refresh.
-  - Media field: type "photos", click away, click back, Enter picks Mixed.
+  - Summary's Sort does nothing when `#view-compare` is stale-disabled (all decided, Families, Summary, clear a card). Fixed: 81d6589.
+  - Reopen a decided solo, Keep, Undo: dead screen, "1/1", "Only version", no buttons (`revisit` not restored). Fixed: 5fd38b4.
+  - Wheel on a solo throws "Cannot read properties of null (reading 'scrolled')". Fixed: 978038c.
+  - A solo with no preview shows Chrome's broken-image icon in an empty square; frames say "No preview". Fixed: 994f312.
+  - Done with 0 moved says "Every file was moved directly" and "still in place" for a file that's gone, and leaves an empty `_to_delete`. Fixed: 9a887ce.
+  - A second folder mid-scan shows a false "Failed to fetch" until the new scan overwrites it. Fixed: 27dfca9.
+  - Waitlist opened from loading: the scan's end pulls you to Families. Fixed: dc7f055.
+  - Waitlist field stays disabled after a success until refresh. Fixed: 8a35135.
+  - Media field: type "photos", click away, click back, Enter picks Mixed. Fixed: 1eebfc6.
   - Grouping toggles drop "These are different" splits, even back at the same level (13 solos back to 12). By code, so does any rescan with a file missing.
-  - WebGPU present but no adapter: scan stops on a raw `--enable-unsafe-webgpu` message, no fallback. Offline and missing-folder errors are raw too, and a refresh repeats the missing-folder one.
-  - 0 bytes reads "1 kb".
-  - Found while fixing: a real double-click on a Summary card clears that card and the one that moves into its place (3 to reject became 1). Only undoes choices, so left open.
+  - WebGPU present but no adapter: scan stops on a raw `--enable-unsafe-webgpu` message, no fallback. Offline and missing-folder errors are raw too, and a refresh repeats the missing-folder one. Fixed: 0ca8761 (wording only; WebGPU part still open).
+  - 0 bytes reads "1 kb". Fixed: cc09bb2.
+  - Found while fixing: a real double-click on a Summary card clears that card and the one that moves into its place (3 to reject became 1). Only undoes choices, so left open. Fixed: dce3e90.
 - **Passed:** Pick, Keep both, These are different (key `n` too), Undo across sets and splits, Backspace, ⌘Z, strip reopening, zoom (Space, arrows loop, wheel stops at ends, Pick while zoomed), reopening sorted sets and swapping the final, full stream sets then solos to Summary with no dead ends, Apply (right files, clash renamed, skipped files and subfolders untouched), Rescan, refresh mid-scan, reopening a saved folder (305ms), two tabs on one folder, waitlist validation and failure, HTML in file names, window heights down to 560.
 - **Not checked:** native picker and Finder drag, Apply on a real disk, Resume after a Chrome restart, real screen fades, large real folders.
 
+
+## Small-bug fixes from the audit (2026-11-05, branch `claude/ecstatic-edison-76d675`)
+
+- **How:** headless Chromium through Playwright against the dev server, folders in the page's private storage (OPFS) with `showDirectoryPicker` stubbed. Generated images only (`test-images/bugfix/`, git-ignored): a dune scene ×3 (crop, colour edit), rings ×2 (rotated), checks, a text page, `broken.png` (random bytes). They group as 2 sets and 3 solos. Each bug was reproduced before its fix and rechecked after; numbers are in each commit.
+- **Test stubs:** this container's Chromium has WebGPU but no adapter (the open WebGPU-fallback bug), so `navigator.gpu` was hidden and the model ran on wasm. Waitlist saves were stubbed (nothing reached Supabase). Offline was Playwright's offline mode or blocked hosts on a fresh profile. A file was "locked" by holding a writable open.
+- **Found, not fixed:**
+  - Choosing a media type in the ~0.2s while the bar runs its last stretch to 100% leaves the loading screen at 100% "Your versions are ready" for good (reproduced 2 of 2). `loadFolder` checks for a type before `await finishLoading()`, then waits for one already chosen.
+  - When Chrome copies a file but can't remove the original, the copy stays in `_to_delete` too.
+  - Done still reads "Moved 0 files into _to_delete…" and the undo note when nothing moved.
+  - Model download HTTP failures (Hugging Face down) still show the library's wording.
+  - Clicking back into the media field after a choice and pressing Enter picks Mixed (the whole list is shown, top row taken).
+- **Not checked:** real disk folders, the native picker, real WebGPU, Vercel builds.
