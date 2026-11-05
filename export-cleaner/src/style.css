@@ -1125,6 +1125,20 @@ button:disabled {
   display: none;
 }
 
+/* A solo with no preview: "No preview" in the middle of its frame, in the
+   type of compare's frames. */
+#compare.is-solo .zoom-frame {
+  display: grid;
+  place-items: center;
+  color: var(--color-sans-muted);
+  font-family: var(--font-instrument-sans);
+  font-size: var(--caption-size);
+}
+
+#compare.is-solo .zoom-frame::after {
+  content: attr(data-empty);
+}
+
 .solo-picture img {
   display: block;
   width: 100%;

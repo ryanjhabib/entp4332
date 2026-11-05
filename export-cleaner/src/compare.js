@@ -401,12 +401,16 @@ function showSolo(entry) {
     fade(() => compare.classList.remove('is-solo'));
     return;
   }
+  const frame = $('#flick .zoom-frame');
   const picture = $('.solo-picture');
   const img = picture.querySelector('img');
   const shown = fade(() => {
     picture.classList.remove('is-zoomed', 'blends');
     picture.dataset.cursor = 'zoom';
-    delete $('#flick .zoom-frame').dataset.cursor; // the − (back) is only for zoomed pairs
+    delete frame.dataset.cursor; // the − (back) is only for zoomed pairs
+    // No preview: the frame says so, as compare's frames do.
+    picture.hidden = !entry.thumb;
+    frame.dataset.empty = entry.thumb ? '' : 'No preview';
     img.src = entry.thumb ?? '';
     renderInfo('zoom', entry, null);
     $('#pick-zoom').hidden = true;
