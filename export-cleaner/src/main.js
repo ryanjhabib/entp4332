@@ -56,11 +56,18 @@ function showFolderError(error) {
   status.textContent = error.message;
 }
 
+// Each folder opened replaces the one before. The old scan stops at its next
+// step, but a file it's in the middle of can fail once its thumbnail is
+// freed; that failure isn't the new folder's, so it isn't shown.
+let opening = 0;
+
 async function openFolder(dir) {
+  const open = ++opening;
   $('#start-status').hidden = true;
   try {
     await loadFolder(dir);
   } catch (error) {
+    if (open !== opening) return;
     // Shown on the loading screen, or in the start screen's estimate line.
     scanning = false;
     failLoading(error.message);
